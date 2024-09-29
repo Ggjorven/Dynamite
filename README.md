@@ -1,2 +1,51 @@
-# Dynamite
-My first try at creating a compiler for my own programming language "Dynamite". Follow the tutorial series: https://www.youtube.com/playlist?list=PLUDlas_Zy_qC7c5tCgTMYq2idyyT241qs
+# Dynamite Programming Language
+
+Dynamite is a new programming language based on C++, designed for creating powerful and efficient applications. This is an ongoing project that currently only supports Linux systems.
+
+## Features
+
+- **C++ Syntax**: Leverages familiar C++ syntax and semantics.
+
+## Installation
+
+### Prerequisites
+
+- A Linux operating system
+- C++20 compatible compiler (e.g., g++ 10 or later)
+
+### Build Instructions
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/Ggjorven/Dynamite.git
+    cd Dynamite
+    ```
+
+2. Navigate to the scripts folder:
+    ```sh
+    cd scripts/linux
+    ```
+
+3. (Optional) If you haven't already installed the premake5 build system you can install it like this:
+    ```sh
+    chmod +x install-premake5.sh
+    ./install-premake5.sh
+    ```
+
+4. Generate make files:
+    ```sh
+    chmod +x gen-make.sh
+    ./gen-make.sh
+    ```
+
+## License
+This project is licensed under the Apache 2.0 License. See [LICENSE](LICENSE.txt) for details.
+
+## Contributing
+Contributions are welcome! Please fork the repository and create a pull request with your changes.
+
+## Acknowledgments
+This project is inspired by various programming languages and aims to create a simple yet powerful tool for developers. Special thanks to the tutorial series on [YouTube](https://youtube.com/playlist?list=PLUDlas_Zy_qC7c5tCgTMYq2idyyT241qs&si=w_2uPn_QRp0VL7LL) that guided the development of this language.
+
+## Third-Party Libraries
+  - `spdlog` [https://github.com/gabime/spdlog/](https://github.com/gabime/spdlog.git)
