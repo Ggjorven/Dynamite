@@ -28,11 +28,11 @@ namespace Dynamite
 		static void LogMessage(LogLevel level, std::string_view fmt, const Args& ...args);
 
 		#if !defined(DY_CONFIG_DIST)
-			#define DY_LOG_TRACE(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Trace, __VA_ARGS__);
-			#define DY_LOG_INFO(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Info, __VA_ARGS__);
-			#define DY_LOG_WARN(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Warn, __VA_ARGS__);
-			#define DY_LOG_ERROR(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Error, __VA_ARGS__);
-			#define DY_LOG_FATAL(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Fatal, __VA_ARGS__);
+			#define DY_LOG_TRACE(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Trace, __VA_ARGS__)
+			#define DY_LOG_INFO(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Info, __VA_ARGS__)
+			#define DY_LOG_WARN(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Warn, __VA_ARGS__)
+			#define DY_LOG_ERROR(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Error, __VA_ARGS__)
+			#define DY_LOG_FATAL(...)	::Dynamite::Logger::LogMessage(::Dynamite::LogLevel::Fatal, __VA_ARGS__)
 		#else
 			#define DY_LOG_TRACE(...)
 			#define DY_LOG_INFO(...)

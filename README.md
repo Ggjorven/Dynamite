@@ -12,6 +12,7 @@ Dynamite is a new programming language based on C++, designed for creating power
 
 - A Linux operating system
 - C++20 compatible compiler (e.g., g++ 10 or later)
+- NASM & ld (gdb)
 
 ### Build Instructions
 

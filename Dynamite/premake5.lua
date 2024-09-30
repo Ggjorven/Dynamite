@@ -9,6 +9,7 @@ project "Dynamite"
 	architecture "x86_64"
 
 	debugdir ("%{wks.location}")
+	debugargs { "Dynamite/dynamite/main.dy" }
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
