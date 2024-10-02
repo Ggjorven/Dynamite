@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include <Pulse/Text/Format.hpp>
+
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
 
@@ -10,6 +12,10 @@
 
 namespace Dynamite
 {
+
+    /////////////////////////////////////////////////////////////////
+    // Main functions
+    /////////////////////////////////////////////////////////////////
     Tokenizer::Tokenizer(const std::string& fileContent)
         : m_FileContent(fileContent)
     {
@@ -19,6 +25,7 @@ namespace Dynamite
     {
         std::vector<Token> tokens = { };
         std::string buffer = {};
+        uint32_t lineNumber = 1;
 
         while (Peek().has_value())
         {
@@ -31,15 +38,7 @@ namespace Dynamite
                 while (PeekCheck(std::isalnum))
                     buffer.push_back(Consume());
 
-                // Keywords/Functions
-                if (buffer == "exit")
-                {
-                    tokens.push_back({ .Type = TokenType::Exit });
-                }
-                else // Invalid keyword or function name
-                {
-                    DY_LOG_ERROR("Invalid keyword or function name found at index: {0}, buffer = {1}", m_Index, buffer);
-                }
+                HandleKeywords(buffer, tokens, lineNumber);
 
                 buffer.clear();
             }
@@ -53,25 +52,19 @@ namespace Dynamite
                 while (PeekCheck(std::isdigit))
                     buffer.push_back(Consume());
 
-                tokens.push_back({ .Type = TokenType::IntegerLiteral, .Value = buffer });
+                tokens.emplace_back(TokenType::Int64Literal, buffer, lineNumber);
                 buffer.clear();
             }
 
-            // Semicolon
-            else if (Peek().value() == ';')
-            {
-                Consume();
-                tokens.push_back({ .Type = TokenType::Semicolon });
-            }
-            // Space
-            else if (std::isspace(Peek().value()))
-            {
-                Consume();
-            }
+            else if (HandleChars(tokens, lineNumber))
+                continue;
 
             // Invalid token
             else
             {
+                if (Peek().value() == '\n' || Peek().value() == '\r')
+                    DY_LOG_ERROR("newline");
+
                 DY_LOG_ERROR("Invalid token found at index: {0}, Buffer = {1}", m_Index, buffer);
                 buffer.clear();
             }
@@ -81,28 +74,108 @@ namespace Dynamite
         return tokens;
     }
 
+    std::string Tokenizer::FormatToken(const Token& token)
+    {
+        if (token.Value.has_value())
+            return Pulse::Text::Format("({0}), TokenType::{1}, Value = {2}", token.LineNumber, Pulse::Enum::Name(token.Type), token.Value.value());
+        else
+            return Pulse::Text::Format("({0}), TokenType::{1}", token.LineNumber, Pulse::Enum::Name(token.Type));
+    }
+
     void Tokenizer::Print(const std::vector<Token>& tokens)
     {
         for (const auto& token : tokens)
-        {
-            if (token.Value.has_value())
-                DY_LOG_TRACE("({0}), TokenType::{1}, Value = {2}", token.Line, Pulse::Enum::Name(token.Type), token.Value.value());
-            else
-                DY_LOG_TRACE("({0}), TokenType::{1}", token.Line, Pulse::Enum::Name(token.Type));
-        }
+            DY_LOG_TRACE(FormatToken(token));
     }
 
+    /////////////////////////////////////////////////////////////////
+    // Peeking & consuming
+    /////////////////////////////////////////////////////////////////
     std::optional<char> Tokenizer::Peek(size_t offset) const
     {
-        if (m_Index + offset >/*=*/ m_FileContent.length())
+        if (m_Index + offset >= m_FileContent.size())
             return {};
 
-        return m_FileContent.at(m_Index);
+        return m_FileContent.at(m_Index + offset);
     }
 
     char Tokenizer::Consume()
     {
         return m_FileContent.at(m_Index++);
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // Handling functions
+    /////////////////////////////////////////////////////////////////
+    bool Tokenizer::HandleKeywords(const std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
+    {
+        // Variable declaration
+        if (buffer == "let")
+        {
+            tokens.emplace_back(TokenType::Let, lineNumber);
+            return true;
+        }
+        // Exit function
+        else if (buffer == "exit")
+        {
+            tokens.emplace_back(TokenType::Exit, lineNumber);
+            return true;
+        }
+
+        else // Invalid keyword or function name
+        {
+            DY_LOG_ERROR("Invalid keyword or function name found at index: {0}, buffer = {1}", m_Index, buffer);
+        }
+
+        return false;
+    }
+
+    bool Tokenizer::HandleChars(std::vector<Token>& tokens, uint32_t& lineNumber)
+    {
+        // Semicolon
+        if (Peek().value() == ';')
+        {
+            Consume();
+            tokens.emplace_back(TokenType::Semicolon, lineNumber);
+            return true;
+        }
+        // Open parenthesis
+        else if (Peek().value() == '(')
+        {
+            Consume();
+            tokens.emplace_back(TokenType::OpenParenthesis, lineNumber);
+            return true;
+        }
+        // Close parenthesis
+        else if (Peek().value() == ')')
+        {
+            Consume();
+            tokens.emplace_back(TokenType::CloseParenthesis, lineNumber);
+            return true;
+        }
+        // Equals
+        else if (Peek().value() == '=')
+        {
+            Consume();
+            tokens.emplace_back(TokenType::Equals, lineNumber);
+            return true;
+        }
+
+        // Newline (for incrementing)
+        else if (Peek().value() == '\n' || Peek().value() == '\r')
+        {
+            Consume();
+            lineNumber++;
+            return true;
+        }
+        // Space
+        else if (std::isspace(Peek().value()))
+        {
+            Consume();
+            return true;
+        }
+
+        return false;
     }
 
 }

@@ -3,6 +3,7 @@
 #include "Dynamite/Core/Logging.hpp"
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
+#include "Dynamite/Parsing/Parser.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -22,7 +23,7 @@ std::string TokensToAsm(const std::vector<Token>& tokens)
 
 		if (token.Type == TokenType::Exit) 
 		{
-			if (i + 1 < tokens.size() && tokens.at(i + 1).Type == TokenType::IntegerLiteral) 
+			if (i + 1 < tokens.size() && tokens.at(i + 1).Type == TokenType::Int64Literal) 
 			{
 				if (i + 2 < tokens.size() && tokens.at(i + 2).Type == TokenType::Semicolon) 
 				{
@@ -58,14 +59,30 @@ int main(int argc, char* argv[])
 		contents = contentsStream.str();
 	}
 
+
 	Tokenizer tokenizer(std::move(contents));
 	std::vector<Token> tokens = tokenizer.GetTokens();
 	
+	DY_LOG_TRACE("-------------------------------------");
+	DY_LOG_TRACE("-- Tokens found");
+	DY_LOG_TRACE("-------------------------------------");
 	Tokenizer::Print(tokens);
 
-	std::string assembly = TokensToAsm(tokens);
+	Parser parser(std::move(tokens));
+	Nodes::Program program = parser.GetProgram();
+	
+	DY_LOG_TRACE("");
+	DY_LOG_TRACE("-------------------------------------");
+	DY_LOG_TRACE("-- Nodes created");
+	DY_LOG_TRACE("-------------------------------------");
+	Parser::Print(program);
 
-	DY_LOG_TRACE("Assembly: \n{0}", assembly);
+	// TODO: Generate assembly
+
+	DY_LOG_TRACE("");
+	DY_LOG_TRACE("-------------------------------------");
+	DY_LOG_TRACE("-- Assembly generated");
+	DY_LOG_TRACE("-------------------------------------");
 
 	return EXIT_SUCCESS;
 }

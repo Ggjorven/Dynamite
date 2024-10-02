@@ -13,21 +13,32 @@ namespace Dynamite
 		None = 0,
 
 		// Main
-		Exit,					// Exit from Program
-		Semicolon,				// End of 'statement'
-		
+		Semicolon = ';',			// End of 'statement'
+		OpenParenthesis = '(',		// '('
+		CloseParenthesis = ')',		// ')'
+		Equals = '=',
+
+		Identifier = 1,				// Variable name?
+		Let = 2,					// Variable declaration
+		Exit = 3,					// Exit from Program
+
 		// Types
-		IntegerLiteral,			// int32_t literal
+		Int64Literal = 4,			// int64_t literal
 	};
 
 	struct Token
 	{
 	public:
-		TokenType Type = TokenType::None;
-		std::optional<std::string> Value = {};
+		TokenType Type;
+		std::optional<std::string> Value;
 
-		// Line number
-		uint32_t Line = 0;
+		uint32_t LineNumber;
+
+	public:
+		Token();
+		Token(TokenType type, uint32_t line = 0);
+		Token(TokenType type, std::optional<std::string> value, uint32_t line = 0);
+		~Token() = default;
 	};
 
 }
