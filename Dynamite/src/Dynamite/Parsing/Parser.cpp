@@ -13,8 +13,8 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Main functions
 	/////////////////////////////////////////////////////////////////
-	Parser::Parser(const std::vector<Token>& tokens)
-		: m_Tokens(tokens)
+	Parser::Parser(Pulse::Memory::ArenaAllocator& allocator, const std::vector<Token>& tokens)
+		: m_Allocator(allocator), m_Tokens(tokens)
 	{
 	}
 

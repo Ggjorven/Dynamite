@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 	{
 		DY_LOG_ERROR("Invalid usage.");
 		DY_LOG_ERROR("Example usage: ./Dynamite <input.dy>");
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
 	std::string contents;
@@ -59,6 +59,10 @@ int main(int argc, char* argv[])
 		contents = contentsStream.str();
 	}
 
+	constexpr const size_t MB = 2ull;
+	Pulse::Memory::ArenaAllocator allocator(MB * (1024 * 1024));
+
+
 
 	Tokenizer tokenizer(std::move(contents));
 	std::vector<Token> tokens = tokenizer.GetTokens();
@@ -68,7 +72,7 @@ int main(int argc, char* argv[])
 	DY_LOG_TRACE("-------------------------------------");
 	Tokenizer::Print(tokens);
 
-	Parser parser(std::move(tokens));
+	Parser parser(allocator, std::move(tokens));
 	Nodes::Program program = parser.GetProgram();
 	
 	DY_LOG_TRACE("");

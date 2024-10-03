@@ -16,7 +16,7 @@ namespace Dynamite
 		Semicolon = ';',			// End of 'statement'
 		OpenParenthesis = '(',		// '('
 		CloseParenthesis = ')',		// ')'
-		Equals = '=',
+		Equals = '=',				// '='
 
 		Identifier = 1,				// Variable name?
 		Let = 2,					// Variable declaration

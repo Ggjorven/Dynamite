@@ -4,6 +4,8 @@
 
 #include "Dynamite/Parsing/Nodes.hpp"
 
+#include <Pulse/Memory/ArenaAllocator.hpp>
+
 #include <cstdint>
 #include <vector>
 #include <optional>
@@ -14,7 +16,7 @@ namespace Dynamite
 	class Parser
 	{
 	public:
-		explicit Parser(const std::vector<Token>& tokens);
+		explicit Parser(Pulse::Memory::ArenaAllocator& allocator, const std::vector<Token>& tokens);
 		~Parser() = default;
 
 		Nodes::Program GetProgram();
@@ -34,6 +36,8 @@ namespace Dynamite
 		Token Consume();
 
 	private:
+		Pulse::Memory::ArenaAllocator& m_Allocator;
+
 		const std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
 	};
