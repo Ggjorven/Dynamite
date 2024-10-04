@@ -34,6 +34,7 @@ namespace Dynamite
 
 		// Increments the index and returns the Token at m_Index
 		Token Consume();
+		Token TryConsume(TokenType tokenType, const std::string& msg = {});
 
 	private:
 		const std::vector<Token>& m_Tokens;

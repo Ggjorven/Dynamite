@@ -1,2 +1,4 @@
-exit(29);
-exit(69);
+let x = 2;
+let y = 3;
+
+exit(y);

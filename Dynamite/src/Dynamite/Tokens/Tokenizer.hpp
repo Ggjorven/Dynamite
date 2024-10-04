@@ -33,7 +33,7 @@ namespace Dynamite
 		char Consume();
 
 		/////////////////////////////////////////////////////////////////
-		bool HandleKeywords(const std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber);
+		bool HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber);
 		bool HandleChars(std::vector<Token>& tokens, uint32_t& lineNumber);
 
 	private:

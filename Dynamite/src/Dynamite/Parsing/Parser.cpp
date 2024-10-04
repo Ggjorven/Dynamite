@@ -78,17 +78,9 @@ namespace Dynamite
 			else
 				DY_LOG_ERROR("Invalid expression.");
 
-			// Close parenthesis ')' resolution
-			if (PeekCheck(0, TokenType::CloseParenthesis)) 
-				Consume(); // ')' token
-			else 
-				DY_LOG_ERROR("Expected `)`.");
-
-			// Semicolon ';' resolution
-			if (PeekCheck(0, TokenType::Semicolon))
-				Consume();
-			else 
-				DY_LOG_ERROR("Expected `;`.");
+			// Close parenthesis ')' & semicolon `;` resolution
+			TryConsume(TokenType::CloseParenthesis, "Expected `)`.");
+			TryConsume(TokenType::Semicolon, "Expected `;`.");
 
 			return Nodes::Statement::New(exitStatement);
 		}
@@ -110,10 +102,7 @@ namespace Dynamite
 				DY_LOG_ERROR("Invalid expression.");
 
 			// Semicolon ';' resolution
-			if (PeekCheck(0, TokenType::Semicolon))
-				Consume();
-			else 
-				DY_LOG_ERROR("Expected `;`.");
+			TryConsume(TokenType::Semicolon, "Expected `;`.");
 
 			return Nodes::Statement::New(letStatement);
 		}
@@ -135,6 +124,16 @@ namespace Dynamite
 	Token Parser::Consume()
 	{
 		return m_Tokens.at(m_Index++);
+	}
+
+	Token Parser::TryConsume(TokenType tokenType, const std::string& msg)
+	{
+		if (PeekCheck(0, tokenType))
+			return Consume();
+		else if (!msg.empty())
+			DY_LOG_ERROR(msg);
+
+		return {};
 	}
 
 }

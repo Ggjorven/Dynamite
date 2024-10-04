@@ -30,8 +30,9 @@ namespace Dynamite::Nodes
             Int64Literal(const Token& token);
             ~Int64Literal() = default;
 
-            static Int64Literal* New();
-            static Int64Literal* New(const Token& token);
+        public:
+            [[nodiscard]] static Int64Literal* New();
+            [[nodiscard]] static Int64Literal* New(const Token& token);
         };
 
         struct Identifier
@@ -44,8 +45,9 @@ namespace Dynamite::Nodes
             Identifier(const Token& token);
             ~Identifier() = default;
 
-            static Identifier* New();
-            static Identifier* New(const Token& token);
+        public:
+            [[nodiscard]] static Identifier* New();
+            [[nodiscard]] static Identifier* New(const Token& token);
         };
 
         struct Binary
@@ -64,8 +66,9 @@ namespace Dynamite::Nodes
                 Addition(Expression* lhs, Expression* rhs);
                 ~Addition() = default;
 
-                static Addition* New();
-                static Addition* New(Expression* lhs, Expression* rhs);
+            public:
+                [[nodiscard]] static Addition* New();
+                [[nodiscard]] static Addition* New(Expression* lhs, Expression* rhs);
             };
 
             struct Multiply
@@ -79,8 +82,9 @@ namespace Dynamite::Nodes
                 Multiply(Expression* lhs, Expression* rhs);
                 ~Multiply() = default;
 
-                static Multiply* New();
-                static Multiply* New(Expression* lhs, Expression* rhs);
+            public:
+                [[nodiscard]] static Multiply* New();
+                [[nodiscard]] static Multiply* New(Expression* lhs, Expression* rhs);
             };
 
         public:
@@ -89,9 +93,10 @@ namespace Dynamite::Nodes
             Binary(Multiply* multiply);
             ~Binary() = default;
 
-            static Binary* New();
-            static Binary* New(Addition* addition);
-            static Binary* New(Multiply* multiply);
+        public:
+            [[nodiscard]] static Binary* New();
+            [[nodiscard]] static Binary* New(Addition* addition);
+            [[nodiscard]] static Binary* New(Multiply* multiply);
 
         public:
             Type BinaryType = Type::None;
@@ -110,10 +115,11 @@ namespace Dynamite::Nodes
         Expression(Binary* binary);
         ~Expression() = default;
 
-        static Expression* New();
-        static Expression* New(Int64Literal* int64literal);
-        static Expression* New(Identifier* identifier);
-        static Expression* New(Binary* binary);
+    public:
+        [[nodiscard]] static Expression* New();
+        [[nodiscard]] static Expression* New(Int64Literal* int64literal);
+        [[nodiscard]] static Expression* New(Identifier* identifier);
+        [[nodiscard]] static Expression* New(Binary* binary);
 
     public:
         Type ExpressionType = Type::None;
@@ -147,11 +153,12 @@ namespace Dynamite::Nodes
             Let(const Token& token, Expression* expression);
             ~Let() = default;
 
-            static Let* New();
-            static Let* New(const Token& token, Expression* expression = nullptr);
+        public:
+            [[nodiscard]] static Let* New();
+            [[nodiscard]] static Let* New(const Token& token, Expression* expression = nullptr);
         };
 
-        struct Exit
+        struct Exit // Currently takes in a Int64Literal
         {
         public:
             Expression* ExpressionObj = nullptr;
@@ -161,8 +168,9 @@ namespace Dynamite::Nodes
             Exit(Expression* expression);
             ~Exit() = default;
 
-            static Exit* New();
-            static Exit* New(Expression* expression);
+        public:
+            [[nodiscard]] static Exit* New();
+            [[nodiscard]] static Exit* New(Expression* expression);
         };
 
     public:
@@ -171,9 +179,10 @@ namespace Dynamite::Nodes
         Statement(Exit* exit);
         ~Statement() = default;
 
-        static Statement* New();
-        static Statement* New(Let* let);
-        static Statement* New(Exit* exit);
+    public:
+        [[nodiscard]] static Statement* New();
+        [[nodiscard]] static Statement* New(Let* let);
+        [[nodiscard]] static Statement* New(Exit* exit);
 
     public:
         Type StatementType = Type::None;

@@ -107,24 +107,27 @@ namespace Dynamite
     /////////////////////////////////////////////////////////////////
     // Handling functions
     /////////////////////////////////////////////////////////////////
-    bool Tokenizer::HandleKeywords(const std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
+    bool Tokenizer::HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
     {
         // Variable declaration
         if (buffer == "let")
         {
             tokens.emplace_back(TokenType::Let, lineNumber);
+            buffer.clear();
             return true;
         }
         // Exit function
         else if (buffer == "exit")
         {
             tokens.emplace_back(TokenType::Exit, lineNumber);
+            buffer.clear();
             return true;
         }
-
-        else // Invalid keyword or function name
+        else // Else identifier
         {
-            DY_LOG_ERROR("Invalid keyword or function name found at index: {0}, buffer = {1}", m_Index, buffer);
+            tokens.emplace_back(TokenType::Identifier, buffer, lineNumber);
+            buffer.clear();
+            return true;
         }
 
         return false;

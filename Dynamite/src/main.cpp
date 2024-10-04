@@ -4,6 +4,7 @@
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
 #include "Dynamite/Parsing/Parser.hpp"
+#include "Dynamite/Generator/Generator.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -76,12 +77,14 @@ int main(int argc, char* argv[])
 	DY_LOG_TRACE("-------------------------------------");
 	Parser::Print(program);
 
-	// TODO: Generate assembly
+	Generator generator(program);
+	std::string assembly = generator.Generate();
 
 	DY_LOG_TRACE("");
 	DY_LOG_TRACE("-------------------------------------");
 	DY_LOG_TRACE("-- Assembly generated");
 	DY_LOG_TRACE("-------------------------------------");
+	DY_LOG_TRACE("File generated: \n{0}", assembly);
 
 	return EXIT_SUCCESS;
 }
