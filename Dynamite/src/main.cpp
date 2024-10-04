@@ -59,11 +59,6 @@ int main(int argc, char* argv[])
 		contents = contentsStream.str();
 	}
 
-	constexpr const size_t MB = 2ull;
-	Pulse::Memory::ArenaAllocator allocator(MB * (1024 * 1024));
-
-
-
 	Tokenizer tokenizer(std::move(contents));
 	std::vector<Token> tokens = tokenizer.GetTokens();
 	
@@ -72,7 +67,7 @@ int main(int argc, char* argv[])
 	DY_LOG_TRACE("-------------------------------------");
 	Tokenizer::Print(tokens);
 
-	Parser parser(allocator, std::move(tokens));
+	Parser parser(std::move(tokens));
 	Nodes::Program program = parser.GetProgram();
 	
 	DY_LOG_TRACE("");

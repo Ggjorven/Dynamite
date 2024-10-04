@@ -16,7 +16,7 @@ namespace Dynamite
 	class Parser
 	{
 	public:
-		explicit Parser(Pulse::Memory::ArenaAllocator& allocator, const std::vector<Token>& tokens);
+		explicit Parser(const std::vector<Token>& tokens);
 		~Parser() = default;
 
 		Nodes::Program GetProgram();
@@ -24,8 +24,8 @@ namespace Dynamite
 		static void Print(const Nodes::Program& program);
 
 	public:
-		std::optional<Nodes::Expression> ParseExpression();
-		std::optional<Nodes::Statement> ParseStatement();
+		std::optional<Nodes::Expression*> ParseExpression();
+		std::optional<Nodes::Statement*> ParseStatement();
 
 	private:
 		// Returns the Token at m_Index + offset, if it is out of bounds it
@@ -36,8 +36,6 @@ namespace Dynamite
 		Token Consume();
 
 	private:
-		Pulse::Memory::ArenaAllocator& m_Allocator;
-
 		const std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
 	};

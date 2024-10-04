@@ -5,6 +5,9 @@
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
 
+#undef FMT_VERSION
+#include <Pulse/Enum/Enum.hpp>
+
 namespace Dynamite
 {
 
@@ -13,8 +16,8 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Main functions
 	/////////////////////////////////////////////////////////////////
-	Parser::Parser(Pulse::Memory::ArenaAllocator& allocator, const std::vector<Token>& tokens)
-		: m_Allocator(allocator), m_Tokens(tokens)
+	Parser::Parser(const std::vector<Token>& tokens)
+		: m_Tokens(tokens)
 	{
 	}
 
@@ -40,24 +43,24 @@ namespace Dynamite
 	void Parser::Print(const Nodes::Program& program)
 	{
 		for (const auto& statement : program.Statements)
-			DY_LOG_TRACE("[{0}] - {1}", Nodes::StatementToString(statement), Nodes::FormatStatementData(statement));
+			DY_LOG_TRACE("[{0}] - {1}", Pulse::Enum::Name(statement->StatementType), Nodes::FormatStatementData(*statement));
 	}
 
 	/////////////////////////////////////////////////////////////////
 	// Parsing functions
 	/////////////////////////////////////////////////////////////////
-	std::optional<Nodes::Expression> Parser::ParseExpression()
+	std::optional<Nodes::Expression*> Parser::ParseExpression()
 	{
 		if (PeekCheck(0, TokenType::Int64Literal))
-			return Nodes::Int64Literal { .TokenObject = Consume() };
-		
+			return Nodes::Expression::New(Nodes::Expression::Int64Literal::New(Consume()));
+
 		else if (PeekCheck(0, TokenType::Identifier))
-			return Nodes::Identifier { .TokenObject = Consume() };
+			return Nodes::Expression::New(Nodes::Expression::Identifier::New(Consume()));
 			
 		return {};
 	}
 
-	std::optional<Nodes::Statement> Parser::ParseStatement()
+	std::optional<Nodes::Statement*> Parser::ParseStatement()
 	{
 		/////////////////////////////////////////////////////////////////
 		// Exit statement
@@ -67,11 +70,11 @@ namespace Dynamite
 			Consume(); // Exit token
 			Consume(); // '(' token
 
-			Nodes::ExitStatement exitStatement = {};
+			Nodes::Statement::Exit* exitStatement = Nodes::Statement::Exit::New();
 
 			// Expression resolution
 			if (auto expr = ParseExpression())
-				exitStatement.ExpressionObject = expr.value();
+				exitStatement->ExpressionObj = expr.value();
 			else
 				DY_LOG_ERROR("Invalid expression.");
 
@@ -87,7 +90,7 @@ namespace Dynamite
 			else 
 				DY_LOG_ERROR("Expected `;`.");
 
-			return exitStatement;
+			return Nodes::Statement::New(exitStatement);
 		}
 		/////////////////////////////////////////////////////////////////
 		// Identifier
@@ -96,13 +99,13 @@ namespace Dynamite
 		{
 			Consume(); // 'let' token
 
-			Nodes::LetStatement letStatement = Nodes::LetStatement { .TokenObject = Consume() }; // identifier token
+			Nodes::Statement::Let* letStatement = Nodes::Statement::Let::New(Consume()); // Identifier token
 
 			Consume(); // '=' token
 
 			// Expression resolution
 			if (auto expr = ParseExpression())
-				letStatement.ExpressionObject = expr.value();
+				letStatement->ExpressionObj = expr.value();
 			else
 				DY_LOG_ERROR("Invalid expression.");
 
@@ -112,7 +115,7 @@ namespace Dynamite
 			else 
 				DY_LOG_ERROR("Expected `;`.");
 
-			return letStatement;
+			return Nodes::Statement::New(letStatement);
 		}
 		
 		return {};
