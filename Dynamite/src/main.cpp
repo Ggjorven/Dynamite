@@ -11,34 +11,6 @@
 
 using namespace Dynamite;
 
-// Temporary function
-std::string TokensToAsm(const std::vector<Token>& tokens)
-{
-	std::stringstream output;
-
-	output << "global _start\n_start:\n";
-
-	for (size_t i = 0; i < tokens.size(); i++) 
-	{
-		const Token& token = tokens.at(i);
-
-		if (token.Type == TokenType::Exit) 
-		{
-			if (i + 1 < tokens.size() && tokens.at(i + 1).Type == TokenType::Int64Literal) 
-			{
-				if (i + 2 < tokens.size() && tokens.at(i + 2).Type == TokenType::Semicolon) 
-				{
-					output << "    mov rax, 60\n";
-					output << "    mov rdi, " << tokens.at(i + 1).Value.value() << "\n";
-					output << "    syscall";
-				}
-			}
-		}
-	}
-
-	return output.str();
-}
-
 int main(int argc, char* argv[])
 {
 	Logger::Init();
@@ -68,23 +40,13 @@ int main(int argc, char* argv[])
 	DY_LOG_TRACE("-------------------------------------");
 	Tokenizer::Print(tokens);
 
-	Parser parser(std::move(tokens));
-	Nodes::Program program = parser.GetProgram();
-	
-	DY_LOG_TRACE("");
+	Parser parser(tokens);
+	Node::Program program = parser.GetProgram();
+
 	DY_LOG_TRACE("-------------------------------------");
 	DY_LOG_TRACE("-- Nodes created");
 	DY_LOG_TRACE("-------------------------------------");
 	Parser::Print(program);
-
-	Generator generator(program);
-	std::string assembly = generator.Generate();
-
-	DY_LOG_TRACE("");
-	DY_LOG_TRACE("-------------------------------------");
-	DY_LOG_TRACE("-- Assembly generated");
-	DY_LOG_TRACE("-------------------------------------");
-	DY_LOG_TRACE("File generated: \n{0}", assembly);
 
 	return EXIT_SUCCESS;
 }

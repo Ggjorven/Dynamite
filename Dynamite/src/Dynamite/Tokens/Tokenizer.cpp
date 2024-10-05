@@ -8,10 +8,10 @@
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
 
-#define PeekCheck(func) Peek().has_value() && func(Peek().value())
-
 namespace Dynamite
 {
+
+    #define PeekCheck(func) Peek().has_value() && func(Peek().value())
 
     /////////////////////////////////////////////////////////////////
     // Main functions
@@ -38,9 +38,9 @@ namespace Dynamite
                 while (PeekCheck(std::isalnum))
                     buffer.push_back(Consume());
 
-                HandleKeywords(buffer, tokens, lineNumber);
-
-                buffer.clear();
+                // If no type is found, try keywords.
+                if (!HandleTypes(buffer, tokens, lineNumber))
+                    HandleKeywords(buffer, tokens, lineNumber);
             }
 
             // Is number
@@ -52,10 +52,13 @@ namespace Dynamite
                 while (PeekCheck(std::isdigit))
                     buffer.push_back(Consume());
 
-                tokens.emplace_back(TokenType::Int64Literal, buffer, lineNumber);
+                // TODO: check if there a '.' and the make it float literal
+
+                tokens.emplace_back(TokenType::IntegerLiteral, buffer, lineNumber);
                 buffer.clear();
             }
 
+            // Handle operators and other chars
             else if (HandleChars(tokens, lineNumber))
                 continue;
 
@@ -104,30 +107,36 @@ namespace Dynamite
     /////////////////////////////////////////////////////////////////
     // Handling functions
     /////////////////////////////////////////////////////////////////
-    bool Tokenizer::HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
+    bool Tokenizer::HandleTypes(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
     {
-        // Variable declaration
-        if (buffer == "let")
-        {
-            tokens.emplace_back(TokenType::Let, lineNumber);
-            buffer.clear();
-            return true;
-        }
+        // Note: It's okay to use if instead of else if, since
+        // we return from the function if it has been found.
+        #define HandleType(tokenType)                           \
+            if (buffer == Pulse::Enum::Name(tokenType))         \
+            {                                                   \
+                tokens.emplace_back(tokenType, lineNumber);     \
+                buffer.clear();                                 \
+                return true;                                    \
+            }
+
+        HandleType(TokenType::Int64);
+
+        return false;
+    }
+
+    void Tokenizer::HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
+    {
         // Exit function
-        else if (buffer == "exit")
+        if (buffer == "exit")
         {
             tokens.emplace_back(TokenType::Exit, lineNumber);
             buffer.clear();
-            return true;
-        }
-        else // Else identifier
-        {
-            tokens.emplace_back(TokenType::Identifier, buffer, lineNumber);
-            buffer.clear();
-            return true;
+            return;
         }
 
-        return false;
+        // Else we say its an Identifier
+        tokens.emplace_back(TokenType::Identifier, buffer, lineNumber);
+        buffer.clear();
     }
 
     bool Tokenizer::HandleChars(std::vector<Token>& tokens, uint32_t& lineNumber)
@@ -142,11 +151,13 @@ namespace Dynamite
                 return true;                                    \
             }
 
+        // Signs
         CharOperator(';', TokenType::Semicolon);
         CharOperator('(', TokenType::OpenParenthesis);
         CharOperator(')', TokenType::CloseParenthesis);
         CharOperator('=', TokenType::Equals);
 
+        // Operators
         CharOperator('+', TokenType::Plus);
         CharOperator('-', TokenType::Minus);
         CharOperator('*', TokenType::Star);

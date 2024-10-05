@@ -18,17 +18,26 @@ namespace Dynamite
 		CloseParenthesis = ')',		// ')'
 		Equals = '=',				// '='
 
+		// Operators
 		Plus = '+',					// '+'
 		Minus = '-',				// '-'
 		Star = '*',					// '*'
 		Divide = '/',				// '/'
 
-		Identifier = 1,				// Variable name?
-		Let = 2,					// Variable declaration
-		Exit = 3,					// Exit from Program
+		// ...
+		Identifier = 1,				// Variable name
+		IntegerLiteral,
+		//FloatLiteral,
+		//CharLiteral,
+		//StringLiteral,
 
-		// Types
-		Int64Literal = 4,			// int64_t literal
+		Exit,						// Exit from Program
+
+		// Types (Name is literally what can be used in program)
+		//Int8,						// int8_t literal
+		//Int16,						// int16_t literal
+		//Int32,						// int32_t literal
+		Int64,						// int64_t literal
 	};
 
 	struct Token

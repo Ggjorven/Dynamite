@@ -1,4 +1,4 @@
-let x = 2;
-let y = 3;
+Int64 x = 100 + 9 + 8;
+Int64 y = 1000;
 
-exit(y);
+exit(x);

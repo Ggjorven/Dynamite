@@ -9,343 +9,131 @@
 #include <Pulse/Enum/Enum.hpp>
 
 #include <Pulse/Types/TypeUtils.hpp>
-#include <Pulse/Memory/ArenaAllocator.hpp>
 
-namespace Dynamite::Nodes
+namespace Dynamite::Node
 {
 
-	constexpr static const size_t s_MaxSize = 2ull * (1024 * 1024);
-	static Pulse::Memory::ArenaAllocator s_Allocator(s_MaxSize);
+	// This can change based on the Reference<T> type.
+	// Currently it's a pointer, so the _DEREFERENCE operator should be nothing
+	#define _DEREF 
 
-	
-	
+	namespace
+	{
+		constexpr static const size_t s_MaxSize = 2ull * (1024 * 1024); // 2 MB
+		static Pulse::Memory::DynamicArenaAllocator s_Allocator(s_MaxSize);
+	}
+
 	/////////////////////////////////////////////////////////////////
-	// Expression nodes
-	/////////////////////////////////////////////////////////////////
-	// New "operators"
-	Expression::Term::Int64Literal* Expression::Term::Int64Literal::New()
-	{
-		return s_Allocator.Construct<Int64Literal>();
-	}
-
-	Expression::Term::Int64Literal* Expression::Term::Int64Literal::New(const Token& token)
-	{
-		return s_Allocator.Construct<Int64Literal>(token);
-	}
-
-	Expression::Term::Identifier* Expression::Term::Identifier::New()
-	{
-		return s_Allocator.Construct<Identifier>();
-	}
-
-	Expression::Term::Identifier* Expression::Term::Identifier::New(const Token& token, VariableType variableType)
-	{
-		return s_Allocator.Construct<Identifier>(token, variableType);
-	}
-
-	Expression::Term* Expression::Term::New()
-	{
-		return s_Allocator.Construct<Term>();
-	}
-
-	Expression::Term* Expression::Term::New(Int64Literal* int64literal)
-	{
-		return s_Allocator.Construct<Term>(int64literal);
-	}
-
-	Expression::Term* Expression::Term::New(Identifier* identifier)
-	{
-		return s_Allocator.Construct<Term>(identifier);
-	}
-
-	Expression::Binary::Addition* Expression::Binary::Addition::New()
-	{
-		return s_Allocator.Construct<Addition>();
-	}
-
-	Expression::Binary::Addition* Expression::Binary::Addition::New(Expression* lhs, Expression* rhs)
-	{
-		return s_Allocator.Construct<Addition>(lhs, rhs);
-	}
-
-	Expression::Binary::Multiply* Expression::Binary::Multiply::New()
-	{
-		return s_Allocator.Construct<Multiply>();
-	}
-
-	Expression::Binary::Multiply* Expression::Binary::Multiply::New(Expression* lhs, Expression* rhs)
-	{
-		return s_Allocator.Construct<Multiply>(lhs, rhs);
-	}
-
-	Expression::Binary* Expression::Binary::New()
-	{
-		return s_Allocator.Construct<Binary>();
-	}
-
-	Expression::Binary* Expression::Binary::New(Addition* addition)
-	{
-		return s_Allocator.Construct<Binary>(addition);
-	}
-
-	Expression::Binary* Expression::Binary::New(Multiply* multiply)
-	{
-		return s_Allocator.Construct<Binary>(multiply);
-	}
-
-	Expression* Expression::New()
-	{
-		return s_Allocator.Construct<Expression>();
-	}
-
-	Expression* Expression::New(Term* term)
-	{
-		return s_Allocator.Construct<Expression>(term);
-	}
-
-	Expression* Expression::New(Binary* binary)
-	{
-		return s_Allocator.Construct<Expression>(binary);
-	}
-
-
-
 	// Constructors
-	Expression::Term::Int64Literal::Int64Literal(const Token& token)
-		: TokenObj(token)
-	{
-	}
+	/////////////////////////////////////////////////////////////////
+	IntegerLiteralTerm::IntegerLiteralTerm(const Token& token) : TokenObj(token) {}
+	
+	IdentifierTerm::IdentifierTerm(const Token& token) : TokenObj(token) {}
 
-	Expression::Term::Identifier::Identifier(const Token& token, VariableType variableType)
-		: TokenObj(token), ResultType(variableType)
-	{
-	}
+	TermExpr::TermExpr(Reference<IntegerLiteralTerm> integerLiteral) : TermObj(integerLiteral) {}
+	TermExpr::TermExpr(Reference<IdentifierTerm> identifier) : TermObj(identifier) {}
 
-	Expression::Term::Term(Int64Literal* int64literal)
-		: Int64LiteralObj(int64literal), ResultType(VariableType::Int64), TermType(Type::Int64Literal)
-	{
-	}
+	BinaryExpr::BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) : BinaryType(binaryType), LHS(lhs), RHS(rhs) {}
 
-	Expression::Term::Term(Identifier* identifier)
-		: IdentifierObj(identifier), ResultType(identifier->ResultType), TermType(Type::Int64Literal) // TODO: Support multiple times
-	{
-	}
+	Expression::Expression(Reference<TermExpr> term, ValueType type) : ExprObj(term), Type(type) {}
+	Expression::Expression(Reference<BinaryExpr> binary, ValueType type) : ExprObj(binary), Type(type) {}
 
-	Expression::Binary::Addition::Addition(Expression* lhs, Expression* rhs)
-		: LHS(lhs), RHS(rhs), ResultType(lhs->ResultType)
-	{
-	}
 
-	Expression::Binary::Multiply::Multiply(Expression* lhs, Expression* rhs)
-		: LHS(lhs), RHS(rhs), ResultType(lhs->ResultType)
-	{
-	}
 
-	Expression::Binary::Binary(Addition* addition)
-		: AdditionObj(addition), BinaryType(Expression::Binary::Type::Addition), ResultType(addition->LHS->ResultType)
-	{
-	}
+	VariableStatement::VariableStatement(const Token& token, Reference<Expression> expr) : TokenObj(token), ExprObj(expr) {}
 
-	Expression::Binary::Binary(Multiply* multiply)
-		: MultiplyObj(multiply), BinaryType(Expression::Binary::Type::Multiply), ResultType(multiply->LHS->ResultType)
-	{
-	}
+	ExitStatement::ExitStatement(Reference<Expression> expr) : ExprObj(expr) {}
 
-	Expression::Expression(Term* term)
-		: TermObj(term), ExpressionType(Type::Term), ResultType(term->ResultType)
-	{
-	}
-
-	Expression::Expression(Binary* binary)
-		: BinaryObj(binary), ExpressionType(Type::Binary), ResultType(binary->ResultType)
-	{
-	}
+	Statement::Statement(Reference<VariableStatement> var) : StatementObj(var) {}
+	Statement::Statement(Reference<ExitStatement> exit) : StatementObj(exit) {}
 
 	/////////////////////////////////////////////////////////////////
-	// Statement nodes
+	// Custom allocator functions
 	/////////////////////////////////////////////////////////////////
-	// New "operators"
-	Statement::Let* Statement::Let::New()
-	{
-		return s_Allocator.Construct<Let>();
-	}
+	Reference<IntegerLiteralTerm> IntegerLiteralTerm::New(const Token& token) { return _DEREF s_Allocator.Construct<IntegerLiteralTerm>(token); }
 
-	Statement::Let* Statement::Let::New(const Token& token, Expression* expression)
-	{
-		return s_Allocator.Construct<Let>(token, expression);
-	}
+	Reference<IdentifierTerm> IdentifierTerm::New(const Token& token) { return _DEREF s_Allocator.Construct<IdentifierTerm>(token); }
 
-	Statement::Exit* Statement::Exit::New()
-	{
-		return s_Allocator.Construct<Exit>();
-	}
+	Reference<TermExpr> TermExpr::New(Reference<IntegerLiteralTerm> integerLiteral) { return _DEREF s_Allocator.Construct<TermExpr>(integerLiteral); }
+	Reference<TermExpr> TermExpr::New(Reference<IdentifierTerm> identifier) { return _DEREF s_Allocator.Construct<TermExpr>(identifier); }
 
-	Statement::Exit* Statement::Exit::New(Expression* expression)
-	{
-		return s_Allocator.Construct<Exit>(expression);
-	}
+	Reference<BinaryExpr> BinaryExpr::New(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) { return _DEREF s_Allocator.Construct<BinaryExpr>(binaryType, lhs, rhs); }
 
-	Statement* Statement::New()
-	{
-		return s_Allocator.Construct<Statement>();
-	}
-
-	Statement* Statement::New(Let* let)
-	{
-		return s_Allocator.Construct<Statement>(let);
-	}
-
-	Statement* Statement::New(Exit* exit)
-	{
-		return s_Allocator.Construct<Statement>(exit);
-	}
+	Reference<Expression> Expression::New(Reference<TermExpr> term, ValueType type) { return _DEREF s_Allocator.Construct<Expression>(term, type); }
+	Reference<Expression> Expression::New(Reference<BinaryExpr> binary, ValueType type) { return _DEREF s_Allocator.Construct<Expression>(binary, type); }
 
 
 
-	// Constructors
-	Statement::Let::Let(const Token& token, Expression* expression)
-		: TokenObj(token), ExpressionObj(expression)
-	{
-	}
+	Reference<VariableStatement> VariableStatement::New(const Token& token, Reference<Expression> expr) { return _DEREF s_Allocator.Construct<VariableStatement>(token, expr); }
 
-	Statement::Exit::Exit(Expression* expression)
-		: ExpressionObj(expression)
-	{
-	}
+	Reference<ExitStatement> ExitStatement::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ExitStatement>(expr); }
 
-	Statement::Statement(Let* let)
-		: LetObj(let), StatementType(Type::Let)
-	{
-	}
-
-	Statement::Statement(Exit* exit)
-		: ExitObj(exit), StatementType(Type::Exit)
-	{
-	}
+	Reference<Statement> Statement::New(Reference<VariableStatement> var) { return _DEREF s_Allocator.Construct<Statement>(var); }
+	Reference<Statement> Statement::New(Reference<ExitStatement> exit) { return _DEREF s_Allocator.Construct<Statement>(exit); }
 
 	/////////////////////////////////////////////////////////////////
-	// Debug print function
+	// Member functions
 	/////////////////////////////////////////////////////////////////
-	// Note: This function has to be manually updated
-	std::string FormatExpressionData(const Expression& expr)
+	Token TermExpr::GetToken()
 	{
-		switch (expr.ExpressionType)
+		return std::visit([](auto&& obj) -> Token
 		{
-		case Expression::Type::Term:
+			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IntegerLiteralTerm>>)
+				return obj->TokenObj;
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
+				return obj->TokenObj;
+
+			return {};
+		}, TermObj);
+	}
+
+	/////////////////////////////////////////////////////////////////
+	// Helper functions
+	/////////////////////////////////////////////////////////////////
+	// Note: Has to be manually updated
+	std::string FormatExpressionData(const Reference<Expression> expr)
+	{
+		return std::visit([](auto&& obj) -> std::string
 		{
-			switch (expr.TermObj->TermType)
+			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<TermExpr>>)
 			{
-			case Expression::Term::Type::Int64Literal:	return Tokenizer::FormatToken(expr.TermObj->Int64LiteralObj->TokenObj);
-			case Expression::Term::Type::Identifier:	return Tokenizer::FormatToken(expr.TermObj->IdentifierObj->TokenObj);
+				return std::visit([](auto&& obj) -> std::string
+				{
+					if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IntegerLiteralTerm>>)
+						return Tokenizer::FormatToken(obj->TokenObj);
+					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
+						return Tokenizer::FormatToken(obj->TokenObj);
 
-			default:
-				DY_LOG_ERROR("Invalid Expression::Term::Type");
-				break;
+					return "Undefined Term Type";
+				}, obj->TermObj);
+			}
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<BinaryExpr>>)
+			{
+				return Pulse::Text::Format("(LHS: {0}, '{1}' RHS: {2})", FormatExpressionData(obj->LHS), (char)obj->BinaryType, FormatExpressionData(obj->RHS));
 			}
 
-			break;
-		}
-		case Expression::Type::Binary:			
-		{
-			switch (expr.BinaryObj->BinaryType)
-			{
-			// TODO: ...
-			case Expression::Binary::Type::Addition:	
-			case Expression::Binary::Type::Multiply:
+			return "Undefined Expression Data";
+		},
+		expr->ExprObj);
+	}
 
-			default:
-				DY_LOG_ERROR("Invalid Expression::Binary::Type");
-				break;
+	// Note: Has to be manually updated
+	std::string FormatStatementData(const Reference<Statement> statement)
+	{
+		return std::visit([](auto&& obj) -> std::string
+		{
+			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<VariableStatement>>)
+			{
+				return Pulse::Text::Format("{0}([{1}])", Tokenizer::FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
+			}
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ExitStatement>>)
+			{
+				return Pulse::Text::Format("{0}", FormatExpressionData(obj->ExprObj));
 			}
 
-			break;
-		}
-
-		default:
-			break;
-		}
-
-		DY_LOG_ERROR("Invalid Expression::Type");
-		return "Invalid Expression::Type";
-	}
-
-	// Note: This function has to be manually updated
-	std::string FormatStatementData(const Statement& statement)
-	{
-		switch (statement.StatementType)
-		{
-		case Statement::Type::Let:
-			return Pulse::Text::Format("{0}([{1}])", Tokenizer::FormatToken(statement.LetObj->TokenObj), FormatExpressionData(*(statement.LetObj->ExpressionObj)));
-		case Statement::Type::Exit:
-			return Pulse::Text::Format("{0}", FormatExpressionData(*(statement.ExitObj->ExpressionObj)));
-
-		default:
-			break;
-		}
-
-		DY_LOG_ERROR("Unnamed Statement::Type");
-		return "Unnamed Statement::Type";
-	}
-
-	/////////////////////////////////////////////////////////////////
-	// Helper variable functions
-	/////////////////////////////////////////////////////////////////
-	// Note: This function has to be manually updated
-	VariableType GetVariableType(TokenType tokenType)
-	{
-		switch (tokenType)
-		{
-		case TokenType::Int64Literal:                       return VariableType::Int64;
-
-		default:
-			break;
-		}
-
-		DY_LOG_ERROR("TokenType::{0}, VariableType has not been defined.", Pulse::Enum::Name(tokenType));
-		return VariableType::None;
-	}
-
-	// Note: This function has to be manually updated
-	VariableType GetVariableType(Nodes::Expression::Term::Type termType)
-	{
-		switch (termType)
-		{
-		case Nodes::Expression::Term::Type::Int64Literal:   return VariableType::Int64;
-
-		default:
-			break;
-		}
-
-		DY_LOG_ERROR("Expression::Term::Type::{0}, VariableType has not been defined.", Pulse::Enum::Name(termType));
-		return VariableType::None;
-	}
-
-	size_t VariableTypeSize(VariableType type)
-	{
-		switch (type)
-		{
-		case VariableType::Int64:     return sizeof(int64_t);
-
-		default:
-			break;
-		}
-
-		DY_LOG_ERROR("VariableType::{0}, size has not been defined.", Pulse::Enum::Name(type));
-		return 0;
-	}
-
-	std::string VariableTypeToASM(VariableType type)
-	{
-		switch (type)
-		{
-		case VariableType::Int64:     return "QWORD";
-
-		default:
-			break;
-		}
-
-		DY_LOG_ERROR("VariableType::{0}, ASM type has not been defined.", Pulse::Enum::Name(type));
-		return "Undefined ASM Type";
+			return "Undefined Statement Data";
+		},
+		statement->StatementObj);
 	}
 
 }

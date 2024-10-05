@@ -2,259 +2,215 @@
 
 #include "Dynamite/Tokens/Token.hpp"
 
+#include "Dynamite/Parsing/Variables.hpp"
+
+#include <Pulse/Memory/ArenaAllocator.hpp>
+
 #include <vector>
 #include <variant>
 #include <string>
+#include <functional>
 
-namespace Dynamite::Nodes
+namespace Dynamite::Node
 {
 
-	template<typename ...Types>
-	using Variant = std::variant<Types...>;
+    template<typename ...Types>
+    using Variant = std::variant<Types...>;
 
-    /////////////////////////////////////////////////////////////////
-    // Variable types
-    /////////////////////////////////////////////////////////////////
-    enum class VariableType : uint8_t
+    // Internal reference type.
+    template<typename T>
+    using Reference = T*;
+
+    constexpr const Reference<void> NullRef = nullptr;
+	
+	/////////////////////////////////////////////////////////////////
+	struct Expression;
+
+	// Expression types
+	struct TermExpr;
+	struct BinaryExpr;
+
+    // Term variants
+	struct IdentifierTerm;
+	struct IntegerLiteralTerm;
+	//struct FloatLiteralTerm;
+	//struct CharLiteralTerm;
+	//struct StringLiteralTerm;
+
+    // Binary is not a variant, since we just store the
+    // operator and the LHS & RHS, and can switch based on that.
+
+	struct Statement;
+
+	// Statement types
+	struct VariableStatement;
+	struct ExitStatement;
+	/////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////
+    struct IntegerLiteralTerm
     {
-        None = 0,
-        Int64,
+    private:
+        IntegerLiteralTerm(const Token& token);
+    
+    public:
+        Token TokenObj;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<IntegerLiteralTerm> New(const Token& token = {});
     };
 
+    struct IdentifierTerm
+    {
+    private:
+        IdentifierTerm(const Token& token);
+    
+    public:
+        Token TokenObj;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<IdentifierTerm> New(const Token& token = {});
+    };
+
+    struct TermExpr
+    {
+    private:
+        TermExpr(Reference<IntegerLiteralTerm> integerLiteral);
+        TermExpr(Reference<IdentifierTerm> identifier);
+
+    public:
+        Variant<Reference<IntegerLiteralTerm>, Reference<IdentifierTerm>> TermObj;
+
+        [[nodiscard]] Token GetToken();
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<TermExpr> New(Reference<IntegerLiteralTerm> integerLiteral = (Reference<IntegerLiteralTerm>)NullRef);
+        [[nodiscard]] static Reference<TermExpr> New(Reference<IdentifierTerm> identifier = (Reference<IdentifierTerm>)NullRef);
+    };
+	/////////////////////////////////////////////////////////////////
+
     /////////////////////////////////////////////////////////////////
-    // Expression nodes
+    struct BinaryExpr
+    {
+    public:
+        // TODO: Binary operators |, &, ^
+        enum class Type : uint8_t
+        {
+            None = 0,
+            Addition = TokenType::Plus,
+            Subtraction = TokenType::Minus,
+            Multiplication = TokenType::Star,
+            Division = TokenType::Divide,
+        };
+    private:
+        BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs);
+
+    public:
+        Type BinaryType;
+        Reference<Expression> LHS;
+        Reference<Expression> RHS;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<BinaryExpr> New(Type binaryType = Type::None, Reference<Expression> lhs = (Reference<Expression>)NullRef, Reference<Expression> rhs = (Reference<Expression>)NullRef);
+    };
+	/////////////////////////////////////////////////////////////////
+    
     /////////////////////////////////////////////////////////////////
     struct Expression
     {
-    public:
-        enum class Type : uint8_t { None = 0, Term, Binary };
-    public:
-        /////////////////////////////////////////////////////////////////
-        // Term
-        /////////////////////////////////////////////////////////////////
-        struct Term
-        {
-        public:
-            enum class Type : uint8_t { None = 0, Int64Literal, Identifier };
-        public:
-            struct Int64Literal
-            {
-            public:
-                Token TokenObj = {};
-
-            public:
-                Int64Literal() = default;
-                Int64Literal(const Token& token);
-                ~Int64Literal() = default;
-
-            public:
-                [[nodiscard]] static Int64Literal* New();
-                [[nodiscard]] static Int64Literal* New(const Token& token);
-            };
-
-            struct Identifier
-            {
-            public:
-                Token TokenObj = {};
-                VariableType ResultType = VariableType::None;
-
-            public:
-                Identifier() = default;
-                Identifier(const Token& token, VariableType variableType);
-                ~Identifier() = default;
-
-            public:
-                [[nodiscard]] static Identifier* New();
-                [[nodiscard]] static Identifier* New(const Token& token, VariableType variableType);
-            };
-
-        public:
-            Term() = default;
-            Term(Int64Literal* addition);
-            Term(Identifier* multiply);
-            ~Term() = default;
-
-        public:
-            [[nodiscard]] static Term* New();
-            [[nodiscard]] static Term* New(Int64Literal* int64literal);
-            [[nodiscard]] static Term* New(Identifier* identifier);
-
-        public:
-            Type TermType = Type::None;
-            VariableType ResultType = VariableType::None;
-
-            union
-            {
-                Int64Literal* Int64LiteralObj = nullptr;
-                Identifier* IdentifierObj;
-            };
-        };
-
-        /////////////////////////////////////////////////////////////////
-        // Binary
-        /////////////////////////////////////////////////////////////////
-        struct Binary
-        {
-        public:
-            enum class Type : uint8_t { None = 0, Addition, Multiply };
-        public:
-            struct Addition
-            {
-            public:
-                Expression* LHS = nullptr;
-                Expression* RHS = nullptr;
-                VariableType ResultType = VariableType::None;
-
-            public:
-                Addition() = default;
-                Addition(Expression* lhs, Expression* rhs);
-                ~Addition() = default;
-
-            public:
-                [[nodiscard]] static Addition* New();
-                [[nodiscard]] static Addition* New(Expression* lhs, Expression* rhs);
-            };
-
-            struct Multiply
-            {
-            public:
-                Expression* LHS = nullptr;
-                Expression* RHS = nullptr;
-                VariableType ResultType = VariableType::None;
-
-            public:
-                Multiply() = default;
-                Multiply(Expression* lhs, Expression* rhs);
-                ~Multiply() = default;
-
-            public:
-                [[nodiscard]] static Multiply* New();
-                [[nodiscard]] static Multiply* New(Expression* lhs, Expression* rhs);
-            };
-
-        public:
-            Binary() = default;
-            Binary(Addition* addition);
-            Binary(Multiply* multiply);
-            ~Binary() = default;
-
-        public:
-            [[nodiscard]] static Binary* New();
-            [[nodiscard]] static Binary* New(Addition* addition);
-            [[nodiscard]] static Binary* New(Multiply* multiply);
-
-        public:
-            Type BinaryType = Type::None;
-            VariableType ResultType = VariableType::None;
-
-            union
-            {
-                Addition* AdditionObj = nullptr;
-                Multiply* MultiplyObj;
-            };
-        };
+    private:
+        Expression(Reference<TermExpr> term, ValueType type);
+        Expression(Reference<BinaryExpr> binary, ValueType type);
 
     public:
-        Expression() = default;
-        Expression(Term* term);
-        Expression(Binary* binary);
-        ~Expression() = default;
+        ValueType Type;
+        Variant<Reference<TermExpr>, Reference<BinaryExpr>> ExprObj;
 
-    public:
-        [[nodiscard]] static Expression* New();
-        [[nodiscard]] static Expression* New(Term* term);
-        [[nodiscard]] static Expression* New(Binary* binary);
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-    public:
-        Type ExpressionType = Type::None;
-        VariableType ResultType = VariableType::None;
+        [[nodiscard]] static Reference<Expression> New(Reference<TermExpr> term = (Reference<TermExpr>)NullRef, ValueType type = ValueType::None);
+        [[nodiscard]] static Reference<Expression> New(Reference<BinaryExpr> binary = (Reference<BinaryExpr>)NullRef, ValueType type = ValueType::None);
+    };
+	/////////////////////////////////////////////////////////////////
 
-        union
-        {
-            Term* TermObj = nullptr;
-            Binary* BinaryObj;
-        };
-    }; // End of Expression
 
-    std::string FormatExpressionData(const Expression& expr);
 
-    /////////////////////////////////////////////////////////////////
-    // Statement nodes
-    /////////////////////////////////////////////////////////////////
-    struct Statement
+	/////////////////////////////////////////////////////////////////
+    struct VariableStatement
     {
-    public:
-        enum class Type : uint8_t { None = 0, Let, Exit };
-    public:
-        struct Let
-        {
-        public:
-            Token TokenObj = {};
-            Expression* ExpressionObj = nullptr;
-
-        public:
-            Let() = default;
-            Let(const Token& token, Expression* expression);
-            ~Let() = default;
-
-        public:
-            [[nodiscard]] static Let* New();
-            [[nodiscard]] static Let* New(const Token& token, Expression* expression = nullptr);
-        };
-
-        struct Exit // Currently takes in a Int64Literal
-        {
-        public:
-            Expression* ExpressionObj = nullptr;
-
-        public:
-            Exit() = default;
-            Exit(Expression* expression);
-            ~Exit() = default;
-
-        public:
-            [[nodiscard]] static Exit* New();
-            [[nodiscard]] static Exit* New(Expression* expression);
-        };
+    private:
+        VariableStatement(const Token& token, Reference<Expression> expr);
 
     public:
-        Statement() = default;
-        Statement(Let* let);
-        Statement(Exit* exit);
-        ~Statement() = default;
+        Token TokenObj;
+        Reference<Expression> ExprObj;
 
-    public:
-        [[nodiscard]] static Statement* New();
-        [[nodiscard]] static Statement* New(Let* let);
-        [[nodiscard]] static Statement* New(Exit* exit);
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-    public:
-        Type StatementType = Type::None;
-
-        union
-        {
-            Let* LetObj = nullptr;
-            Exit* ExitObj;
-        };
-    }; // End of statement
-
-    std::string FormatStatementData(const Statement& statement);
-
-    /////////////////////////////////////////////////////////////////
-    // Main program node
-    /////////////////////////////////////////////////////////////////
-    struct Program 
-    {
-    public:
-        std::vector<Statement*> Statements = { };
+        [[nodiscard]] static Reference<VariableStatement> New(const Token& token = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
     };
 
+    struct ExitStatement
+    {
+    private:
+        ExitStatement(Reference<Expression> expr);
+
+    public:
+        Reference<Expression> ExprObj;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<ExitStatement> New(Reference<Expression> expr = (Reference<Expression>)NullRef);
+    };
+
+    struct Statement
+    {
+    private:
+        Statement(Reference<VariableStatement> var);
+        Statement(Reference<ExitStatement> exit);
+
+    public:
+        Variant<Reference<VariableStatement>, Reference<ExitStatement>> StatementObj;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<Statement> New(Reference<VariableStatement> var = (Reference<VariableStatement>)NullRef);
+        [[nodiscard]] static Reference<Statement> New(Reference<ExitStatement> exit = (Reference<ExitStatement>)NullRef);
+    };
+	/////////////////////////////////////////////////////////////////
+    
+	/////////////////////////////////////////////////////////////////
+    struct Program
+    {
+    public:
+        std::vector<Reference<Statement>> Statements = { };
+    };
+	/////////////////////////////////////////////////////////////////
+
     /////////////////////////////////////////////////////////////////
-    // Variable helper functions
+    // Helper functions
     /////////////////////////////////////////////////////////////////
-    VariableType GetVariableType(TokenType tokenType);
-    VariableType GetVariableType(Nodes::Expression::Term::Type tokenType);
-    size_t VariableTypeSize(VariableType type);
-    std::string VariableTypeToASM(VariableType type);
+    std::string FormatExpressionData(const Reference<Expression> expr);
+    std::string FormatStatementData(const Reference<Statement> statement);
 
 }

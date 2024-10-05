@@ -20,13 +20,14 @@ namespace Dynamite
 		explicit Parser(const std::vector<Token>& tokens);
 		~Parser() = default;
 
-		Nodes::Program GetProgram();
+		Node::Program GetProgram();
 
-		static void Print(const Nodes::Program& program);
+		static void Print(const Node::Program& program);
 
 	public:
-		std::optional<Nodes::Expression*> ParseExpression();
-		std::optional<Nodes::Statement*> ParseStatement();
+		std::optional<Node::Reference<Node::TermExpr>> ParseTermExpr();
+		std::optional<Node::Reference<Node::Expression>> ParseExpr();
+		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
 	private:
 		// Returns the Token at m_Index + offset, if it is out of bounds it
@@ -35,14 +36,18 @@ namespace Dynamite
 
 		// Increments the index and returns the Token at m_Index
 		Token Consume();
-		Token TryConsume(TokenType tokenType, const std::string& msg = {});
-		std::optional<Token> TryConsume(TokenType tokenType);
+		Token CheckConsume(TokenType tokenType, const std::string& msg = {});
+		std::optional<Token> TryConsume(TokenType type);
+
+		bool PeekIsVariableType();
+		bool PeekIsBinaryOperator();
 
 	private:
 		const std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
 
-		std::unordered_map<std::string, Nodes::VariableType> m_IdentifierTypes = { };
+		// TODO: Add support for scopes
+		std::unordered_map<std::string, ValueType> m_SymbolTypes = { };
 	};
 
 }

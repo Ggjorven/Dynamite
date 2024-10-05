@@ -21,18 +21,16 @@ namespace Dynamite
 	{
 	}
 
-	Nodes::Program Parser::GetProgram()
+	Node::Program Parser::GetProgram()
 	{
-		Nodes::Program program = {};
+		Node::Program program = {};
 
 		// Parse statements
-		while (Peek().has_value()) 
+		while (Peek().has_value())
 		{
 			if (auto statement = ParseStatement())
 				program.Statements.emplace_back(statement.value());
-
-			// Failed to retrieve a valid statement
-			else
+			else // Failed to retrieve a valid statement
 				DY_LOG_ERROR("Failed to retrieve a valid statement.");
 		}
 
@@ -40,36 +38,61 @@ namespace Dynamite
 		return program;
 	}
 
-	void Parser::Print(const Nodes::Program& program)
+	void Parser::Print(const Node::Program& program)
 	{
 		for (const auto& statement : program.Statements)
-			DY_LOG_TRACE("[{0}] - {1}", Pulse::Enum::Name(statement->StatementType), Nodes::FormatStatementData(*statement));
+			DY_LOG_TRACE("{0}",  Node::FormatStatementData(statement));
 	}
 
 	/////////////////////////////////////////////////////////////////
 	// Parsing functions
 	/////////////////////////////////////////////////////////////////
-	std::optional<Nodes::Expression*> Parser::ParseExpression()
+	std::optional<Node::Reference<Node::TermExpr>> Parser::ParseTermExpr()
 	{
-		if (PeekCheck(0, TokenType::Int64Literal))
-		{
-			return Nodes::Expression::New(Nodes::Expression::Term::New(Nodes::Expression::Term::Int64Literal::New(Consume())));
-		}
-		else if (PeekCheck(0, TokenType::Identifier))
-		{
-			if (!m_IdentifierTypes.contains(Peek().value().Value.value()))
-			{
-				// TODO: Support multiple types
-				m_IdentifierTypes[Peek().value().Value.value()] = Nodes::VariableType::Int64;
-			}
+		if (auto integerLiteral = TryConsume(TokenType::IntegerLiteral))
+			return Node::TermExpr::New(Node::IntegerLiteralTerm::New(integerLiteral.value()));
+		else if (auto identifier = TryConsume(TokenType::Identifier))
+			return Node::TermExpr::New(Node::IdentifierTerm::New(identifier.value()));
+			
+		return {};
+	}
 
-			return Nodes::Expression::New(Nodes::Expression::Term::New(Nodes::Expression::Term::Identifier::New(Consume(), m_IdentifierTypes[Peek().value().Value.value()])));
+	std::optional<Node::Reference<Node::Expression>> Parser::ParseExpr()
+	{
+		if (auto term = ParseTermExpr()) 
+		{
+			ValueType type = static_cast<ValueType>(term.value()->GetToken().Type);
+			
+			// Check if Term is Binary expression
+			if (PeekIsBinaryOperator()) // Note: Takes type of LHS
+			{
+				Token op = Consume(); // Binary operator
+
+				auto binaryExpr = Node::BinaryExpr::New(static_cast<Node::BinaryExpr::Type>(op.Type));
+
+				auto lhs = Node::Expression::New(term.value(), type);
+				binaryExpr->LHS = lhs;
+
+				if (auto rhs = ParseExpr()) 
+				{
+					binaryExpr->RHS = rhs.value();
+					return Node::Expression::New(binaryExpr, type);
+				}
+
+				DY_LOG_ERROR("Expected expression.");
+				return {};
+			}
+			else // Else it's just a literal 
+			{
+				auto expr = Node::Expression::New(term.value(), type);
+				return expr;
+			}
 		}
 		
 		return {};
 	}
 
-	std::optional<Nodes::Statement*> Parser::ParseStatement()
+	std::optional<Node::Reference<Node::Statement>> Parser::ParseStatement()
 	{
 		/////////////////////////////////////////////////////////////////
 		// Exit statement
@@ -79,43 +102,46 @@ namespace Dynamite
 			Consume(); // Exit token
 			Consume(); // '(' token
 
-			Nodes::Statement::Exit* exitStatement = Nodes::Statement::Exit::New();
+			Node::Reference<Node::ExitStatement> exitStatement = Node::ExitStatement::New();
 
 			// Expression resolution
-			if (auto expr = ParseExpression())
-				exitStatement->ExpressionObj = expr.value();
+			if (auto expr = ParseExpr())
+				exitStatement->ExprObj = expr.value();
 			else
 				DY_LOG_ERROR("Invalid expression.");
 
 			// Close parenthesis ')' & semicolon `;` resolution
-			TryConsume(TokenType::CloseParenthesis, "Expected `)`.");
-			TryConsume(TokenType::Semicolon, "Expected `;`.");
+			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+			CheckConsume(TokenType::Semicolon, "Expected `;`.");
 
-			return Nodes::Statement::New(exitStatement);
+			return Node::Statement::New(exitStatement);
 		}
+
 		/////////////////////////////////////////////////////////////////
 		// Identifier
 		/////////////////////////////////////////////////////////////////
-		else if (PeekCheck(0, TokenType::Let) && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
+		else if (PeekIsVariableType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
 		{
-			Consume(); // 'let' token
+			Token variableType = Consume(); // Type token
+			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(Consume()); // Identifier token
 
-			Nodes::Statement::Let* letStatement = Nodes::Statement::Let::New(Consume()); // Identifier token
+			// Add type to global scope with name of variable
+			m_SymbolTypes[variable->TokenObj.Value.value()] = static_cast<ValueType>(variableType.Type);
 
 			Consume(); // '=' token
 
 			// Expression resolution
-			if (auto expr = ParseExpression())
-				letStatement->ExpressionObj = expr.value();
+			if (auto expr = ParseExpr())
+				variable->ExprObj = expr.value();
 			else
 				DY_LOG_ERROR("Invalid expression.");
 
 			// Semicolon ';' resolution
-			TryConsume(TokenType::Semicolon, "Expected `;`.");
+			CheckConsume(TokenType::Semicolon, "Expected `;`.");
 
-			return Nodes::Statement::New(letStatement);
+			return Node::Statement::New(variable);
 		}
-		
+
 		return {};
 	}
 
@@ -135,7 +161,7 @@ namespace Dynamite
 		return m_Tokens.at(m_Index++);
 	}
 
-	Token Parser::TryConsume(TokenType tokenType, const std::string& msg)
+	Token Parser::CheckConsume(TokenType tokenType, const std::string& msg)
 	{
 		if (PeekCheck(0, tokenType))
 			return Consume();
@@ -145,12 +171,43 @@ namespace Dynamite
 		return {};
 	}
 
-	std::optional<Token> Parser::TryConsume(TokenType tokenType)
+	std::optional<Token> Parser::TryConsume(TokenType type)
 	{
-		if (PeekCheck(0, tokenType))
+		if (Peek(0).has_value() && Peek(0).value().Type == type)
 			return Consume();
-
+			
 		return {};
+	}
+
+	// Note: Has to be manually updated
+	bool Parser::PeekIsVariableType()
+	{
+		if (!Peek(0).has_value())
+			return false;
+
+		#define CheckType(type) Peek(0).value().Type == type
+
+		bool result = false;
+		//result |= CheckType(TokenType::Int8);
+		//result |= CheckType(TokenType::Int16);
+		//result |= CheckType(TokenType::Int32);
+		result |= CheckType(TokenType::Int64);
+		
+		return result;
+	}
+
+	bool Parser::PeekIsBinaryOperator()
+	{
+		if (!Peek(0).has_value())
+			return false;
+
+		#define CheckOperator(op) Peek(0).value().Type == op
+
+		bool result = false;
+		result |= CheckOperator(TokenType::Plus);
+		// TODO: More operators
+
+		return result;
 	}
 
 }
