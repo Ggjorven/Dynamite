@@ -52,11 +52,20 @@ namespace Dynamite
 	std::optional<Nodes::Expression*> Parser::ParseExpression()
 	{
 		if (PeekCheck(0, TokenType::Int64Literal))
-			return Nodes::Expression::New(Nodes::Expression::Int64Literal::New(Consume()));
-
+		{
+			return Nodes::Expression::New(Nodes::Expression::Term::New(Nodes::Expression::Term::Int64Literal::New(Consume())));
+		}
 		else if (PeekCheck(0, TokenType::Identifier))
-			return Nodes::Expression::New(Nodes::Expression::Identifier::New(Consume()));
-			
+		{
+			if (!m_IdentifierTypes.contains(Peek().value().Value.value()))
+			{
+				// TODO: Support multiple types
+				m_IdentifierTypes[Peek().value().Value.value()] = Nodes::VariableType::Int64;
+			}
+
+			return Nodes::Expression::New(Nodes::Expression::Term::New(Nodes::Expression::Term::Identifier::New(Consume(), m_IdentifierTypes[Peek().value().Value.value()])));
+		}
+		
 		return {};
 	}
 
@@ -132,6 +141,14 @@ namespace Dynamite
 			return Consume();
 		else if (!msg.empty())
 			DY_LOG_ERROR(msg);
+
+		return {};
+	}
+
+	std::optional<Token> Parser::TryConsume(TokenType tokenType)
+	{
+		if (PeekCheck(0, tokenType))
+			return Consume();
 
 		return {};
 	}

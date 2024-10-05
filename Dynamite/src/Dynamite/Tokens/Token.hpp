@@ -18,6 +18,11 @@ namespace Dynamite
 		CloseParenthesis = ')',		// ')'
 		Equals = '=',				// '='
 
+		Plus = '+',					// '+'
+		Minus = '-',				// '-'
+		Star = '*',					// '*'
+		Divide = '/',				// '/'
+
 		Identifier = 1,				// Variable name?
 		Let = 2,					// Variable declaration
 		Exit = 3,					// Exit from Program

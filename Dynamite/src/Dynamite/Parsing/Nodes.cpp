@@ -5,6 +5,9 @@
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
 
+#undef FMT_VERSION
+#include <Pulse/Enum/Enum.hpp>
+
 #include <Pulse/Types/TypeUtils.hpp>
 #include <Pulse/Memory/ArenaAllocator.hpp>
 
@@ -20,24 +23,39 @@ namespace Dynamite::Nodes
 	// Expression nodes
 	/////////////////////////////////////////////////////////////////
 	// New "operators"
-	Expression::Int64Literal* Expression::Int64Literal::New()
+	Expression::Term::Int64Literal* Expression::Term::Int64Literal::New()
 	{
 		return s_Allocator.Construct<Int64Literal>();
 	}
 
-	Expression::Int64Literal* Expression::Int64Literal::New(const Token& token)
+	Expression::Term::Int64Literal* Expression::Term::Int64Literal::New(const Token& token)
 	{
 		return s_Allocator.Construct<Int64Literal>(token);
 	}
 
-	Expression::Identifier* Expression::Identifier::New()
+	Expression::Term::Identifier* Expression::Term::Identifier::New()
 	{
 		return s_Allocator.Construct<Identifier>();
 	}
 
-	Expression::Identifier* Expression::Identifier::New(const Token& token)
+	Expression::Term::Identifier* Expression::Term::Identifier::New(const Token& token, VariableType variableType)
 	{
-		return s_Allocator.Construct<Identifier>(token);
+		return s_Allocator.Construct<Identifier>(token, variableType);
+	}
+
+	Expression::Term* Expression::Term::New()
+	{
+		return s_Allocator.Construct<Term>();
+	}
+
+	Expression::Term* Expression::Term::New(Int64Literal* int64literal)
+	{
+		return s_Allocator.Construct<Term>(int64literal);
+	}
+
+	Expression::Term* Expression::Term::New(Identifier* identifier)
+	{
+		return s_Allocator.Construct<Term>(identifier);
 	}
 
 	Expression::Binary::Addition* Expression::Binary::Addition::New()
@@ -80,14 +98,9 @@ namespace Dynamite::Nodes
 		return s_Allocator.Construct<Expression>();
 	}
 
-	Expression* Expression::New(Int64Literal* int64literal)
+	Expression* Expression::New(Term* term)
 	{
-		return s_Allocator.Construct<Expression>(int64literal);
-	}
-
-	Expression* Expression::New(Identifier* identifier)
-	{
-		return s_Allocator.Construct<Expression>(identifier);
+		return s_Allocator.Construct<Expression>(term);
 	}
 
 	Expression* Expression::New(Binary* binary)
@@ -98,48 +111,53 @@ namespace Dynamite::Nodes
 
 
 	// Constructors
-	Expression::Int64Literal::Int64Literal(const Token& token)
+	Expression::Term::Int64Literal::Int64Literal(const Token& token)
 		: TokenObj(token)
 	{
 	}
 
-	Expression::Identifier::Identifier(const Token& token)
-		: TokenObj(token)
+	Expression::Term::Identifier::Identifier(const Token& token, VariableType variableType)
+		: TokenObj(token), ResultType(variableType)
+	{
+	}
+
+	Expression::Term::Term(Int64Literal* int64literal)
+		: Int64LiteralObj(int64literal), ResultType(VariableType::Int64), TermType(Type::Int64Literal)
+	{
+	}
+
+	Expression::Term::Term(Identifier* identifier)
+		: IdentifierObj(identifier), ResultType(identifier->ResultType), TermType(Type::Int64Literal) // TODO: Support multiple times
 	{
 	}
 
 	Expression::Binary::Addition::Addition(Expression* lhs, Expression* rhs)
-		: LHS(lhs), RHS(rhs)
+		: LHS(lhs), RHS(rhs), ResultType(lhs->ResultType)
 	{
 	}
 
 	Expression::Binary::Multiply::Multiply(Expression* lhs, Expression* rhs)
-		: LHS(lhs), RHS(rhs)
+		: LHS(lhs), RHS(rhs), ResultType(lhs->ResultType)
 	{
 	}
 
 	Expression::Binary::Binary(Addition* addition)
-		: AdditionObj(addition), BinaryType(Expression::Binary::Type::Addition)
+		: AdditionObj(addition), BinaryType(Expression::Binary::Type::Addition), ResultType(addition->LHS->ResultType)
 	{
 	}
 
 	Expression::Binary::Binary(Multiply* multiply)
-		: MultiplyObj(multiply), BinaryType(Expression::Binary::Type::Multiply)
+		: MultiplyObj(multiply), BinaryType(Expression::Binary::Type::Multiply), ResultType(multiply->LHS->ResultType)
 	{
 	}
 
-	Expression::Expression(Int64Literal* int64literal)
-		: Int64LiteralObj(int64literal), ExpressionType(Type::Int64Literal)
-	{
-	}
-
-	Expression::Expression(Identifier* identifier)
-		: IdentifierObj(identifier), ExpressionType(Type::Identifier)
+	Expression::Expression(Term* term)
+		: TermObj(term), ExpressionType(Type::Term), ResultType(term->ResultType)
 	{
 	}
 
 	Expression::Expression(Binary* binary)
-		: BinaryObj(binary), ExpressionType(Type::Binary)
+		: BinaryObj(binary), ExpressionType(Type::Binary), ResultType(binary->ResultType)
 	{
 	}
 
@@ -213,17 +231,41 @@ namespace Dynamite::Nodes
 	{
 		switch (expr.ExpressionType)
 		{
-		case Expression::Type::Int64Literal:
-			return Tokenizer::FormatToken(expr.Int64LiteralObj->TokenObj);
-		case Expression::Type::Identifier:		
-			return Tokenizer::FormatToken(expr.IdentifierObj->TokenObj);
+		case Expression::Type::Term:
+		{
+			switch (expr.TermObj->TermType)
+			{
+			case Expression::Term::Type::Int64Literal:	return Tokenizer::FormatToken(expr.TermObj->Int64LiteralObj->TokenObj);
+			case Expression::Term::Type::Identifier:	return Tokenizer::FormatToken(expr.TermObj->IdentifierObj->TokenObj);
+
+			default:
+				DY_LOG_ERROR("Invalid Expression::Term::Type");
+				break;
+			}
+
+			break;
+		}
 		case Expression::Type::Binary:			
-			return "TODO: ...";
+		{
+			switch (expr.BinaryObj->BinaryType)
+			{
+			// TODO: ...
+			case Expression::Binary::Type::Addition:	
+			case Expression::Binary::Type::Multiply:
+
+			default:
+				DY_LOG_ERROR("Invalid Expression::Binary::Type");
+				break;
+			}
+
+			break;
+		}
 
 		default:
 			break;
 		}
 
+		DY_LOG_ERROR("Invalid Expression::Type");
 		return "Invalid Expression::Type";
 	}
 
@@ -241,7 +283,69 @@ namespace Dynamite::Nodes
 			break;
 		}
 
+		DY_LOG_ERROR("Unnamed Statement::Type");
 		return "Unnamed Statement::Type";
+	}
+
+	/////////////////////////////////////////////////////////////////
+	// Helper variable functions
+	/////////////////////////////////////////////////////////////////
+	// Note: This function has to be manually updated
+	VariableType GetVariableType(TokenType tokenType)
+	{
+		switch (tokenType)
+		{
+		case TokenType::Int64Literal:                       return VariableType::Int64;
+
+		default:
+			break;
+		}
+
+		DY_LOG_ERROR("TokenType::{0}, VariableType has not been defined.", Pulse::Enum::Name(tokenType));
+		return VariableType::None;
+	}
+
+	// Note: This function has to be manually updated
+	VariableType GetVariableType(Nodes::Expression::Term::Type termType)
+	{
+		switch (termType)
+		{
+		case Nodes::Expression::Term::Type::Int64Literal:   return VariableType::Int64;
+
+		default:
+			break;
+		}
+
+		DY_LOG_ERROR("Expression::Term::Type::{0}, VariableType has not been defined.", Pulse::Enum::Name(termType));
+		return VariableType::None;
+	}
+
+	size_t VariableTypeSize(VariableType type)
+	{
+		switch (type)
+		{
+		case VariableType::Int64:     return sizeof(int64_t);
+
+		default:
+			break;
+		}
+
+		DY_LOG_ERROR("VariableType::{0}, size has not been defined.", Pulse::Enum::Name(type));
+		return 0;
+	}
+
+	std::string VariableTypeToASM(VariableType type)
+	{
+		switch (type)
+		{
+		case VariableType::Int64:     return "QWORD";
+
+		default:
+			break;
+		}
+
+		DY_LOG_ERROR("VariableType::{0}, ASM type has not been defined.", Pulse::Enum::Name(type));
+		return "Undefined ASM Type";
 	}
 
 }

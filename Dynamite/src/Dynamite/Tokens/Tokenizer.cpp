@@ -62,9 +62,6 @@ namespace Dynamite
             // Invalid token
             else
             {
-                if (Peek().value() == '\n' || Peek().value() == '\r')
-                    DY_LOG_ERROR("newline");
-
                 DY_LOG_ERROR("Invalid token found at index: {0}, Buffer = {1}", m_Index, buffer);
                 buffer.clear();
             }
@@ -135,44 +132,35 @@ namespace Dynamite
 
     bool Tokenizer::HandleChars(std::vector<Token>& tokens, uint32_t& lineNumber)
     {
-        // Semicolon
-        if (Peek().value() == ';')
-        {
-            Consume();
-            tokens.emplace_back(TokenType::Semicolon, lineNumber);
-            return true;
-        }
-        // Open parenthesis
-        else if (Peek().value() == '(')
-        {
-            Consume();
-            tokens.emplace_back(TokenType::OpenParenthesis, lineNumber);
-            return true;
-        }
-        // Close parenthesis
-        else if (Peek().value() == ')')
-        {
-            Consume();
-            tokens.emplace_back(TokenType::CloseParenthesis, lineNumber);
-            return true;
-        }
-        // Equals
-        else if (Peek().value() == '=')
-        {
-            Consume();
-            tokens.emplace_back(TokenType::Equals, lineNumber);
-            return true;
-        }
+        // Note: It's okay to use if instead of else if, since
+        // we return from the function if it has been found.
+        #define CharOperator(c, tokenType)                      \
+            if (Peek().value() == c)                            \
+            {                                                   \
+                Consume();                                      \
+                tokens.emplace_back(tokenType, lineNumber);     \
+                return true;                                    \
+            }
+
+        CharOperator(';', TokenType::Semicolon);
+        CharOperator('(', TokenType::OpenParenthesis);
+        CharOperator(')', TokenType::CloseParenthesis);
+        CharOperator('=', TokenType::Equals);
+
+        CharOperator('+', TokenType::Plus);
+        CharOperator('-', TokenType::Minus);
+        CharOperator('*', TokenType::Star);
+        CharOperator('/', TokenType::Divide);
 
         // Newline (for incrementing)
-        else if (Peek().value() == '\n' || Peek().value() == '\r')
+        if (Peek().value() == '\n' || Peek().value() == '\r')
         {
             Consume();
             lineNumber++;
             return true;
         }
         // Space
-        else if (std::isspace(Peek().value()))
+        if (std::isspace(Peek().value()))
         {
             Consume();
             return true;

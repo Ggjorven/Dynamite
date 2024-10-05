@@ -7,21 +7,14 @@
 namespace Dynamite
 {
 
-	enum class VariableType : uint8_t
-	{
-		None = 0, 
-		Int64,
-	};
-	VariableType GetVariableType(TokenType tokenType);
-	VariableType GetVariableType(Nodes::Expression::Type exprType);
-	size_t VariableTypeSize(VariableType type);
-	std::string VariableTypeToASM(VariableType type);
-
 	class Generator
 	{
 	public:
 		explicit Generator(const Nodes::Program& program);
 		~Generator() = default;
+
+		void GenerateTerm(std::stringstream& output, const Nodes::Expression::Term* term);
+		void GenerateBinary(std::stringstream& output, const Nodes::Expression::Binary* binary);
 
 		void GenerateExpression(std::stringstream& output, const Nodes::Expression* expr);
 		void GenerateStatement(std::stringstream& output, const Nodes::Statement* statement);
@@ -37,7 +30,7 @@ namespace Dynamite
 		struct Variable
 		{
 		public:
-			VariableType Type = VariableType::None;
+			Nodes::VariableType Type = Nodes::VariableType::None;
 			size_t StackLocation = 0;
 		};
 

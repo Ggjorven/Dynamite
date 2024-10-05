@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <vector>
 #include <optional>
+#include <unordered_map>
 
 namespace Dynamite
 {
@@ -35,10 +36,13 @@ namespace Dynamite
 		// Increments the index and returns the Token at m_Index
 		Token Consume();
 		Token TryConsume(TokenType tokenType, const std::string& msg = {});
+		std::optional<Token> TryConsume(TokenType tokenType);
 
 	private:
 		const std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
+
+		std::unordered_map<std::string, Nodes::VariableType> m_IdentifierTypes = { };
 	};
 
 }

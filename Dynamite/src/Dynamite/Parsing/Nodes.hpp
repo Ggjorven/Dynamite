@@ -13,43 +13,86 @@ namespace Dynamite::Nodes
 	using Variant = std::variant<Types...>;
 
     /////////////////////////////////////////////////////////////////
+    // Variable types
+    /////////////////////////////////////////////////////////////////
+    enum class VariableType : uint8_t
+    {
+        None = 0,
+        Int64,
+    };
+
+    /////////////////////////////////////////////////////////////////
     // Expression nodes
     /////////////////////////////////////////////////////////////////
     struct Expression
     {
     public:
-        enum class Type : uint8_t { None = 0, Int64Literal, Identifier, Binary };
+        enum class Type : uint8_t { None = 0, Term, Binary };
     public:
-        struct Int64Literal
+        /////////////////////////////////////////////////////////////////
+        // Term
+        /////////////////////////////////////////////////////////////////
+        struct Term
         {
         public:
-            Token TokenObj = {};
+            enum class Type : uint8_t { None = 0, Int64Literal, Identifier };
+        public:
+            struct Int64Literal
+            {
+            public:
+                Token TokenObj = {};
+
+            public:
+                Int64Literal() = default;
+                Int64Literal(const Token& token);
+                ~Int64Literal() = default;
+
+            public:
+                [[nodiscard]] static Int64Literal* New();
+                [[nodiscard]] static Int64Literal* New(const Token& token);
+            };
+
+            struct Identifier
+            {
+            public:
+                Token TokenObj = {};
+                VariableType ResultType = VariableType::None;
+
+            public:
+                Identifier() = default;
+                Identifier(const Token& token, VariableType variableType);
+                ~Identifier() = default;
+
+            public:
+                [[nodiscard]] static Identifier* New();
+                [[nodiscard]] static Identifier* New(const Token& token, VariableType variableType);
+            };
 
         public:
-            Int64Literal() = default;
-            Int64Literal(const Token& token);
-            ~Int64Literal() = default;
+            Term() = default;
+            Term(Int64Literal* addition);
+            Term(Identifier* multiply);
+            ~Term() = default;
 
         public:
-            [[nodiscard]] static Int64Literal* New();
-            [[nodiscard]] static Int64Literal* New(const Token& token);
+            [[nodiscard]] static Term* New();
+            [[nodiscard]] static Term* New(Int64Literal* int64literal);
+            [[nodiscard]] static Term* New(Identifier* identifier);
+
+        public:
+            Type TermType = Type::None;
+            VariableType ResultType = VariableType::None;
+
+            union
+            {
+                Int64Literal* Int64LiteralObj = nullptr;
+                Identifier* IdentifierObj;
+            };
         };
 
-        struct Identifier
-        {
-        public:
-            Token TokenObj = {};
-
-        public:
-            Identifier() = default;
-            Identifier(const Token& token);
-            ~Identifier() = default;
-
-        public:
-            [[nodiscard]] static Identifier* New();
-            [[nodiscard]] static Identifier* New(const Token& token);
-        };
-
+        /////////////////////////////////////////////////////////////////
+        // Binary
+        /////////////////////////////////////////////////////////////////
         struct Binary
         {
         public:
@@ -60,6 +103,7 @@ namespace Dynamite::Nodes
             public:
                 Expression* LHS = nullptr;
                 Expression* RHS = nullptr;
+                VariableType ResultType = VariableType::None;
 
             public:
                 Addition() = default;
@@ -76,6 +120,7 @@ namespace Dynamite::Nodes
             public:
                 Expression* LHS = nullptr;
                 Expression* RHS = nullptr;
+                VariableType ResultType = VariableType::None;
 
             public:
                 Multiply() = default;
@@ -100,6 +145,7 @@ namespace Dynamite::Nodes
 
         public:
             Type BinaryType = Type::None;
+            VariableType ResultType = VariableType::None;
 
             union
             {
@@ -110,24 +156,22 @@ namespace Dynamite::Nodes
 
     public:
         Expression() = default;
-        Expression(Int64Literal* int64literal);
-        Expression(Identifier* identifier);
+        Expression(Term* term);
         Expression(Binary* binary);
         ~Expression() = default;
 
     public:
         [[nodiscard]] static Expression* New();
-        [[nodiscard]] static Expression* New(Int64Literal* int64literal);
-        [[nodiscard]] static Expression* New(Identifier* identifier);
+        [[nodiscard]] static Expression* New(Term* term);
         [[nodiscard]] static Expression* New(Binary* binary);
 
     public:
         Type ExpressionType = Type::None;
+        VariableType ResultType = VariableType::None;
 
         union
         {
-            Int64Literal* Int64LiteralObj = nullptr;
-            Identifier* IdentifierObj;
+            Term* TermObj = nullptr;
             Binary* BinaryObj;
         };
     }; // End of Expression
@@ -205,5 +249,12 @@ namespace Dynamite::Nodes
         std::vector<Statement*> Statements = { };
     };
 
+    /////////////////////////////////////////////////////////////////
+    // Variable helper functions
+    /////////////////////////////////////////////////////////////////
+    VariableType GetVariableType(TokenType tokenType);
+    VariableType GetVariableType(Nodes::Expression::Term::Type tokenType);
+    size_t VariableTypeSize(VariableType type);
+    std::string VariableTypeToASM(VariableType type);
 
 }

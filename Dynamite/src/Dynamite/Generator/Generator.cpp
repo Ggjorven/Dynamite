@@ -5,9 +5,6 @@
 
 #include <Pulse/Text/Format.hpp>
 
-#undef FMT_VERSION
-#include <Pulse/Enum/Enum.hpp>
-
 namespace Dynamite
 {
 
@@ -16,26 +13,76 @@ namespace Dynamite
     {
     }
 
+    void Generator::GenerateTerm(std::stringstream& output, const Nodes::Expression::Term* term)
+    {
+        switch (term->TermType)
+        {
+        case Nodes::Expression::Term::Type::Int64Literal:
+        {
+            output << "\tmov rax, " << term->Int64LiteralObj->TokenObj.Value.value() << "\n";
+            Push(output, "rax", VariableTypeSize(GetVariableType(term->TermType)));
+            break;
+        }
+        case Nodes::Expression::Term::Type::Identifier:
+        {
+            if (!m_Variables.contains(term->IdentifierObj->TokenObj.Value.value()))
+            {
+                DY_LOG_ERROR("Use of undeclared identifier '{0}', line: {1}", term->IdentifierObj->TokenObj.Value.value(), term->IdentifierObj->TokenObj.LineNumber);
+                break;
+            }
+
+            const auto& var = m_Variables.at(term->IdentifierObj->TokenObj.Value.value());
+            Push(output, Pulse::Text::Format("{0} [rsp + {1}]", VariableTypeToASM(var.Type), (m_StackSize - var.StackLocation) - VariableTypeSize(var.Type)), VariableTypeSize(var.Type));
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+    void Generator::GenerateBinary(std::stringstream& output, const Nodes::Expression::Binary* binary)
+    {
+        switch (binary->BinaryType)
+        {
+        case Nodes::Expression::Binary::Type::Addition:
+        {
+            GenerateExpression(output, binary->AdditionObj->LHS);
+            GenerateExpression(output, binary->AdditionObj->RHS);
+
+            Pop(output, "rax", Nodes::VariableTypeSize(binary->AdditionObj->LHS->ResultType)); 
+            Pop(output, "rbx", Nodes::VariableTypeSize(binary->AdditionObj->RHS->ResultType)); 
+            
+            output << "    add rax, rbx\n";
+            
+            // Push result on to the stack
+            Push(output, "rax", Nodes::VariableTypeSize(binary->AdditionObj->LHS->ResultType));
+            break;
+        }
+        case Nodes::Expression::Binary::Type::Multiply:
+        {
+            // TODO: ...
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+    // Note to self: Adds expression/variable to stack temporarily or permanently
     void Generator::GenerateExpression(std::stringstream& output, const Nodes::Expression* expr)
     {
         switch (expr->ExpressionType)
         {
-        case Nodes::Expression::Type::Int64Literal:
+        case Nodes::Expression::Type::Term:
         {
-            output << "\tmov rax, " << expr->Int64LiteralObj->TokenObj.Value.value() << "\n";
-            Push(output, "rax", VariableTypeSize(GetVariableType(expr->ExpressionType)));
+            GenerateTerm(output, expr->TermObj);
             break;
         }
-        case Nodes::Expression::Type::Identifier:
+        case Nodes::Expression::Type::Binary:
         {
-            if (!m_Variables.contains(expr->IdentifierObj->TokenObj.Value.value()))
-            {
-                DY_LOG_ERROR("Use of undeclared identifier '{0}', line: {1}", expr->IdentifierObj->TokenObj.Value.value(), expr->IdentifierObj->TokenObj.LineNumber);
-                break;
-            }
-            
-            const auto& var = m_Variables.at(expr->IdentifierObj->TokenObj.Value.value());
-            Push(output, Pulse::Text::Format("{0} [rsp + {1}]", VariableTypeToASM(var.Type), (m_StackSize - var.StackLocation) - VariableTypeSize(var.Type)), VariableTypeSize(var.Type));
+            GenerateBinary(output, expr->BinaryObj);
             break;
         }
 
@@ -52,7 +99,7 @@ namespace Dynamite
         {
             GenerateExpression(output, statement->ExitObj->ExpressionObj);
             output << "\tmov rax, 60\n";
-            Pop(output, "rdi", VariableTypeSize(GetVariableType(Nodes::Expression::Type::Int64Literal)));
+            Pop(output, "rdi", Nodes::VariableTypeSize(statement->ExitObj->ExpressionObj->ResultType));
             output << "\tsyscall\n";
             break;
         }
@@ -68,7 +115,7 @@ namespace Dynamite
             m_Variables.insert({ 
                 statement->LetObj->TokenObj.Value.value(), 
                 Variable { 
-                    .Type = GetVariableType(statement->LetObj->ExpressionObj->IdentifierObj->TokenObj.Type),
+                    .Type = statement->LetObj->ExpressionObj->ResultType,
                     .StackLocation = m_StackSize 
                 } 
             });
@@ -108,64 +155,6 @@ namespace Dynamite
     {
         output << "\tpop " << reg << "\n";
         m_StackSize -= size;
-    }
-
-
-
-    VariableType GetVariableType(TokenType tokenType)
-    {
-        switch (tokenType)
-        {
-        case TokenType::Int64Literal:                   return VariableType::Int64;
-
-        default:
-            break;
-        }
-
-        DY_LOG_ERROR("TokenType::{0}, VariableType has not been defined.", Pulse::Enum::Name(tokenType));
-        return VariableType::None;
-    }
-
-    VariableType GetVariableType(Nodes::Expression::Type exprType)
-    {
-        switch (exprType)
-        {
-        case Nodes::Expression::Type::Int64Literal:     return VariableType::Int64;
-
-        default:
-            break;
-        }
-
-        DY_LOG_ERROR("Expression::Type::{0}, VariableType has not been defined.", Pulse::Enum::Name(exprType));
-        return VariableType::None;
-    }
-
-    size_t VariableTypeSize(VariableType type)
-    {
-        switch (type)
-        {
-        case VariableType::Int64:     return sizeof(int64_t);
-        
-        default:
-            break;
-        }
-
-        DY_LOG_ERROR("VariableType::{0}, size has not been defined.", Pulse::Enum::Name(type));
-        return 0;
-    }
-
-    std::string VariableTypeToASM(VariableType type)
-    {
-        switch (type)
-        {
-        case VariableType::Int64:     return "QWORD";
-
-        default:
-            break;
-        }
-
-        DY_LOG_ERROR("VariableType::{0}, ASM type has not been defined.", Pulse::Enum::Name(type));
-        return "Undefined ASM Type";
     }
 
 }
