@@ -39,8 +39,12 @@ namespace Dynamite
 		Token CheckConsume(TokenType tokenType, const std::string& msg = {});
 		std::optional<Token> TryConsume(TokenType type);
 
+		std::optional<Token> TryConsumeLiteral();
+
 		bool PeekIsVariableType();
 		bool PeekIsBinaryOperator();
+
+		ValueType GetValueType(TokenType literalType, const std::string& value);
 
 	private:
 		const std::vector<Token>& m_Tokens;

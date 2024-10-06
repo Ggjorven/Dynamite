@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
 	DY_LOG_TRACE("-- Tokens found");
 	DY_LOG_TRACE("-------------------------------------");
 	Tokenizer::Print(tokens);
+	DY_LOG_TRACE("-------------------------------------\n");
 
 	Parser parser(tokens);
 	Node::Program program = parser.GetProgram();
@@ -47,6 +48,7 @@ int main(int argc, char* argv[])
 	DY_LOG_TRACE("-- Nodes created");
 	DY_LOG_TRACE("-------------------------------------");
 	Parser::Print(program);
+	DY_LOG_TRACE("-------------------------------------\n");
 
 	return EXIT_SUCCESS;
 }

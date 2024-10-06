@@ -13,6 +13,24 @@ namespace Dynamite
 
     #define PeekCheck(func) Peek().has_value() && func(Peek().value())
 
+    namespace
+    {
+        static bool IsAlpha(char c)
+        {
+            return (std::isalpha(c) || c == '_');
+        }
+
+        static bool IsNumeric(char c)
+        {
+            return std::isdigit(c);
+        }
+
+        static bool IsAlphaNumeric(char c)
+        {
+            return IsAlpha(c) || IsNumeric(c);
+        }
+    }
+
     /////////////////////////////////////////////////////////////////
     // Main functions
     /////////////////////////////////////////////////////////////////
@@ -27,15 +45,15 @@ namespace Dynamite
         std::string buffer = {};
         uint32_t lineNumber = 1;
 
-        while (Peek().has_value())
+        while (Peek(0).has_value())
         {
             // Is alphabetic
-            if (PeekCheck(std::isalpha))
+            if (PeekCheck(IsAlpha))
             {
                 buffer.push_back(Consume());
 
                 // While is alphabetic or a number, keep reading
-                while (PeekCheck(std::isalnum))
+                while (PeekCheck(IsAlphaNumeric))
                     buffer.push_back(Consume());
 
                 // If no type is found, try keywords.
@@ -44,12 +62,12 @@ namespace Dynamite
             }
 
             // Is number
-            else if (PeekCheck(std::isdigit))
+            else if (PeekCheck(IsNumeric))
             {
                 buffer.push_back(Consume());
 
                 // While still a numeric value, keep reading
-                while (PeekCheck(std::isdigit))
+                while (PeekCheck(IsNumeric))
                     buffer.push_back(Consume());
 
                 // TODO: check if there a '.' and the make it float literal
@@ -119,7 +137,23 @@ namespace Dynamite
                 return true;                                    \
             }
 
+        HandleType(TokenType::Bool);
+
+        HandleType(TokenType::Int8);
+        HandleType(TokenType::Int16);
+        HandleType(TokenType::Int32);
         HandleType(TokenType::Int64);
+
+        HandleType(TokenType::UInt8);
+        HandleType(TokenType::UInt16);
+        HandleType(TokenType::UInt32);
+        HandleType(TokenType::UInt64);
+
+        HandleType(TokenType::Float32);
+        HandleType(TokenType::Float64);
+
+        HandleType(TokenType::Char);
+        HandleType(TokenType::String);
 
         return false;
     }

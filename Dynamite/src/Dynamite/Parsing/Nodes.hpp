@@ -32,10 +32,7 @@ namespace Dynamite::Node
 
     // Term variants
 	struct IdentifierTerm;
-	struct IntegerLiteralTerm;
-	//struct FloatLiteralTerm;
-	//struct CharLiteralTerm;
-	//struct StringLiteralTerm;
+	struct LiteralTerm;
 
     // Binary is not a variant, since we just store the
     // operator and the LHS & RHS, and can switch based on that.
@@ -48,19 +45,30 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////
-    struct IntegerLiteralTerm
+    struct LiteralTerm
     {
+    public:
+        enum class Type : uint8_t
+        {
+            None = 0,
+            Bool = TokenType::BoolLiteral,
+            Integer = TokenType::IntegerLiteral,
+            Float = TokenType::FloatLiteral,
+            Char = TokenType::CharLiteral,
+            String = TokenType::StringLiteral,
+        };
     private:
-        IntegerLiteralTerm(const Token& token);
+        LiteralTerm(Type literalType, const Token& token);
     
     public:
+        Type LiteralType;
         Token TokenObj;
 
     public: // Custom allocator functions.
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<IntegerLiteralTerm> New(const Token& token = {});
+        [[nodiscard]] static Reference<LiteralTerm> New(Type literalType = Type::None, const Token& token = {});
     };
 
     struct IdentifierTerm
@@ -81,11 +89,11 @@ namespace Dynamite::Node
     struct TermExpr
     {
     private:
-        TermExpr(Reference<IntegerLiteralTerm> integerLiteral);
+        TermExpr(Reference<LiteralTerm> literal);
         TermExpr(Reference<IdentifierTerm> identifier);
 
     public:
-        Variant<Reference<IntegerLiteralTerm>, Reference<IdentifierTerm>> TermObj;
+        Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>> TermObj;
 
         [[nodiscard]] Token GetToken();
 
@@ -93,7 +101,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<TermExpr> New(Reference<IntegerLiteralTerm> integerLiteral = (Reference<IntegerLiteralTerm>)NullRef);
+        [[nodiscard]] static Reference<TermExpr> New(Reference<LiteralTerm> literalTerm = (Reference<LiteralTerm>)NullRef);
         [[nodiscard]] static Reference<TermExpr> New(Reference<IdentifierTerm> identifier = (Reference<IdentifierTerm>)NullRef);
     };
 	/////////////////////////////////////////////////////////////////
@@ -102,7 +110,6 @@ namespace Dynamite::Node
     struct BinaryExpr
     {
     public:
-        // TODO: Binary operators |, &, ^
         enum class Type : uint8_t
         {
             None = 0,
@@ -110,6 +117,10 @@ namespace Dynamite::Node
             Subtraction = TokenType::Minus,
             Multiplication = TokenType::Star,
             Division = TokenType::Divide,
+
+            Or = TokenType::Or,
+            And = TokenType::And,
+            Xor = TokenType::Xor,
         };
     private:
         BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs);
@@ -131,8 +142,8 @@ namespace Dynamite::Node
     struct Expression
     {
     private:
-        Expression(Reference<TermExpr> term, ValueType type);
-        Expression(Reference<BinaryExpr> binary, ValueType type);
+        Expression(ValueType type, Reference<TermExpr> term);
+        Expression(ValueType type, Reference<BinaryExpr> binary);
 
     public:
         ValueType Type;
@@ -142,8 +153,8 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<Expression> New(Reference<TermExpr> term = (Reference<TermExpr>)NullRef, ValueType type = ValueType::None);
-        [[nodiscard]] static Reference<Expression> New(Reference<BinaryExpr> binary = (Reference<BinaryExpr>)NullRef, ValueType type = ValueType::None);
+        [[nodiscard]] static Reference<Expression> New(ValueType type = ValueType::None, Reference<TermExpr> term = (Reference<TermExpr>)NullRef);
+        [[nodiscard]] static Reference<Expression> New(ValueType type = ValueType::None, Reference<BinaryExpr> binary = (Reference<BinaryExpr>)NullRef);
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -153,9 +164,10 @@ namespace Dynamite::Node
     struct VariableStatement
     {
     private:
-        VariableStatement(const Token& token, Reference<Expression> expr);
+        VariableStatement(ValueType type, const Token& token, Reference<Expression> expr);
 
     public:
+        ValueType Type;
         Token TokenObj;
         Reference<Expression> ExprObj;
 
@@ -163,7 +175,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<VariableStatement> New(const Token& token = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
+        [[nodiscard]] static Reference<VariableStatement> New(ValueType type = ValueType::None, const Token& token = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
     };
 
     struct ExitStatement

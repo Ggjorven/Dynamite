@@ -49,8 +49,8 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	std::optional<Node::Reference<Node::TermExpr>> Parser::ParseTermExpr()
 	{
-		if (auto integerLiteral = TryConsume(TokenType::IntegerLiteral))
-			return Node::TermExpr::New(Node::IntegerLiteralTerm::New(integerLiteral.value()));
+		if (auto literalTerm = TryConsumeLiteral())
+			return Node::TermExpr::New(Node::LiteralTerm::New(static_cast<Node::LiteralTerm::Type>(literalTerm.value().Type), literalTerm.value()));
 		else if (auto identifier = TryConsume(TokenType::Identifier))
 			return Node::TermExpr::New(Node::IdentifierTerm::New(identifier.value()));
 			
@@ -61,7 +61,14 @@ namespace Dynamite
 	{
 		if (auto term = ParseTermExpr()) 
 		{
-			ValueType type = static_cast<ValueType>(term.value()->GetToken().Type);
+			ValueType type = ValueType::None;
+			Token termToken = term.value()->GetToken();
+			
+			// On identifier retrieve type from symbols
+			if (termToken.Type == TokenType::Identifier)
+				type = m_SymbolTypes[termToken.Value.value()];
+			else // It's a literal
+				type = GetValueType(termToken.Type, termToken.Value.value());
 			
 			// Check if Term is Binary expression
 			if (PeekIsBinaryOperator()) // Note: Takes type of LHS
@@ -70,13 +77,13 @@ namespace Dynamite
 
 				auto binaryExpr = Node::BinaryExpr::New(static_cast<Node::BinaryExpr::Type>(op.Type));
 
-				auto lhs = Node::Expression::New(term.value(), type);
+				auto lhs = Node::Expression::New(type, term.value());
 				binaryExpr->LHS = lhs;
 
 				if (auto rhs = ParseExpr()) 
 				{
 					binaryExpr->RHS = rhs.value();
-					return Node::Expression::New(binaryExpr, type);
+					return Node::Expression::New(type, binaryExpr);
 				}
 
 				DY_LOG_ERROR("Expected expression.");
@@ -84,7 +91,7 @@ namespace Dynamite
 			}
 			else // Else it's just a literal 
 			{
-				auto expr = Node::Expression::New(term.value(), type);
+				auto expr = Node::Expression::New(type, term.value());
 				return expr;
 			}
 		}
@@ -95,7 +102,7 @@ namespace Dynamite
 	std::optional<Node::Reference<Node::Statement>> Parser::ParseStatement()
 	{
 		/////////////////////////////////////////////////////////////////
-		// Exit statement
+		// Exit statement (Enforces Int32 expr :) )
 		/////////////////////////////////////////////////////////////////
 		if (PeekCheck(0, TokenType::Exit) && PeekCheck(1, TokenType::OpenParenthesis))
 		{
@@ -106,7 +113,16 @@ namespace Dynamite
 
 			// Expression resolution
 			if (auto expr = ParseExpr())
+			{
+				// Enforce Int32 type
+				if (expr.value()->Type != ValueType::Int32)
+				{
+					DY_LOG_ERROR("exit() expects an Int32 type, got {0}", Pulse::Enum::Name(expr.value()->Type));
+					return {};
+				}
+
 				exitStatement->ExprObj = expr.value();
+			}
 			else
 				DY_LOG_ERROR("Invalid expression.");
 
@@ -118,15 +134,17 @@ namespace Dynamite
 		}
 
 		/////////////////////////////////////////////////////////////////
-		// Identifier
+		// Variable creation
 		/////////////////////////////////////////////////////////////////
 		else if (PeekIsVariableType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
 		{
-			Token variableType = Consume(); // Type token
-			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(Consume()); // Identifier token
+			Token typeToken = Consume(); // Type token
+			ValueType variableType = static_cast<ValueType>(typeToken.Type);
+
+			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
 
 			// Add type to global scope with name of variable
-			m_SymbolTypes[variable->TokenObj.Value.value()] = static_cast<ValueType>(variableType.Type);
+			m_SymbolTypes[variable->TokenObj.Value.value()] = variableType;
 
 			Consume(); // '=' token
 
@@ -142,6 +160,9 @@ namespace Dynamite
 			return Node::Statement::New(variable);
 		}
 
+		// Consume() just 1 token, just to make sure we keep going.
+		// Since obviously from the previous token it was impossible to carry on.
+		Consume();
 		return {};
 	}
 
@@ -179,19 +200,46 @@ namespace Dynamite
 		return {};
 	}
 
+	std::optional<Token> Parser::TryConsumeLiteral()
+	{
+		std::optional<Token> peek = Peek();
+		if (peek.has_value())
+		{
+			TokenType type = peek.value().Type;
+
+			if (/*type == TokenType::BoolLiteral || */
+				type == TokenType::IntegerLiteral /*||
+				type == TokenType::FloatLiteral ||
+				type == TokenType::CharLiteral ||
+				type == TokenType::StringLiteral
+				*/)
+			{
+				return Consume();
+			}
+		}
+
+		return {};
+	}
+
 	// Note: Has to be manually updated
 	bool Parser::PeekIsVariableType()
 	{
 		if (!Peek(0).has_value())
 			return false;
 
-		#define CheckType(type) Peek(0).value().Type == type
+		#define CheckType(type) peeked.value().Type == type
+		auto peeked = Peek(0);
 
 		bool result = false;
-		//result |= CheckType(TokenType::Int8);
-		//result |= CheckType(TokenType::Int16);
-		//result |= CheckType(TokenType::Int32);
+		result |= CheckType(TokenType::Int8);
+		result |= CheckType(TokenType::Int16);
+		result |= CheckType(TokenType::Int32);
 		result |= CheckType(TokenType::Int64);
+
+		result |= CheckType(TokenType::UInt8);
+		result |= CheckType(TokenType::UInt16);
+		result |= CheckType(TokenType::UInt32);
+		result |= CheckType(TokenType::UInt64);
 		
 		return result;
 	}
@@ -201,13 +249,61 @@ namespace Dynamite
 		if (!Peek(0).has_value())
 			return false;
 
-		#define CheckOperator(op) Peek(0).value().Type == op
+		#define CheckOperator(op) peeked.value().Type == op
+		auto peeked = Peek(0);
 
 		bool result = false;
 		result |= CheckOperator(TokenType::Plus);
 		// TODO: More operators
 
 		return result;
+	}
+
+	ValueType Parser::GetValueType(TokenType literalType, const std::string& value)
+	{
+		ValueType type = ValueType::None;
+
+		switch (literalType)
+		{
+		case TokenType::IntegerLiteral:
+		{
+			bool isNegative = !value.empty() && value[0] == '-';
+
+			if (isNegative)
+			{
+				int64_t intVal = std::stoll(value);
+
+				
+				if (intVal >= Pulse::Numeric::Min<int8_t>() && intVal <= Pulse::Numeric::Max<int8_t>())
+					type = ValueType::Int8;
+				else if (intVal >= Pulse::Numeric::Min<int16_t>() && intVal <= Pulse::Numeric::Max<int16_t>())
+					type = ValueType::Int16;
+				else if (intVal >= Pulse::Numeric::Min<int32_t>() && intVal <= Pulse::Numeric::Max<int32_t>())
+					type = ValueType::Int32;
+				else if (intVal >= Pulse::Numeric::Min<int64_t>() && intVal <= Pulse::Numeric::Max<int64_t>())
+					type = ValueType::Int64;
+			}
+			else
+			{
+				uint64_t uintVal = std::stoull(value);
+
+				if (uintVal <= Pulse::Numeric::Max<uint8_t>())
+					type = ValueType::UInt8;
+				else if (uintVal <= Pulse::Numeric::Max<uint16_t>())
+					type = ValueType::UInt16;
+				else if (uintVal <= Pulse::Numeric::Max<uint32_t>())
+					type = ValueType::UInt32;
+				else if (uintVal <= Pulse::Numeric::Max<uint64_t>())
+					type = ValueType::UInt64;
+			}
+			break;
+		}
+
+		default:
+			break;
+		}
+
+		return type;
 	}
 
 }

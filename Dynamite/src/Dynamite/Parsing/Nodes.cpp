@@ -26,21 +26,21 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Constructors
 	/////////////////////////////////////////////////////////////////
-	IntegerLiteralTerm::IntegerLiteralTerm(const Token& token) : TokenObj(token) {}
+	LiteralTerm::LiteralTerm(Type literalType, const Token& token) : LiteralType(literalType), TokenObj(token) {}
 	
 	IdentifierTerm::IdentifierTerm(const Token& token) : TokenObj(token) {}
 
-	TermExpr::TermExpr(Reference<IntegerLiteralTerm> integerLiteral) : TermObj(integerLiteral) {}
+	TermExpr::TermExpr(Reference<LiteralTerm> literalTerm) : TermObj(literalTerm) {}
 	TermExpr::TermExpr(Reference<IdentifierTerm> identifier) : TermObj(identifier) {}
 
 	BinaryExpr::BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) : BinaryType(binaryType), LHS(lhs), RHS(rhs) {}
 
-	Expression::Expression(Reference<TermExpr> term, ValueType type) : ExprObj(term), Type(type) {}
-	Expression::Expression(Reference<BinaryExpr> binary, ValueType type) : ExprObj(binary), Type(type) {}
+	Expression::Expression(ValueType type, Reference<TermExpr> term) : Type(type), ExprObj(term) {}
+	Expression::Expression(ValueType type, Reference<BinaryExpr> binary) : Type(type), ExprObj(binary) {}
 
 
 
-	VariableStatement::VariableStatement(const Token& token, Reference<Expression> expr) : TokenObj(token), ExprObj(expr) {}
+	VariableStatement::VariableStatement(ValueType type, const Token& token, Reference<Expression> expr) : Type(type), TokenObj(token), ExprObj(expr) {}
 
 	ExitStatement::ExitStatement(Reference<Expression> expr) : ExprObj(expr) {}
 
@@ -50,21 +50,21 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Custom allocator functions
 	/////////////////////////////////////////////////////////////////
-	Reference<IntegerLiteralTerm> IntegerLiteralTerm::New(const Token& token) { return _DEREF s_Allocator.Construct<IntegerLiteralTerm>(token); }
+	Reference<LiteralTerm> LiteralTerm::New(Type literalType, const Token& token) { return _DEREF s_Allocator.Construct<LiteralTerm>(literalType, token); }
 
 	Reference<IdentifierTerm> IdentifierTerm::New(const Token& token) { return _DEREF s_Allocator.Construct<IdentifierTerm>(token); }
 
-	Reference<TermExpr> TermExpr::New(Reference<IntegerLiteralTerm> integerLiteral) { return _DEREF s_Allocator.Construct<TermExpr>(integerLiteral); }
+	Reference<TermExpr> TermExpr::New(Reference<LiteralTerm> literalTerm) { return _DEREF s_Allocator.Construct<TermExpr>(literalTerm); }
 	Reference<TermExpr> TermExpr::New(Reference<IdentifierTerm> identifier) { return _DEREF s_Allocator.Construct<TermExpr>(identifier); }
 
 	Reference<BinaryExpr> BinaryExpr::New(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) { return _DEREF s_Allocator.Construct<BinaryExpr>(binaryType, lhs, rhs); }
 
-	Reference<Expression> Expression::New(Reference<TermExpr> term, ValueType type) { return _DEREF s_Allocator.Construct<Expression>(term, type); }
-	Reference<Expression> Expression::New(Reference<BinaryExpr> binary, ValueType type) { return _DEREF s_Allocator.Construct<Expression>(binary, type); }
+	Reference<Expression> Expression::New(ValueType type, Reference<TermExpr> term) { return _DEREF s_Allocator.Construct<Expression>(type, term); }
+	Reference<Expression> Expression::New(ValueType type, Reference<BinaryExpr> binary) { return _DEREF s_Allocator.Construct<Expression>(type, binary); }
 
 
 
-	Reference<VariableStatement> VariableStatement::New(const Token& token, Reference<Expression> expr) { return _DEREF s_Allocator.Construct<VariableStatement>(token, expr); }
+	Reference<VariableStatement> VariableStatement::New(ValueType type, const Token& token, Reference<Expression> expr) { return _DEREF s_Allocator.Construct<VariableStatement>(type, token, expr); }
 
 	Reference<ExitStatement> ExitStatement::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ExitStatement>(expr); }
 
@@ -78,7 +78,7 @@ namespace Dynamite::Node
 	{
 		return std::visit([](auto&& obj) -> Token
 		{
-			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IntegerLiteralTerm>>)
+			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<LiteralTerm>>)
 				return obj->TokenObj;
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
 				return obj->TokenObj;
@@ -99,7 +99,7 @@ namespace Dynamite::Node
 			{
 				return std::visit([](auto&& obj) -> std::string
 				{
-					if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IntegerLiteralTerm>>)
+					if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<LiteralTerm>>)
 						return Tokenizer::FormatToken(obj->TokenObj);
 					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
 						return Tokenizer::FormatToken(obj->TokenObj);
@@ -124,11 +124,11 @@ namespace Dynamite::Node
 		{
 			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<VariableStatement>>)
 			{
-				return Pulse::Text::Format("{0}([{1}])", Tokenizer::FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
+				return Pulse::Text::Format("[Variable({0})] - {1}([{2}])", Pulse::Enum::Name(obj->Type), Tokenizer::FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
 			}
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ExitStatement>>)
 			{
-				return Pulse::Text::Format("{0}", FormatExpressionData(obj->ExprObj));
+				return Pulse::Text::Format("[Exit] - {0}", FormatExpressionData(obj->ExprObj));
 			}
 
 			return "Undefined Statement Data";

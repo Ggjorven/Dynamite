@@ -1,4 +1,4 @@
-Int64 x = 100 + 9 + 8;
+Int32 _x = 100;
 Int64 y = 1000;
 
-exit(x);
+exit(_x);

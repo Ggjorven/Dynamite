@@ -24,20 +24,39 @@ namespace Dynamite
 		Star = '*',					// '*'
 		Divide = '/',				// '/'
 
+		Pipe = '|',
+		Or = Pipe,
+		And = '&',
+		Xor = '^',
+
 		// ...
 		Identifier = 1,				// Variable name
+		BoolLiteral,
 		IntegerLiteral,
-		//FloatLiteral,
-		//CharLiteral,
-		//StringLiteral,
+		FloatLiteral,
+		CharLiteral,
+		StringLiteral,
 
 		Exit,						// Exit from Program
 
 		// Types (Name is literally what can be used in program)
-		//Int8,						// int8_t literal
-		//Int16,						// int16_t literal
-		//Int32,						// int32_t literal
-		Int64,						// int64_t literal
+		Bool,
+
+		Int8,	
+		Int16,	
+		Int32,	
+		Int64,	
+
+		UInt8,	
+		UInt16,	
+		UInt32,	
+		UInt64,
+
+		Float32,
+		Float64,
+
+		Char,
+		String,
 	};
 
 	struct Token
