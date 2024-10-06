@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Parsing/Variables.hpp"
+
 #include <Pulse/Text/Format.hpp>
 
 #undef FMT_VERSION
@@ -172,12 +174,12 @@ namespace Dynamite
     {
         // Note: It's okay to use if instead of else if, since
         // we return from the function if it has been found.
-        #define HandleType(tokenType)                           \
-            if (buffer == Pulse::Enum::Name(tokenType))         \
-            {                                                   \
-                tokens.emplace_back(tokenType, lineNumber);     \
-                buffer.clear();                                 \
-                return true;                                    \
+        #define HandleType(tokenType)                                           \
+            if (buffer == ValueTypeToStr(static_cast<ValueType>(tokenType)))    \
+            {                                                                   \
+                tokens.emplace_back(tokenType, lineNumber);                     \
+                buffer.clear();                                                 \
+                return true;                                                    \
             }
 
         HandleType(TokenType::Bool);

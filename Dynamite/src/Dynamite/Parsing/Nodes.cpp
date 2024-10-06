@@ -124,7 +124,7 @@ namespace Dynamite::Node
 		{
 			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<VariableStatement>>)
 			{
-				return Pulse::Text::Format("[Variable({0})] - {1}([{2}])", Pulse::Enum::Name(obj->Type), Tokenizer::FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
+				return Pulse::Text::Format("[Variable({0})] - {1}([{2}])", ValueTypeToStr(obj->Type), Tokenizer::FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
 			}
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ExitStatement>>)
 			{

@@ -8,7 +8,7 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Types
 	/////////////////////////////////////////////////////////////////
-	enum class ValueType : uint8_t
+	enum class ValueType : uint16_t
 	{
 		None = 0,
 
@@ -62,6 +62,7 @@ namespace Dynamite
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string ValueTypeToASM(ValueType type);
+	std::string ValueTypeToStr(ValueType type);
 	bool ValueTypeCastable(ValueType from, ValueType to);
 	std::string ValueTypeCast(ValueType from, ValueType to, const std::string& value, bool* dataLostPtr = nullptr);
 

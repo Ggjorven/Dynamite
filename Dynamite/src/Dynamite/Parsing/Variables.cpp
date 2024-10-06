@@ -41,6 +41,35 @@ namespace Dynamite
 		return "Undefined ASM Type";
 	}
 
+	std::string ValueTypeToStr(ValueType type)
+	{
+		switch (type)
+		{
+		case ValueType::Bool:		return "bool";
+
+		case ValueType::Int8:		return "i8";
+		case ValueType::Int16:		return "i16";
+		case ValueType::Int32:		return "i32";
+		case ValueType::Int64:		return "i64";
+
+		case ValueType::UInt8:		return "u8";
+		case ValueType::UInt16:		return "u16";
+		case ValueType::UInt32:		return "u32";
+		case ValueType::UInt64:		return "u64";
+
+		case ValueType::Float32:	return "f32";
+		case ValueType::Float64:	return "f64";
+
+		case ValueType::Char:		return "char";
+		case ValueType::String:		return "str";
+
+		default:
+			break;
+		}
+
+		return "Unnamed ValueType";
+	}
+
 	bool ValueTypeCastable(ValueType from, ValueType to)
 	{
 		if (from == to)

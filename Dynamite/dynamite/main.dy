@@ -1,11 +1,11 @@
-UInt8 x = -1;
-Int32 _x = -2;
-Int64 y = 1000;
-String z = "My string";
-Char c = '=';
-Bool b1 = 100;
-Bool b2 = true;
+u8 x = -1;
+i32 _x = -2;
+i64 y = 1000;
+str z = "My string";
+char c = '=';
+bool b1 = 100;
+bool b2 = true;
 
-UInt8 or = 0 | 1;
+u8 or = 0 | 1;
 
 exit(_x);

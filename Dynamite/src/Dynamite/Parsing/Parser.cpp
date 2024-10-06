@@ -122,7 +122,7 @@ namespace Dynamite
 				// Enforce Int32 type
 				if (!ValueTypeCastable(expr.value()->Type, ValueType::Int32))
 				{
-					DY_LOG_ERROR("exit() expects an Int32 type, got {0}, {0} is not castable to Int32", Pulse::Enum::Name(expr.value()->Type));
+					DY_LOG_ERROR("exit() expects an Int32 type, got {0}, {0} is not castable to Int32", ValueTypeToStr(expr.value()->Type));
 
 					// Close parenthesis ')' & semicolon `;` resolution
 					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -166,7 +166,7 @@ namespace Dynamite
 			{
 				if (!ValueTypeCastable(expr.value()->Type, variableType))
 				{
-					DY_LOG_ERROR("Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}", varName, Pulse::Enum::Name(variableType), Pulse::Enum::Name(expr.value()->Type));
+					DY_LOG_ERROR("Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type));
 
 					// Close parenthesis ')' & semicolon `;` resolution
 					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -420,7 +420,7 @@ namespace Dynamite
 		std::visit(visitor, expression->ExprObj);
 
 		if (visitor.DataLost) // Note: This outputs the new value, not the original value before cast
-			DY_LOG_WARN("Lost data while casting expression {0}. From: {1}, to {2}", Node::FormatExpressionData(expression), Pulse::Enum::Name(from), Pulse::Enum::Name(to));
+			DY_LOG_WARN("Lost data while casting expression {0}. From: {1}, to {2}", Node::FormatExpressionData(expression), ValueTypeToStr(from), ValueTypeToStr(to));
 	}
 
 }
