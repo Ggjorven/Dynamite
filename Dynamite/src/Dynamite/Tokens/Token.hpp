@@ -22,7 +22,9 @@ namespace Dynamite
 		Plus = '+',					// '+'
 		Minus = '-',				// '-'
 		Star = '*',					// '*'
-		Divide = '/',				// '/'
+		Multiply = Star,
+		Slash = '/',				// '/'
+		Divide = Slash,
 
 		Pipe = '|',
 		Or = Pipe,
@@ -31,6 +33,7 @@ namespace Dynamite
 
 		// ...
 		Identifier = 1,				// Variable name
+
 		BoolLiteral,
 		IntegerLiteral,
 		FloatLiteral,

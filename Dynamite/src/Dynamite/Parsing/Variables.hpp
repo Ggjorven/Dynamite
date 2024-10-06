@@ -12,6 +12,8 @@ namespace Dynamite
 	{
 		None = 0,
 
+		Bool = TokenType::Bool,
+
 		Int8 = TokenType::Int8,
 		Int16 = TokenType::Int16,
 		Int32 = TokenType::Int32,
@@ -21,12 +23,20 @@ namespace Dynamite
 		UInt16 = TokenType::UInt16,
 		UInt32 = TokenType::UInt32,
 		UInt64 = TokenType::UInt64,
+
+		Float32 = TokenType::Float32,
+		Float64 = TokenType::Float64,
+
+		Char = TokenType::Char,
+		String = TokenType::String,
 	};
 
 	/////////////////////////////////////////////////////////////////
 	// Conversion of Types
 	/////////////////////////////////////////////////////////////////
 	template<ValueType T> struct ValueTypeToCTypeImpl;
+
+	template<> struct ValueTypeToCTypeImpl<ValueType::Bool> { using Type = bool; };
 
 	template<> struct ValueTypeToCTypeImpl<ValueType::Int8> { using Type = int8_t; };
 	template<> struct ValueTypeToCTypeImpl<ValueType::Int16> { using Type = int16_t; };
@@ -38,6 +48,13 @@ namespace Dynamite
 	template<> struct ValueTypeToCTypeImpl<ValueType::UInt32> { using Type = uint32_t; };
 	template<> struct ValueTypeToCTypeImpl<ValueType::UInt64> { using Type = uint64_t; };
 
+	template<> struct ValueTypeToCTypeImpl<ValueType::Float32> { using Type = float; };
+	template<> struct ValueTypeToCTypeImpl<ValueType::Float64> { using Type = double; };
+
+	template<> struct ValueTypeToCTypeImpl<ValueType::Char> { using Type = char; };
+
+	// Note: String doesn't have a C(++) equivalent at the moment.
+
 	template<ValueType T>
 	using ValueTypeToCType = ValueTypeToCTypeImpl<T>::Type;
 	
@@ -45,5 +62,7 @@ namespace Dynamite
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string ValueTypeToASM(ValueType type);
+	bool ValueTypeCastable(ValueType from, ValueType to);
+	std::string ValueTypeCast(ValueType from, ValueType to, const std::string& value, bool* dataLostPtr = nullptr);
 
 }

@@ -46,6 +46,9 @@ namespace Dynamite
 
 		ValueType GetValueType(TokenType literalType, const std::string& value);
 
+		// Note: Only casts if the internal type is a literalterm
+		void CastInternalValue(ValueType from, ValueType to, Node::Reference<Node::Expression> expression);
+
 	private:
 		const std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;

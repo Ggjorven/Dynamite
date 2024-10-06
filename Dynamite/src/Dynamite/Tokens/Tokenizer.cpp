@@ -11,7 +11,7 @@
 namespace Dynamite
 {
 
-    #define PeekCheck(func) Peek().has_value() && func(Peek().value())
+    #define PeekCheck(func, ...) Peek().has_value() && func(Peek().value(), __VA_ARGS__)
 
     namespace
     {
@@ -20,9 +20,9 @@ namespace Dynamite
             return (std::isalpha(c) || c == '_');
         }
 
-        static bool IsNumeric(char c)
+        static bool IsNumeric(char c, bool allowsMinus = false)
         {
-            return std::isdigit(c);
+            return (std::isdigit(c) || (allowsMinus ? (c == '-') : false));
         }
 
         static bool IsAlphaNumeric(char c)
@@ -48,7 +48,7 @@ namespace Dynamite
         while (Peek(0).has_value())
         {
             // Is alphabetic
-            if (PeekCheck(IsAlpha))
+            if (PeekCheck(IsAlpha)) // Note: Also handles boolean values
             {
                 buffer.push_back(Consume());
 
@@ -62,7 +62,7 @@ namespace Dynamite
             }
 
             // Is number
-            else if (PeekCheck(IsNumeric))
+            else if (PeekCheck(IsNumeric, true))
             {
                 buffer.push_back(Consume());
 
@@ -70,14 +70,57 @@ namespace Dynamite
                 while (PeekCheck(IsNumeric))
                     buffer.push_back(Consume());
 
-                // TODO: check if there a '.' and the make it float literal
+                if (Peek(0).has_value() && (Peek(0).value() == '.'))
+                {
+                    buffer.push_back(Consume()); // '.' char
 
-                tokens.emplace_back(TokenType::IntegerLiteral, buffer, lineNumber);
+                    while (PeekCheck(IsNumeric))
+                        buffer.push_back(Consume());
+
+                    tokens.emplace_back(TokenType::FloatLiteral, buffer, lineNumber);
+                    buffer.clear();
+                }
+                else // Else it's just an integer literal
+                {
+                    tokens.emplace_back(TokenType::IntegerLiteral, buffer, lineNumber);
+                    buffer.clear();
+                }
+            }
+
+            // Is char  
+            else if (Peek(0).has_value() && Peek(0).value() == '\'' // Begin char character
+                && Peek(2).has_value() && Peek(2).value() == '\'') // End char character
+            {
+                Consume(); // ''' Start char character
+                buffer.push_back(Consume()); // Char character
+                Consume(); // ''' End char character
+
+                tokens.emplace_back(TokenType::CharLiteral, buffer, lineNumber);
+                buffer.clear();
+            }
+
+            // Is string // Note: String buffer keeps '\'s
+            else if (Peek(0).has_value() && Peek(0).value() == '"')
+            {
+                Consume(); // '"' Start string character
+
+                bool contin = Peek(0).has_value() && Peek(0).value() != '"';
+                while (contin)
+                {
+                    buffer.push_back(Consume());
+
+                    if (Peek(0).has_value() && Peek(0).value() == '"' && Peek(-1).value() != '\\')
+                        contin = false;
+                }
+
+                Consume(); // '"' End string character
+
+                tokens.emplace_back(TokenType::StringLiteral, buffer, lineNumber);
                 buffer.clear();
             }
 
             // Handle operators and other chars
-            else if (HandleChars(tokens, lineNumber))
+            else if (HandleOperators(tokens, lineNumber))
                 continue;
 
             // Invalid token
@@ -160,7 +203,21 @@ namespace Dynamite
 
     void Tokenizer::HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
     {
-        // Exit function
+        // Boolean values
+        if (buffer == "false")
+        {
+            tokens.emplace_back(TokenType::BoolLiteral, "0", lineNumber);
+            buffer.clear();
+            return;
+        }
+        if (buffer == "true")
+        {
+            tokens.emplace_back(TokenType::BoolLiteral, "1", lineNumber);
+            buffer.clear();
+            return;
+        }
+
+        // Exit function // TODO: Make reusable for all functions
         if (buffer == "exit")
         {
             tokens.emplace_back(TokenType::Exit, lineNumber);
@@ -173,7 +230,7 @@ namespace Dynamite
         buffer.clear();
     }
 
-    bool Tokenizer::HandleChars(std::vector<Token>& tokens, uint32_t& lineNumber)
+    bool Tokenizer::HandleOperators(std::vector<Token>& tokens, uint32_t& lineNumber)
     {
         // Note: It's okay to use if instead of else if, since
         // we return from the function if it has been found.
@@ -196,6 +253,10 @@ namespace Dynamite
         CharOperator('-', TokenType::Minus);
         CharOperator('*', TokenType::Star);
         CharOperator('/', TokenType::Divide);
+
+        CharOperator('|', TokenType::Or);
+        CharOperator('&', TokenType::And);
+        CharOperator('^', TokenType::Xor);
 
         // Newline (for incrementing)
         if (Peek().value() == '\n' || Peek().value() == '\r')

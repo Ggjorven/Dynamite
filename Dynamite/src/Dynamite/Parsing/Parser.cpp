@@ -5,8 +5,12 @@
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
 
+#include <Pulse/Text/Format.hpp>
+
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
+
+#include <Pulse/Types/TypeUtils.hpp>
 
 namespace Dynamite
 {
@@ -102,7 +106,8 @@ namespace Dynamite
 	std::optional<Node::Reference<Node::Statement>> Parser::ParseStatement()
 	{
 		/////////////////////////////////////////////////////////////////
-		// Exit statement (Enforces Int32 expr :) )
+		// Exit statement (Enforces Int32 expr :) ) 
+		// TODO: Make a table with functions and make code underneath reusable.
 		/////////////////////////////////////////////////////////////////
 		if (PeekCheck(0, TokenType::Exit) && PeekCheck(1, TokenType::OpenParenthesis))
 		{
@@ -115,12 +120,18 @@ namespace Dynamite
 			if (auto expr = ParseExpr())
 			{
 				// Enforce Int32 type
-				if (expr.value()->Type != ValueType::Int32)
+				if (!ValueTypeCastable(expr.value()->Type, ValueType::Int32))
 				{
-					DY_LOG_ERROR("exit() expects an Int32 type, got {0}", Pulse::Enum::Name(expr.value()->Type));
+					DY_LOG_ERROR("exit() expects an Int32 type, got {0}, {0} is not castable to Int32", Pulse::Enum::Name(expr.value()->Type));
+
+					// Close parenthesis ')' & semicolon `;` resolution
+					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+					CheckConsume(TokenType::Semicolon, "Expected `;`.");
 					return {};
 				}
-
+				
+				// Note: Only casts if the internal type is a literalterm
+				CastInternalValue(expr.value()->Type, ValueType::Int32, expr.value());
 				exitStatement->ExprObj = expr.value();
 			}
 			else
@@ -143,14 +154,30 @@ namespace Dynamite
 
 			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
 
+			std::string varName = variable->TokenObj.Value.value();
+
 			// Add type to global scope with name of variable
-			m_SymbolTypes[variable->TokenObj.Value.value()] = variableType;
+			m_SymbolTypes[varName] = variableType;
 
 			Consume(); // '=' token
 
 			// Expression resolution
 			if (auto expr = ParseExpr())
+			{
+				if (!ValueTypeCastable(expr.value()->Type, variableType))
+				{
+					DY_LOG_ERROR("Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}", varName, Pulse::Enum::Name(variableType), Pulse::Enum::Name(expr.value()->Type));
+
+					// Close parenthesis ')' & semicolon `;` resolution
+					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+					CheckConsume(TokenType::Semicolon, "Expected `;`.");
+					return {};
+				}
+
+				// Note: Only casts if the internal type is a literalterm
+				CastInternalValue(expr.value()->Type, variableType, expr.value());
 				variable->ExprObj = expr.value();
+			}
 			else
 				DY_LOG_ERROR("Invalid expression.");
 
@@ -207,12 +234,12 @@ namespace Dynamite
 		{
 			TokenType type = peek.value().Type;
 
-			if (/*type == TokenType::BoolLiteral || */
-				type == TokenType::IntegerLiteral /*||
+			if (type == TokenType::BoolLiteral || 
+				type == TokenType::IntegerLiteral ||
 				type == TokenType::FloatLiteral ||
 				type == TokenType::CharLiteral ||
 				type == TokenType::StringLiteral
-				*/)
+				)
 			{
 				return Consume();
 			}
@@ -231,6 +258,9 @@ namespace Dynamite
 		auto peeked = Peek(0);
 
 		bool result = false;
+
+		result |= CheckType(TokenType::Bool);
+		
 		result |= CheckType(TokenType::Int8);
 		result |= CheckType(TokenType::Int16);
 		result |= CheckType(TokenType::Int32);
@@ -240,6 +270,12 @@ namespace Dynamite
 		result |= CheckType(TokenType::UInt16);
 		result |= CheckType(TokenType::UInt32);
 		result |= CheckType(TokenType::UInt64);
+
+		result |= CheckType(TokenType::Float32);
+		result |= CheckType(TokenType::Float64);
+
+		result |= CheckType(TokenType::Char);
+		result |= CheckType(TokenType::String);
 		
 		return result;
 	}
@@ -254,7 +290,13 @@ namespace Dynamite
 
 		bool result = false;
 		result |= CheckOperator(TokenType::Plus);
-		// TODO: More operators
+		result |= CheckOperator(TokenType::Minus);
+		result |= CheckOperator(TokenType::Star);
+		result |= CheckOperator(TokenType::Divide);
+
+		result |= CheckOperator(TokenType::Or);
+		result |= CheckOperator(TokenType::And);
+		result |= CheckOperator(TokenType::Xor);
 
 		return result;
 	}
@@ -265,6 +307,11 @@ namespace Dynamite
 
 		switch (literalType)
 		{
+		case TokenType::BoolLiteral:
+		{
+			type = ValueType::Bool;
+			break;
+		}
 		case TokenType::IntegerLiteral:
 		{
 			bool isNegative = !value.empty() && value[0] == '-';
@@ -272,7 +319,6 @@ namespace Dynamite
 			if (isNegative)
 			{
 				int64_t intVal = std::stoll(value);
-
 				
 				if (intVal >= Pulse::Numeric::Min<int8_t>() && intVal <= Pulse::Numeric::Max<int8_t>())
 					type = ValueType::Int8;
@@ -282,6 +328,8 @@ namespace Dynamite
 					type = ValueType::Int32;
 				else if (intVal >= Pulse::Numeric::Min<int64_t>() && intVal <= Pulse::Numeric::Max<int64_t>())
 					type = ValueType::Int64;
+				else
+					DY_LOG_ERROR("Integer {0} exceeds max integers' type (Int64) size.", value);
 			}
 			else
 			{
@@ -295,7 +343,32 @@ namespace Dynamite
 					type = ValueType::UInt32;
 				else if (uintVal <= Pulse::Numeric::Max<uint64_t>())
 					type = ValueType::UInt64;
+				else
+					DY_LOG_ERROR("Integer {0} exceeds max integers' type (UInt64) size.", value);
 			}
+			break;
+		}
+		case TokenType::FloatLiteral:
+		{
+			double doubleVal = std::stod(value);
+
+			if (doubleVal >= Pulse::Numeric::Min<float>() && doubleVal <= Pulse::Numeric::Max<float>())
+				type = ValueType::Float32;
+			if (doubleVal >= Pulse::Numeric::Min<double>() && doubleVal <= Pulse::Numeric::Max<double>())
+				type = ValueType::Float32;
+			else
+				DY_LOG_ERROR("Float {0} exceeds max floats' type (Float64) size.", value);
+
+			break;
+		}
+		case TokenType::CharLiteral:
+		{
+			type = ValueType::Char;
+			break;
+		}
+		case TokenType::StringLiteral:
+		{
+			type = ValueType::String;
 			break;
 		}
 
@@ -304,6 +377,50 @@ namespace Dynamite
 		}
 
 		return type;
+	}
+
+	// Note: Only casts if the internal type is a literalterm
+	void Parser::CastInternalValue(ValueType from, ValueType to, Node::Reference<Node::Expression> expression)
+	{
+		if (from == to)
+			return;
+
+		struct ExprVisitor
+		{
+		public:
+			ValueType From;
+			ValueType To;
+			bool DataLost = false;
+
+		public:
+			void operator() (Node::Reference<Node::TermExpr> obj)
+			{
+				struct TermVisitor
+				{
+				public:
+					ValueType From;
+					ValueType To;
+					bool* DataLost;
+
+				public:
+					void operator() (Node::Reference<Node::LiteralTerm> obj)
+					{
+						obj->TokenObj.Value = ValueTypeCast(From, To, obj->TokenObj.Value.value(), DataLost);
+					}
+					void operator() (Node::Reference<Node::IdentifierTerm> obj) {}
+				};
+
+				TermVisitor visitor = { .From = From, .To = To, .DataLost = &DataLost };
+				std::visit(visitor, obj->TermObj);
+			}
+			void operator() (Node::Reference<Node::BinaryExpr> obj) {}
+		};
+
+		ExprVisitor visitor = { .From = from, .To = to };
+		std::visit(visitor, expression->ExprObj);
+
+		if (visitor.DataLost) // Note: This outputs the new value, not the original value before cast
+			DY_LOG_WARN("Lost data while casting expression {0}. From: {1}, to {2}", Node::FormatExpressionData(expression), Pulse::Enum::Name(from), Pulse::Enum::Name(to));
 	}
 
 }

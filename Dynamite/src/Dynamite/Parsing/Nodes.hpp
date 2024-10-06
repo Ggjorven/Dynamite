@@ -115,7 +115,7 @@ namespace Dynamite::Node
             None = 0,
             Addition = TokenType::Plus,
             Subtraction = TokenType::Minus,
-            Multiplication = TokenType::Star,
+            Multiplication = TokenType::Multiply,
             Division = TokenType::Divide,
 
             Or = TokenType::Or,

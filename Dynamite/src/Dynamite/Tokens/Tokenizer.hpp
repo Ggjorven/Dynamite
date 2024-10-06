@@ -35,7 +35,7 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		bool HandleTypes(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber);
 		void HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber);
-		bool HandleChars(std::vector<Token>& tokens, uint32_t& lineNumber);
+		bool HandleOperators(std::vector<Token>& tokens, uint32_t& lineNumber);
 
 	private:
 		std::string const& m_FileContent;
