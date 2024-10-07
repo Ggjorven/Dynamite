@@ -78,22 +78,9 @@ namespace Dynamite::Node
 	Reference<Statement> Statement::New(Reference<ExitStatement> exit) { return _DEREF s_Allocator.Construct<Statement>(exit); }
 
 	/////////////////////////////////////////////////////////////////
-	// Member functions
+	// Helper functions
 	/////////////////////////////////////////////////////////////////
-	Token TermExpr::GetToken()
-	{
-		return std::visit([](auto&& obj) -> Token
-		{
-			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<LiteralTerm>>)
-				return obj->TokenObj;
-			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
-				return obj->TokenObj;
-
-			return {};
-		}, TermObj);
-	}
-
-	size_t BinaryExprPrecendce(BinaryExpr::Type type)
+	std::optional<size_t> GetBinaryExprPrecendce(BinaryExpr::Type type)
 	{
 		switch (type)
 		{
@@ -105,19 +92,16 @@ namespace Dynamite::Node
 		case BinaryExpr::Type::Division:
 			return 1;
 
-		// TODO: Binary operators
+		// TODO: Additional binary operators
 
 		default:
 			break;
 		}
 
-		DY_LOG_ERROR("BinaryExpr::Type's precendce level has not been implemented.");
-		return -1;
+		//DY_LOG_ERROR("BinaryExpr::Type's precendce level has not been implemented.");
+		return {};
 	}
 
-	/////////////////////////////////////////////////////////////////
-	// Helper functions
-	/////////////////////////////////////////////////////////////////
 	// Note: Has to be manually updated
 	std::string FormatExpressionData(const Reference<Expression> expr)
 	{

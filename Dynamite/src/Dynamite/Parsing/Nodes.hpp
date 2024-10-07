@@ -111,8 +111,6 @@ namespace Dynamite::Node
     public:
         Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>> TermObj;
 
-        [[nodiscard]] Token GetToken();
-
     public: // Custom allocator functions.
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
@@ -239,7 +237,7 @@ namespace Dynamite::Node
     /////////////////////////////////////////////////////////////////
     // Helper functions
     /////////////////////////////////////////////////////////////////
-    size_t BinaryExprPrecendce(BinaryExpr::Type type);
+    std::optional<size_t> GetBinaryExprPrecendce(BinaryExpr::Type type);
 
     std::string FormatExpressionData(const Reference<Expression> expr);
     std::string FormatStatementData(const Reference<Statement> statement);

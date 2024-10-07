@@ -72,6 +72,14 @@ namespace Dynamite
                 while (PeekCheck(IsNumeric))
                     buffer.push_back(Consume());
 
+                // If buffer is just a minus, make it a minus
+                if (buffer == "-")
+                {
+                    tokens.emplace_back(TokenType::Minus, lineNumber);
+                    buffer.clear();
+                    continue;
+                }
+
                 if (Peek(0).has_value() && (Peek(0).value() == '.'))
                 {
                     buffer.push_back(Consume()); // '.' char

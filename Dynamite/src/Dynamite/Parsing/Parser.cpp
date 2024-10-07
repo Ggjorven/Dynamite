@@ -80,43 +80,68 @@ namespace Dynamite
 
 	std::optional<Node::Reference<Node::Expression>> Parser::ParseExpr(size_t minimumPrecedence)
 	{
-		if (auto term = ParseTermExpr()) 
+		if (auto termLHS = ParseTermExpr())
 		{
-			ValueType type = ValueType::None;
-			Token termToken = term.value()->GetToken();
-			
-			// On identifier retrieve type from symbols
-			if (termToken.Type == TokenType::Identifier)
-				type = m_SymbolTypes[termToken.Value.value()];
-			else // It's a literal
-				type = GetValueType(termToken.Type, termToken.Value.value());
-			
-			// Check if next is a binary operator
-			if (PeekIsBinaryOperator()) // Note: Takes type of LHS
+			/////////////////////////////////////////////////////////////////
+			// Type retrieval
+			/////////////////////////////////////////////////////////////////
+			ValueType type = std::visit([this](auto&& obj) -> ValueType
 			{
-				Token op = Consume(); // Binary operator
+				if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::LiteralTerm>>)
+					return GetValueType(obj->TokenObj.Type, obj->TokenObj.Value.value());
+				else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::IdentifierTerm>>)
+					return m_SymbolTypes[obj->TokenObj.Value.value()];
+				else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::ParenthesisTerm>>)
+					return obj->ExprObj->Type;
 
-				auto binaryExpr = Node::BinaryExpr::New(static_cast<Node::BinaryExpr::Type>(op.Type));
+				DY_LOG_ERROR("Retrieving ValueType has not been implemented for current type.");
+				return {};
+			}, termLHS.value()->TermObj);
 
-				auto lhs = Node::Expression::New(type, term.value());
-				binaryExpr->LHS = lhs;
+			/////////////////////////////////////////////////////////////////
+			// Expression retrieval/creation
+			/////////////////////////////////////////////////////////////////
+			Node::Reference<Node::Expression> exprLHS = Node::Expression::New(type, termLHS.value());
+			
+			while (true)
+			{
+				std::optional<Token> current = Peek(0);
+				std::optional<size_t> precedence = {};
+				size_t nextMinimumPrecedence = -1;
+				
+				if (!current.has_value())
+					break;
 
-				if (auto rhs = ParseExpr()) 
+				precedence = Node::GetBinaryExprPrecendce(static_cast<Node::BinaryExpr::Type>(current->Type));
+				if (!precedence.has_value() || precedence.value() < minimumPrecedence)
+					break;
+				else
+					nextMinimumPrecedence = precedence.value() + 1;
+
+				Token operation = Consume();
+
+				auto exprRHS = ParseExpr(nextMinimumPrecedence);
+				if (!exprRHS.has_value()) 
 				{
-					binaryExpr->RHS = rhs.value();
-					return Node::Expression::New(type, binaryExpr);
+					DY_LOG_ERROR("Unable to parse expression.");
+					break;
 				}
 
-				DY_LOG_ERROR("Expected expression.");
-				return {};
+				auto expr = Node::BinaryExpr::New(static_cast<Node::BinaryExpr::Type>(operation.Type));
+				auto exprLHS2 = std::visit([type](auto&& obj) -> Node::Reference<Node::Expression>
+				{
+					return Node::Expression::New(type, obj);
+				}, exprLHS->ExprObj); 
+				
+				expr->LHS = exprLHS2;
+				expr->RHS = exprRHS.value();
+
+				exprLHS->ExprObj = expr;
 			}
-			else // Else it's just the current term 
-			{
-				auto expr = Node::Expression::New(type, term.value());
-				return expr;
-			}
+
+			return exprLHS;
 		}
-		
+
 		return {};
 	}
 
