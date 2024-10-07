@@ -14,7 +14,7 @@ namespace Dynamite::Node
 {
 
 	// This can change based on the Reference<T> type.
-	// Currently it's a pointer, so the _DEREFERENCE operator should be nothing
+	// Currently it's a pointer, so the _DEREF 'operator' should be nothing
 	#define _DEREF 
 
 	namespace
@@ -30,8 +30,11 @@ namespace Dynamite::Node
 	
 	IdentifierTerm::IdentifierTerm(const Token& token) : TokenObj(token) {}
 
+	ParenthesisTerm::ParenthesisTerm(Reference<Expression> expr) : ExprObj(expr) {}
+
 	TermExpr::TermExpr(Reference<LiteralTerm> literalTerm) : TermObj(literalTerm) {}
 	TermExpr::TermExpr(Reference<IdentifierTerm> identifier) : TermObj(identifier) {}
+	TermExpr::TermExpr(Reference<ParenthesisTerm> parenthesis) : TermObj(parenthesis) {}
 
 	BinaryExpr::BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) : BinaryType(binaryType), LHS(lhs), RHS(rhs) {}
 
@@ -54,8 +57,11 @@ namespace Dynamite::Node
 
 	Reference<IdentifierTerm> IdentifierTerm::New(const Token& token) { return _DEREF s_Allocator.Construct<IdentifierTerm>(token); }
 
+	Reference<ParenthesisTerm> ParenthesisTerm::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ParenthesisTerm>(expr); }
+
 	Reference<TermExpr> TermExpr::New(Reference<LiteralTerm> literalTerm) { return _DEREF s_Allocator.Construct<TermExpr>(literalTerm); }
 	Reference<TermExpr> TermExpr::New(Reference<IdentifierTerm> identifier) { return _DEREF s_Allocator.Construct<TermExpr>(identifier); }
+	Reference<TermExpr> TermExpr::New(Reference<ParenthesisTerm> parenthesis) { return _DEREF s_Allocator.Construct<TermExpr>(parenthesis); }
 
 	Reference<BinaryExpr> BinaryExpr::New(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) { return _DEREF s_Allocator.Construct<BinaryExpr>(binaryType, lhs, rhs); }
 
@@ -87,6 +93,28 @@ namespace Dynamite::Node
 		}, TermObj);
 	}
 
+	size_t BinaryExprPrecendce(BinaryExpr::Type type)
+	{
+		switch (type)
+		{
+		case BinaryExpr::Type::Addition:
+		case BinaryExpr::Type::Subtraction:
+			return 0;
+
+		case BinaryExpr::Type::Multiplication:
+		case BinaryExpr::Type::Division:
+			return 1;
+
+		// TODO: Binary operators
+
+		default:
+			break;
+		}
+
+		DY_LOG_ERROR("BinaryExpr::Type's precendce level has not been implemented.");
+		return -1;
+	}
+
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
@@ -103,6 +131,8 @@ namespace Dynamite::Node
 						return Tokenizer::FormatToken(obj->TokenObj);
 					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
 						return Tokenizer::FormatToken(obj->TokenObj);
+					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ParenthesisTerm>>)
+							return Pulse::Text::Format("Parenthesis: ({0})", FormatExpressionData(obj->ExprObj));
 
 					return "Undefined Term Type";
 				}, obj->TermObj);

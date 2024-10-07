@@ -26,7 +26,7 @@ namespace Dynamite
 
 	public:
 		std::optional<Node::Reference<Node::TermExpr>> ParseTermExpr();
-		std::optional<Node::Reference<Node::Expression>> ParseExpr();
+		std::optional<Node::Reference<Node::Expression>> ParseExpr(size_t minimumPrecedence = 0);
 		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
 	private:
@@ -41,10 +41,9 @@ namespace Dynamite
 
 		std::optional<Token> TryConsumeLiteral();
 
+		bool PeekIs(const std::vector<TokenType>& allowedValues);
 		bool PeekIsVariableType();
 		bool PeekIsBinaryOperator();
-
-		ValueType GetValueType(TokenType literalType, const std::string& value);
 
 		// Note: Only casts if the internal type is a literalterm
 		void CastInternalValue(ValueType from, ValueType to, Node::Reference<Node::Expression> expression);

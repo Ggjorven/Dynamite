@@ -86,14 +86,30 @@ namespace Dynamite::Node
         [[nodiscard]] static Reference<IdentifierTerm> New(const Token& token = {});
     };
 
+    struct ParenthesisTerm // Note: We have this as a seperate term, to support expressions within parenthesis.
+    {
+    private:
+        ParenthesisTerm(Reference<Expression> expr);
+
+    public:
+        Reference<Expression> ExprObj;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<ParenthesisTerm> New(Reference<Expression> expr);
+    };
+
     struct TermExpr
     {
     private:
         TermExpr(Reference<LiteralTerm> literal);
         TermExpr(Reference<IdentifierTerm> identifier);
+        TermExpr(Reference<ParenthesisTerm> parenthesis);
 
     public:
-        Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>> TermObj;
+        Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>> TermObj;
 
         [[nodiscard]] Token GetToken();
 
@@ -103,6 +119,7 @@ namespace Dynamite::Node
 
         [[nodiscard]] static Reference<TermExpr> New(Reference<LiteralTerm> literalTerm = (Reference<LiteralTerm>)NullRef);
         [[nodiscard]] static Reference<TermExpr> New(Reference<IdentifierTerm> identifier = (Reference<IdentifierTerm>)NullRef);
+        [[nodiscard]] static Reference<TermExpr> New(Reference<ParenthesisTerm> parenthesis = (Reference<ParenthesisTerm>)NullRef);
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -222,6 +239,8 @@ namespace Dynamite::Node
     /////////////////////////////////////////////////////////////////
     // Helper functions
     /////////////////////////////////////////////////////////////////
+    size_t BinaryExprPrecendce(BinaryExpr::Type type);
+
     std::string FormatExpressionData(const Reference<Expression> expr);
     std::string FormatStatementData(const Reference<Statement> statement);
 

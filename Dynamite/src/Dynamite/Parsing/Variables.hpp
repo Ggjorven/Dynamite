@@ -66,4 +66,6 @@ namespace Dynamite
 	bool ValueTypeCastable(ValueType from, ValueType to);
 	std::string ValueTypeCast(ValueType from, ValueType to, const std::string& value, bool* dataLostPtr = nullptr);
 
+	ValueType GetValueType(TokenType literalType, const std::string& value);
+
 }

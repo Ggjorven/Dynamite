@@ -12,27 +12,31 @@ namespace Dynamite
 	{
 		None = 0,
 
-		// Main
+		// Char tokens
 		Semicolon = ';',			// End of 'statement'
 		OpenParenthesis = '(',		// '('
 		CloseParenthesis = ')',		// ')'
+		OpenCurlyBrace = '{',		// '{'
+		CloseCurlyBrace = '}',		// '}'
 		Equals = '=',				// '='
 
 		// Operators
 		Plus = '+',					// '+'
+		Add = Plus,
 		Minus = '-',				// '-'
+		Subtract = Minus,
 		Star = '*',					// '*'
 		Multiply = Star,
-		Slash = '/',				// '/'
-		Divide = Slash,
+		ForwardSlash = '/',			// '/'
+		Divide = ForwardSlash,
 
 		Pipe = '|',
 		Or = Pipe,
-		And = '&',
+		And = '&',					// (Current lowest 38) Note: Keep in mind
 		Xor = '^',
 
-		// ...
-		Identifier = 1,				// Variable name
+		// Main
+		Identifier = 1,				// Variable/function name
 
 		BoolLiteral,
 		IntegerLiteral,
@@ -40,9 +44,13 @@ namespace Dynamite
 		CharLiteral,
 		StringLiteral,
 
+		// Keywords
+		If,
+		Else,
+
 		Exit,						// Exit from Program
 
-		// Types (Name is literally what can be used in program)
+		// Types
 		Bool,
 
 		Int8,	

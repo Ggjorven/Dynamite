@@ -205,6 +205,20 @@ namespace Dynamite
 
     void Tokenizer::HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber)
     {
+        // If / Else
+        if (buffer == "if")
+        {
+            tokens.emplace_back(TokenType::If, lineNumber);
+            buffer.clear();
+            return;
+        }
+        if (buffer == "else")
+        {
+            tokens.emplace_back(TokenType::Else, lineNumber);
+            buffer.clear();
+            return;
+        }
+
         // Boolean values
         if (buffer == "false")
         {
@@ -248,6 +262,8 @@ namespace Dynamite
         CharOperator(';', TokenType::Semicolon);
         CharOperator('(', TokenType::OpenParenthesis);
         CharOperator(')', TokenType::CloseParenthesis);
+        CharOperator('{', TokenType::OpenCurlyBrace);
+        CharOperator('}', TokenType::CloseCurlyBrace);
         CharOperator('=', TokenType::Equals);
 
         // Operators

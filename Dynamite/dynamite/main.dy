@@ -1,11 +1,4 @@
-u8 x = -1;
-i32 _x = -2;
-i64 y = 1000;
-str z = "My string";
-char c = '=';
-bool b1 = 100;
-bool b2 = true;
+u8 x = 10 + 10;
+u8 y = 255;
 
-u8 or = 0 | 1;
-
-exit(_x);
+exit(x);

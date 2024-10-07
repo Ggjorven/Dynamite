@@ -5,6 +5,8 @@
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
 
+#include <Pulse/Core/Defines.hpp>
+
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
 
@@ -246,7 +248,7 @@ namespace Dynamite
 		case Fuse(ValueType::UInt64, ValueType::Int64):
 		{
 			uint64_t uintVal = std::stoull(value);
-			if (uintVal > std::numeric_limits<int64_t>::max())
+			if (uintVal > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()))
 			{
 				if (dataLostPtr) *dataLostPtr = true;
 				return std::to_string(std::numeric_limits<int64_t>::max()); // Clamp to max int value
@@ -278,5 +280,82 @@ namespace Dynamite
 		return {};
 	}
 
+	ValueType GetValueType(TokenType literalType, const std::string& value)
+	{
+		ValueType type = ValueType::None;
+
+		switch (literalType)
+		{
+		case TokenType::BoolLiteral:
+		{
+			type = ValueType::Bool;
+			break;
+		}
+		case TokenType::IntegerLiteral:
+		{
+			bool isNegative = !value.empty() && value[0] == '-';
+
+			if (isNegative)
+			{
+				int64_t intVal = std::stoll(value);
+
+				if (intVal >= Pulse::Numeric::Min<int8_t>() && intVal <= Pulse::Numeric::Max<int8_t>())
+					type = ValueType::Int8;
+				else if (intVal >= Pulse::Numeric::Min<int16_t>() && intVal <= Pulse::Numeric::Max<int16_t>())
+					type = ValueType::Int16;
+				else if (intVal >= Pulse::Numeric::Min<int32_t>() && intVal <= Pulse::Numeric::Max<int32_t>())
+					type = ValueType::Int32;
+				else if (intVal >= Pulse::Numeric::Min<int64_t>() && intVal <= Pulse::Numeric::Max<int64_t>())
+					type = ValueType::Int64;
+				else
+					DY_LOG_ERROR("Integer {0} exceeds max integers' type (Int64) size.", value);
+			}
+			else
+			{
+				uint64_t uintVal = std::stoull(value);
+
+				if (uintVal <= Pulse::Numeric::Max<uint8_t>())
+					type = ValueType::UInt8;
+				else if (uintVal <= Pulse::Numeric::Max<uint16_t>())
+					type = ValueType::UInt16;
+				else if (uintVal <= Pulse::Numeric::Max<uint32_t>())
+					type = ValueType::UInt32;
+				else if (uintVal <= Pulse::Numeric::Max<uint64_t>())
+					type = ValueType::UInt64;
+				else
+					DY_LOG_ERROR("Integer {0} exceeds max integers' type (UInt64) size.", value);
+			}
+			break;
+		}
+		case TokenType::FloatLiteral:
+		{
+			double doubleVal = std::stod(value);
+
+			if (doubleVal >= Pulse::Numeric::Min<float>() && doubleVal <= Pulse::Numeric::Max<float>())
+				type = ValueType::Float32;
+			if (doubleVal >= Pulse::Numeric::Min<double>() && doubleVal <= Pulse::Numeric::Max<double>())
+				type = ValueType::Float32;
+			else
+				DY_LOG_ERROR("Float {0} exceeds max floats' type (Float64) size.", value);
+
+			break;
+		}
+		case TokenType::CharLiteral:
+		{
+			type = ValueType::Char;
+			break;
+		}
+		case TokenType::StringLiteral:
+		{
+			type = ValueType::String;
+			break;
+		}
+
+		default:
+			break;
+		}
+
+		return type;
+	}
 
 }
