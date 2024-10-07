@@ -35,7 +35,7 @@ namespace Dynamite
 			if (auto statement = ParseStatement())
 				program.Statements.emplace_back(statement.value());
 			else // Failed to retrieve a valid statement
-				DY_LOG_ERROR("Failed to retrieve a valid statement.");
+				DY_LOG_ERROR("Failed to retrieve a valid statement.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
 		}
 
 		m_Index = 0;
@@ -66,7 +66,7 @@ namespace Dynamite
 			auto expr = ParseExpr();
 			if (!expr.has_value())
 			{
-				DY_LOG_ERROR("Failed to retrieve valid expression");
+				DY_LOG_ERROR("Failed to retrieve valid expression\n (-) Line number: {0}", Peek(-1).value().LineNumber);
 				return {};
 			}
 
@@ -109,6 +109,8 @@ namespace Dynamite
 				std::optional<size_t> precedence = {};
 				size_t nextMinimumPrecedence = -1;
 				
+				// Note: It breaks out and just returns the normal expression if
+				// it's not a binary expression.
 				if (!current.has_value())
 					break;
 
@@ -123,7 +125,7 @@ namespace Dynamite
 				auto exprRHS = ParseExpr(nextMinimumPrecedence);
 				if (!exprRHS.has_value()) 
 				{
-					DY_LOG_ERROR("Unable to parse expression.");
+					DY_LOG_ERROR("Unable to parse expression.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
 					break;
 				}
 
@@ -139,6 +141,8 @@ namespace Dynamite
 				exprLHS->ExprObj = expr;
 			}
 
+			// Note: This is either a binary expression or just a normal expression.
+			// The loop up top accounts for both
 			return exprLHS;
 		}
 
@@ -164,7 +168,7 @@ namespace Dynamite
 				// Enforce Int32 type
 				if (!ValueTypeCastable(expr.value()->Type, ValueType::UInt8))
 				{
-					DY_LOG_ERROR("exit() expects an UInt8 type, got {0}, {0} is not castable to UInt8", ValueTypeToStr(expr.value()->Type));
+					DY_LOG_ERROR("exit() expects an UInt8 type, got {0}, {0} is not castable to UInt8\n (-) Line number: {1}", ValueTypeToStr(expr.value()->Type), Peek(-1).value().LineNumber);
 
 					// Close parenthesis ')' & semicolon `;` resolution
 					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -177,7 +181,7 @@ namespace Dynamite
 				exitStatement->ExprObj = expr.value();
 			}
 			else
-				DY_LOG_ERROR("Invalid expression.");
+				DY_LOG_ERROR("Invalid expression.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
 
 			// Close parenthesis ')' & semicolon `;` resolution
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -208,7 +212,7 @@ namespace Dynamite
 			{
 				if (!ValueTypeCastable(expr.value()->Type, variableType))
 				{
-					DY_LOG_ERROR("Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type));
+					DY_LOG_ERROR("Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}\n (-) Line number: {3}", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type), Peek(-1).value().LineNumber);
 
 					// Close parenthesis ')' & semicolon `;` resolution
 					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -221,7 +225,7 @@ namespace Dynamite
 				variable->ExprObj = expr.value();
 			}
 			else
-				DY_LOG_ERROR("Invalid expression.");
+				DY_LOG_ERROR("Invalid expression.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
 
 			// Semicolon ';' resolution
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
@@ -256,7 +260,7 @@ namespace Dynamite
 		if (PeekCheck(0, tokenType))
 			return Consume();
 		else if (!msg.empty())
-			DY_LOG_ERROR(msg);
+			DY_LOG_ERROR("{0}\n - (-) Line number: {1}", msg, Peek(-1).value().LineNumber);
 
 		return {};
 	}
@@ -347,43 +351,27 @@ namespace Dynamite
 		if (from == to)
 			return;
 
-		struct ExprVisitor
+		bool dataLost = false;
+		std::string originalData = Node::FormatExpressionData(expression);
+		std::visit([&, from, to](auto&& obj) -> bool
 		{
-		public:
-			ValueType From;
-			ValueType To;
-			bool DataLost = false;
-
-		public:
-			void operator() (Node::Reference<Node::TermExpr> obj)
+			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::TermExpr>>)
 			{
-				struct TermVisitor
+				std::visit([&, from, to](auto&& obj) -> void
 				{
-				public:
-					ValueType From;
-					ValueType To;
-					bool* DataLost;
-
-				public:
-					void operator() (Node::Reference<Node::LiteralTerm> obj)
+					if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::LiteralTerm>>)
 					{
-						obj->TokenObj.Value = ValueTypeCast(From, To, obj->TokenObj.Value.value(), DataLost);
+						obj->TokenObj.Value = ValueTypeCast(from, to, obj->TokenObj.Value.value(), &dataLost);
 					}
-					void operator() (Node::Reference<Node::IdentifierTerm> obj) {}
-					void operator() (Node::Reference<Node::ParenthesisTerm> obj) {}
-				};
 
-				TermVisitor visitor = { .From = From, .To = To, .DataLost = &DataLost };
-				std::visit(visitor, obj->TermObj);
+				}, obj->TermObj);
 			}
-			void operator() (Node::Reference<Node::BinaryExpr> obj) {}
-		};
 
-		ExprVisitor visitor = { .From = from, .To = to };
-		std::visit(visitor, expression->ExprObj);
+			return dataLost;
+		}, expression->ExprObj);
 
-		if (visitor.DataLost) // Note: This outputs the new value, not the original value before cast
-			DY_LOG_WARN("Lost data while casting expression {0}. From: {1}, to {2}", Node::FormatExpressionData(expression), ValueTypeToStr(from), ValueTypeToStr(to));
+		if (dataLost) // Note: This outputs the new value, not the original value before cast
+			DY_LOG_WARN("Lost data while casting expression. From: {0}, to {1}\n\tOriginal: \t{2}\n\tNew: \t\t{3}\n (-) Line number: {4}", ValueTypeToStr(from), ValueTypeToStr(to), originalData, Node::FormatExpressionData(expression), Peek(-1).value().LineNumber);
 	}
 
 }

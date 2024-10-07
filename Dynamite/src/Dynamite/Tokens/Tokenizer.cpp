@@ -136,7 +136,13 @@ namespace Dynamite
             // Invalid token
             else
             {
-                DY_LOG_ERROR("Invalid token found at index: {0}, Buffer = {1}", m_Index, buffer);
+                size_t beginIndex = 0;
+                std::string line = GetCurrentLine(&beginIndex);
+                DY_LOG_ERROR("Invalid token found:\n    {0}\n    {1}^\n{2}|\n (-) Line number: {3}\n", GetCurrentLine(&beginIndex), std::string((m_Index - beginIndex), ' '), std::string((m_Index - beginIndex) + 4, '-'), lineNumber);
+                
+                // Consume() just 1 char, just to make sure we keep going.
+                // Since obviously from the previous char it was impossible to carry on.
+                Consume();
                 buffer.clear();
             }
         }
@@ -299,6 +305,32 @@ namespace Dynamite
         }
 
         return false;
+    }
+
+    std::string Tokenizer::GetCurrentLine(size_t* beginLineIndex)
+    {
+        size_t index = m_Index;
+        std::string line = {};
+
+        // Go back until the newline character
+        while ((m_FileContent[index] != '\n' && m_FileContent[index] != '\r') && index != 0)
+            index--;
+
+        // Go one forward so we don't start on the newline character
+        if (index != 0)
+            index++;
+
+        if (beginLineIndex) 
+            *beginLineIndex = index;
+
+        // Go forward until the newline character
+        while ((m_FileContent[index] != '\n' && m_FileContent[index] != '\r') && index != (m_FileContent.size() - 1))
+        {
+            line.push_back(m_FileContent[index]);
+            index++;
+        }
+
+        return line;
     }
 
 }

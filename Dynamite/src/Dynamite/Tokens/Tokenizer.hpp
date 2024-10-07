@@ -37,6 +37,9 @@ namespace Dynamite
 		void HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber);
 		bool HandleOperators(std::vector<Token>& tokens, uint32_t& lineNumber);
 
+		/////////////////////////////////////////////////////////////////
+		std::string GetCurrentLine(size_t* beginLineIndex = nullptr);
+
 	private:
 		std::string const& m_FileContent;
 		size_t m_Index = 0;
