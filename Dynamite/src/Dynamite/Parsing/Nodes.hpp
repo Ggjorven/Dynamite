@@ -22,7 +22,7 @@ namespace Dynamite::Node
     using Reference = T*;
 
     constexpr const Reference<void> NullRef = nullptr;
-	
+
 	/////////////////////////////////////////////////////////////////
 	struct Expression;
 
@@ -51,15 +51,15 @@ namespace Dynamite::Node
         enum class Type : uint8_t
         {
             None = 0,
-            Bool = TokenType::BoolLiteral,
-            Integer = TokenType::IntegerLiteral,
-            Float = TokenType::FloatLiteral,
-            Char = TokenType::CharLiteral,
-            String = TokenType::StringLiteral,
+            Bool = (uint8_t)TokenType::BoolLiteral,
+            Integer = (uint8_t)TokenType::IntegerLiteral,
+            Float = (uint8_t)TokenType::FloatLiteral,
+            Char = (uint8_t)TokenType::CharLiteral,
+            String = (uint8_t)TokenType::StringLiteral,
         };
     private:
         LiteralTerm(Type literalType, const Token& token);
-    
+
     public:
         Type LiteralType;
         Token TokenObj;
@@ -75,7 +75,7 @@ namespace Dynamite::Node
     {
     private:
         IdentifierTerm(const Token& token);
-    
+
     public:
         Token TokenObj;
 
@@ -128,14 +128,14 @@ namespace Dynamite::Node
         enum class Type : uint8_t
         {
             None = 0,
-            Addition = TokenType::Plus,
-            Subtraction = TokenType::Minus,
-            Multiplication = TokenType::Multiply,
-            Division = TokenType::Divide,
+            Addition = (uint8_t)TokenType::Plus,
+            Subtraction = (uint8_t)TokenType::Minus,
+            Multiplication = (uint8_t)TokenType::Multiply,
+            Division = (uint8_t)TokenType::Divide,
 
-            Or = TokenType::Or,
-            And = TokenType::And,
-            Xor = TokenType::Xor,
+            Or = (uint8_t)TokenType::Or,
+            And = (uint8_t)TokenType::And,
+            Xor = (uint8_t)TokenType::Xor,
         };
     private:
         BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs);
@@ -152,7 +152,7 @@ namespace Dynamite::Node
         [[nodiscard]] static Reference<BinaryExpr> New(Type binaryType = Type::None, Reference<Expression> lhs = (Reference<Expression>)NullRef, Reference<Expression> rhs = (Reference<Expression>)NullRef);
     };
 	/////////////////////////////////////////////////////////////////
-    
+
     /////////////////////////////////////////////////////////////////
     struct Expression
     {
@@ -225,7 +225,7 @@ namespace Dynamite::Node
         [[nodiscard]] static Reference<Statement> New(Reference<ExitStatement> exit = (Reference<ExitStatement>)NullRef);
     };
 	/////////////////////////////////////////////////////////////////
-    
+
 	/////////////////////////////////////////////////////////////////
     struct Program
     {

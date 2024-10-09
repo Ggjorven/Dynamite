@@ -8,7 +8,7 @@
 namespace Dynamite
 {
 
-	enum class TokenType : uint16_t
+	enum class TokenType : uint8_t
 	{
 		None = 0,
 
@@ -53,14 +53,14 @@ namespace Dynamite
 		// Types
 		Bool,
 
-		Int8,	
-		Int16,	
-		Int32,	
-		Int64,	
+		Int8,
+		Int16,
+		Int32,
+		Int64,
 
-		UInt8,	
-		UInt16,	
-		UInt32,	
+		UInt8,
+		UInt16,
+		UInt32,
 		UInt64,
 
 		Float32,

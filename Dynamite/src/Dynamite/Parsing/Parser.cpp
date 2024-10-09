@@ -214,8 +214,7 @@ namespace Dynamite
 				{
 					DY_LOG_ERROR("Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}\n (-) Line number: {3}", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type), Peek(-1).value().LineNumber);
 
-					// Close parenthesis ')' & semicolon `;` resolution
-					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+					// Semicolon `;` resolution
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
 					return {};
 				}

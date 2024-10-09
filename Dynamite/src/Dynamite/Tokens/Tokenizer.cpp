@@ -13,8 +13,6 @@
 namespace Dynamite
 {
 
-    #define PeekCheck(func, ...) Peek().has_value() && func(Peek().value(), __VA_ARGS__)
-
     namespace
     {
         static bool IsAlpha(char c)
@@ -22,14 +20,14 @@ namespace Dynamite
             return (std::isalpha(c) || c == '_');
         }
 
-        static bool IsNumeric(char c, bool allowsMinus = false)
+        static bool IsNumeric(char c, bool allowsMinus)
         {
             return (std::isdigit(c) || (allowsMinus ? (c == '-') : false));
         }
 
         static bool IsAlphaNumeric(char c)
         {
-            return IsAlpha(c) || IsNumeric(c);
+            return IsAlpha(c) || IsNumeric(c, false);
         }
     }
 
@@ -69,7 +67,7 @@ namespace Dynamite
                 buffer.push_back(Consume());
 
                 // While still a numeric value, keep reading
-                while (PeekCheck(IsNumeric))
+                while (PeekCheck(IsNumeric, false))
                     buffer.push_back(Consume());
 
                 // If buffer is just a minus, make it a minus
@@ -84,7 +82,7 @@ namespace Dynamite
                 {
                     buffer.push_back(Consume()); // '.' char
 
-                    while (PeekCheck(IsNumeric))
+                    while (PeekCheck(IsNumeric, false))
                         buffer.push_back(Consume());
 
                     tokens.emplace_back(TokenType::FloatLiteral, buffer, lineNumber);
@@ -97,7 +95,7 @@ namespace Dynamite
                 }
             }
 
-            // Is char  
+            // Is char
             else if (Peek(0).has_value() && Peek(0).value() == '\'' // Begin char character
                 && Peek(2).has_value() && Peek(2).value() == '\'') // End char character
             {
@@ -139,7 +137,7 @@ namespace Dynamite
                 size_t beginIndex = 0;
                 std::string line = GetCurrentLine(&beginIndex);
                 DY_LOG_ERROR("Invalid token found:\n    {0}\n    {1}^\n{2}|\n (-) Line number: {3}\n", GetCurrentLine(&beginIndex), std::string((m_Index - beginIndex), ' '), std::string((m_Index - beginIndex) + 4, '-'), lineNumber);
-                
+
                 // Consume() just 1 char, just to make sure we keep going.
                 // Since obviously from the previous char it was impossible to carry on.
                 Consume();
@@ -320,7 +318,7 @@ namespace Dynamite
         if (index != 0)
             index++;
 
-        if (beginLineIndex) 
+        if (beginLineIndex)
             *beginLineIndex = index;
 
         // Go forward until the newline character

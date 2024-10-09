@@ -29,6 +29,9 @@ namespace Dynamite
 		// will return an optional with no value. Checkable with .has_value()
 		[[nodiscard]] std::optional<char> Peek(size_t offset = 0) const;
 
+        template<typename Func, typename ...Args>
+        [[nodiscard]] bool PeekCheck(Func&& func, Args&& ...args);
+
 		// Increments the index and returns the character at m_Index
 		char Consume();
 
@@ -44,5 +47,12 @@ namespace Dynamite
 		std::string const& m_FileContent;
 		size_t m_Index = 0;
 	};
+
+    template<typename Func, typename ...Args>
+    bool Tokenizer::PeekCheck(Func&& func, Args&& ...args)
+    {
+        auto peeked = Peek();
+        return peeked.has_value() && func(peeked.value(), std::forward<Args>(args)...);
+    }
 
 }

@@ -8,27 +8,27 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Types
 	/////////////////////////////////////////////////////////////////
-	enum class ValueType : uint16_t
+	enum class ValueType : uint8_t
 	{
 		None = 0,
 
-		Bool = TokenType::Bool,
+		Bool = (uint8_t)TokenType::Bool,
 
-		Int8 = TokenType::Int8,
-		Int16 = TokenType::Int16,
-		Int32 = TokenType::Int32,
-		Int64 = TokenType::Int64,
+		Int8 = (uint8_t)TokenType::Int8,
+		Int16 = (uint8_t)TokenType::Int16,
+		Int32 = (uint8_t)TokenType::Int32,
+		Int64 = (uint8_t)TokenType::Int64,
 
-		UInt8 = TokenType::UInt8,
-		UInt16 = TokenType::UInt16,
-		UInt32 = TokenType::UInt32,
-		UInt64 = TokenType::UInt64,
+		UInt8 = (uint8_t)TokenType::UInt8,
+		UInt16 = (uint8_t)TokenType::UInt16,
+		UInt32 = (uint8_t)TokenType::UInt32,
+		UInt64 = (uint8_t)TokenType::UInt64,
 
-		Float32 = TokenType::Float32,
-		Float64 = TokenType::Float64,
+		Float32 = (uint8_t)TokenType::Float32,
+		Float64 = (uint8_t)TokenType::Float64,
 
-		Char = TokenType::Char,
-		String = TokenType::String,
+		Char = (uint8_t)TokenType::Char,
+		String = (uint8_t)TokenType::String,
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -57,7 +57,7 @@ namespace Dynamite
 
 	template<ValueType T>
 	using ValueTypeToCType = ValueTypeToCTypeImpl<T>::Type;
-	
+
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
