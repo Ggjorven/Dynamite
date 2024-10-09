@@ -12,7 +12,7 @@ namespace Dynamite
 	struct CompilerFlag
 	{
 	public:
-		enum class Type : uint8_t { None = 0, File, IncludeDir };
+		enum class Type : uint8_t { None = 0, File, IncludeDir, OutputDir };
 	public:
 		Type Flag;
 		const std::optional<std::string> Value;

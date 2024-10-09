@@ -15,16 +15,19 @@ namespace Dynamite
 	class Tokenizer
 	{
 	public:
-		explicit Tokenizer(const std::string& fileContent);
+		Tokenizer(std::string& fileContent);
 		~Tokenizer() = default;
 
-		std::vector<Token> GetTokens();
+		std::vector<Token> Tokenize();
 
-		// Debug print function
-		static std::string FormatToken(const Token& token);
-		static void Print(const std::vector<Token>& tokens);
+		// Getters
+		inline const size_t GetIndex() const { return m_Index; }
 
-	private:
+		inline const std::vector<Token>& GetTokens() const { return m_Tokens; }
+		inline const std::string& GetBuffer() const { return m_Buffer; }
+		inline const uint32_t GetLineNumber() const { return m_LineNumber; }
+
+	public:
 		// Returns the char at m_Index + offset, if it is out of bounds it
 		// will return an optional with no value. Checkable with .has_value()
 		[[nodiscard]] std::optional<char> Peek(size_t offset = 0) const;
@@ -36,16 +39,18 @@ namespace Dynamite
 		char Consume();
 
 		/////////////////////////////////////////////////////////////////
-		bool HandleTypes(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber);
-		void HandleKeywords(std::string& buffer, std::vector<Token>& tokens, uint32_t lineNumber);
-		bool HandleOperators(std::vector<Token>& tokens, uint32_t& lineNumber);
-
-		/////////////////////////////////////////////////////////////////
-		std::string GetCurrentLine(size_t* beginLineIndex = nullptr);
+		bool HandleTypes();
+		void HandleKeywords();
+		bool HandleOperators();
 
 	private:
-		std::string const& m_FileContent;
+		std::string& m_FileContent;
 		size_t m_Index = 0;
+
+		// Token usage
+		std::vector<Token> m_Tokens = { };
+		std::string m_Buffer = {};
+		uint32_t m_LineNumber = 1;
 	};
 
     template<typename Func, typename ...Args>

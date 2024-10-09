@@ -5,10 +5,7 @@
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
 
-#include <Pulse/Text/Format.hpp>
-
-#undef FMT_VERSION
-#include <Pulse/Enum/Enum.hpp>
+#include "Dynamite/Compiler/CompilerSuite.hpp"
 
 #include <Pulse/Types/TypeUtils.hpp>
 
@@ -20,7 +17,7 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Main functions
 	/////////////////////////////////////////////////////////////////
-	Parser::Parser(const std::vector<Token>& tokens)
+	Parser::Parser(std::vector<Token>& tokens)
 		: m_Tokens(tokens)
 	{
 	}
@@ -35,17 +32,11 @@ namespace Dynamite
 			if (auto statement = ParseStatement())
 				program.Statements.emplace_back(statement.value());
 			else // Failed to retrieve a valid statement
-				DY_LOG_ERROR("Failed to retrieve a valid statement.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
+				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve a valid statement");
 		}
 
 		m_Index = 0;
 		return program;
-	}
-
-	void Parser::Print(const Node::Program& program)
-	{
-		for (const auto& statement : program.Statements)
-			DY_LOG_TRACE("{0}",  Node::FormatStatementData(statement));
 	}
 
 	/////////////////////////////////////////////////////////////////
@@ -66,7 +57,7 @@ namespace Dynamite
 			auto expr = ParseExpr();
 			if (!expr.has_value())
 			{
-				DY_LOG_ERROR("Failed to retrieve valid expression\n (-) Line number: {0}", Peek(-1).value().LineNumber);
+				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve a valid expression");
 				return {};
 			}
 
@@ -125,7 +116,7 @@ namespace Dynamite
 				auto exprRHS = ParseExpr(nextMinimumPrecedence);
 				if (!exprRHS.has_value()) 
 				{
-					DY_LOG_ERROR("Unable to parse expression.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
+					CompilerSuite::Error(GetLineNumber(), "Unable to parse expression.");
 					break;
 				}
 
@@ -168,7 +159,7 @@ namespace Dynamite
 				// Enforce Int32 type
 				if (!ValueTypeCastable(expr.value()->Type, ValueType::UInt8))
 				{
-					DY_LOG_ERROR("exit() expects an UInt8 type, got {0}, {0} is not castable to UInt8\n (-) Line number: {1}", ValueTypeToStr(expr.value()->Type), Peek(-1).value().LineNumber);
+					CompilerSuite::Error(GetLineNumber(), "exit() expects an UInt8 type, got {0}, {0} is not castable to UInt8", ValueTypeToStr(expr.value()->Type));
 
 					// Close parenthesis ')' & semicolon `;` resolution
 					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -181,7 +172,7 @@ namespace Dynamite
 				exitStatement->ExprObj = expr.value();
 			}
 			else
-				DY_LOG_ERROR("Invalid expression.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
+				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
 
 			// Close parenthesis ')' & semicolon `;` resolution
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -212,7 +203,7 @@ namespace Dynamite
 			{
 				if (!ValueTypeCastable(expr.value()->Type, variableType))
 				{
-					DY_LOG_ERROR("Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}\n (-) Line number: {3}", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type), Peek(-1).value().LineNumber);
+					CompilerSuite::Error(GetLineNumber(), "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type));
 
 					// Semicolon `;` resolution
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
@@ -224,7 +215,7 @@ namespace Dynamite
 				variable->ExprObj = expr.value();
 			}
 			else
-				DY_LOG_ERROR("Invalid expression.\n (-) Line number: {0}", Peek(-1).value().LineNumber);
+				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
 
 			// Semicolon ';' resolution
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
@@ -259,7 +250,7 @@ namespace Dynamite
 		if (PeekCheck(0, tokenType))
 			return Consume();
 		else if (!msg.empty())
-			DY_LOG_ERROR("{0}\n - (-) Line number: {1}", msg, Peek(-1).value().LineNumber);
+			CompilerSuite::Error(GetLineNumber(), msg);
 
 		return {};
 	}
@@ -370,7 +361,7 @@ namespace Dynamite
 		}, expression->ExprObj);
 
 		if (dataLost) // Note: This outputs the new value, not the original value before cast
-			DY_LOG_WARN("Lost data while casting expression. From: {0}, to {1}\n\tOriginal: \t{2}\n\tNew: \t\t{3}\n (-) Line number: {4}", ValueTypeToStr(from), ValueTypeToStr(to), originalData, Node::FormatExpressionData(expression), Peek(-1).value().LineNumber);
+			CompilerSuite::Warn(GetLineNumber(), "Lost data while casting expression. From: {0}, to {1}\n    Original: \t\t{2}\n    New: \t\t{3}", ValueTypeToStr(from), ValueTypeToStr(to), originalData, Node::FormatExpressionData(expression));
 	}
 
 }

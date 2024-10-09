@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	Logger::Init();
 
 	CompilerSuite compilerSuite(CompilerOptions(argc, argv));
-	std::string result = compilerSuite.Compile();
+	compilerSuite.Compile();
 
 	return 0;
 }

@@ -24,12 +24,15 @@ namespace Dynamite
 			if (str.substr(2, 2) == "I=")
 				return CompilerFlag(CompilerFlag::Type::IncludeDir, str.substr(4, str.size() - 4));
 
+			if (str.substr(2, 2) == "O=")
+				return CompilerFlag(CompilerFlag::Type::OutputDir, str.substr(4, str.size() - 4));
+
 			return {};
 		}
 	}
 
 	CompilerFlag::CompilerFlag(const std::optional<std::string>& value)
-		: Flag(Type::File), Value(value)
+		: CompilerFlag(Type::File, value)
 	{
 	}
 
@@ -49,6 +52,8 @@ namespace Dynamite
 	CompilerOptions::CompilerOptions(int argc, char** argv)
 		: WorkingDir(std::filesystem::current_path())
 	{
+		Flags.emplace_back(CompilerFlag::Type::OutputDir, "bin"); // Set a default output directory
+		
 		ParseArgs(argc, argv);
 	}
 

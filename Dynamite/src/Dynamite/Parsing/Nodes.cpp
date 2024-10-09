@@ -112,9 +112,9 @@ namespace Dynamite::Node
 				return std::visit([](auto&& obj) -> std::string
 				{
 					if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<LiteralTerm>>)
-						return Tokenizer::FormatToken(obj->TokenObj);
+						return FormatToken(obj->TokenObj);
 					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
-						return Tokenizer::FormatToken(obj->TokenObj);
+						return FormatToken(obj->TokenObj);
 					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ParenthesisTerm>>)
 							return Pulse::Text::Format("Parenthesis: ({0})", FormatExpressionData(obj->ExprObj));
 
@@ -138,7 +138,7 @@ namespace Dynamite::Node
 		{
 			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<VariableStatement>>)
 			{
-				return Pulse::Text::Format("[Variable({0})] - {1}([{2}])", ValueTypeToStr(obj->Type), Tokenizer::FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
+				return Pulse::Text::Format("[Variable({0})] - {1}([{2}])", ValueTypeToStr(obj->Type), FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
 			}
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ExitStatement>>)
 			{

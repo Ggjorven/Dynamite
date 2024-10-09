@@ -17,23 +17,25 @@ namespace Dynamite
 	class Parser
 	{
 	public:
-		explicit Parser(const std::vector<Token>& tokens);
+		Parser(std::vector<Token>& tokens);
 		~Parser() = default;
 
 		Node::Program GetProgram();
 
-		static void Print(const Node::Program& program);
+		inline const std::vector<Token>& GetTokens() const { return m_Tokens; }
+		inline const size_t GetIndex() const { return m_Index; }
 
 	public:
 		std::optional<Node::Reference<Node::TermExpr>> ParseTermExpr();
 		std::optional<Node::Reference<Node::Expression>> ParseExpr(size_t minimumPrecedence = 0);
 		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
-	private:
+	public:
 		// Returns the Token at m_Index + offset, if it is out of bounds it
 		// will return an optional with no value. Checkable with .has_value()
 		[[nodiscard]] std::optional<Token> Peek(size_t offset = 0) const;
 
+	private:
 		// Increments the index and returns the Token at m_Index
 		Token Consume();
 		Token CheckConsume(TokenType tokenType, const std::string& msg = {});
@@ -48,8 +50,10 @@ namespace Dynamite
 		// Note: Only casts if the internal type is a literalterm
 		void CastInternalValue(ValueType from, ValueType to, Node::Reference<Node::Expression> expression);
 
+		inline uint32_t GetLineNumber() const { return Peek(0).value().LineNumber; }
+
 	private:
-		const std::vector<Token>& m_Tokens;
+		std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
 
 		// TODO: Add support for scopes
