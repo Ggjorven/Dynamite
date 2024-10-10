@@ -113,9 +113,7 @@ namespace Dynamite::Node
     struct TermExpr
     {
     private:
-        TermExpr(Reference<LiteralTerm> literal);
-        TermExpr(Reference<IdentifierTerm> identifier);
-        TermExpr(Reference<ParenthesisTerm> parenthesis);
+        TermExpr(Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>> term);
 
     public:
         Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>> TermObj;
@@ -124,9 +122,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<TermExpr> New(Reference<LiteralTerm> literalTerm = (Reference<LiteralTerm>)NullRef);
-        [[nodiscard]] static Reference<TermExpr> New(Reference<IdentifierTerm> identifier = (Reference<IdentifierTerm>)NullRef);
-        [[nodiscard]] static Reference<TermExpr> New(Reference<ParenthesisTerm> parenthesis = (Reference<ParenthesisTerm>)NullRef);
+        [[nodiscard]] static Reference<TermExpr> New(Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>> = {});
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -166,8 +162,7 @@ namespace Dynamite::Node
     struct Expression
     {
     private:
-        Expression(ValueType type, Reference<TermExpr> term);
-        Expression(ValueType type, Reference<BinaryExpr> binary);
+        Expression(ValueType type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr);
 
     public:
         ValueType Type;
@@ -177,8 +172,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<Expression> New(ValueType type = ValueType::None, Reference<TermExpr> term = (Reference<TermExpr>)NullRef);
-        [[nodiscard]] static Reference<Expression> New(ValueType type = ValueType::None, Reference<BinaryExpr> binary = (Reference<BinaryExpr>)NullRef);
+        [[nodiscard]] static Reference<Expression> New(ValueType type = ValueType::None, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr = {});
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -222,8 +216,7 @@ namespace Dynamite::Node
     struct ConditionBranch
     {
     private:
-        ConditionBranch(Reference<ElseIfBranch> elseIfBranch);
-        ConditionBranch(Reference<ElseBranch> elseBranch);
+        ConditionBranch(Variant<Reference<ElseIfBranch>, Reference<ElseBranch>> branch);
 
     public:
         Variant<Reference<ElseIfBranch>, Reference<ElseBranch>> ConditionObj;
@@ -232,8 +225,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<ConditionBranch> New(Reference<ElseIfBranch> elseIfBranch = (Reference<ElseIfBranch>)NullRef);
-        [[nodiscard]] static Reference<ConditionBranch> New(Reference<ElseBranch> elseBranch = (Reference<ElseBranch>)NullRef);
+        [[nodiscard]] static Reference<ConditionBranch> New(Variant<Reference<ElseIfBranch>, Reference<ElseBranch>> branch = {});
     };
 
     struct IfStatement
@@ -313,11 +305,7 @@ namespace Dynamite::Node
     struct Statement
     {
     private:
-        Statement(Reference<VariableStatement> var);
-        Statement(Reference<ExitStatement> exit);
-        Statement(Reference<ScopeStatement> scope);
-        Statement(Reference<IfStatement> ifStatement);
-        Statement(Reference<AssignmentStatement> assignment);
+        Statement(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement);
 
     public:
         Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> StatementObj;
@@ -326,11 +314,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<Statement> New(Reference<VariableStatement> var = (Reference<VariableStatement>)NullRef);
-        [[nodiscard]] static Reference<Statement> New(Reference<ExitStatement> exit = (Reference<ExitStatement>)NullRef);
-        [[nodiscard]] static Reference<Statement> New(Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef);
-        [[nodiscard]] static Reference<Statement> New(Reference<IfStatement> ifStatement = (Reference<IfStatement>)NullRef);
-        [[nodiscard]] static Reference<Statement> New(Reference<AssignmentStatement> assignment = (Reference<AssignmentStatement>)NullRef);
+        [[nodiscard]] static Reference<Statement> New(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement = {});
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -348,6 +332,7 @@ namespace Dynamite::Node
     std::optional<size_t> GetBinaryExprPrecendce(BinaryExpr::Type type);
 
     std::string FormatExpressionData(const Reference<Expression> expr);
+    std::string FormatConditionBranch(const Reference<ConditionBranch> expr);
     std::string FormatStatementData(const Reference<Statement> statement);
 
 }

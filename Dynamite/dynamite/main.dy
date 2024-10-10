@@ -1,8 +1,19 @@
 u8 x = 10 + 6 * (7 - 2);
 u8 y = 255;
 
+if (1)
 {
 	i32 z = 89;
 }
+else // Comment
+{
+	i32 z = 90;
+}
+
+/*
+Multi 
+line
+comment
+*/
 
 exit(x);

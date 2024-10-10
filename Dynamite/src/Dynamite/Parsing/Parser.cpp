@@ -121,10 +121,7 @@ namespace Dynamite
 				}
 
 				auto expr = Node::BinaryExpr::New(static_cast<Node::BinaryExpr::Type>(operation.Type));
-				auto exprLHS2 = std::visit([type](auto&& obj) -> Node::Reference<Node::Expression>
-				{
-					return Node::Expression::New(type, obj);
-				}, exprLHS->ExprObj); 
+				auto exprLHS2 = Node::Expression::New(type, exprLHS->ExprObj);
 				
 				expr->LHS = exprLHS2;
 				expr->RHS = exprRHS.value();
@@ -162,6 +159,52 @@ namespace Dynamite
 		
 		CheckConsume(TokenType::CloseCurlyBrace, "Expected `}}`");
 		return scope;
+	}
+
+	std::optional<Node::Reference<Node::ConditionBranch>> Parser::ParseConditionBrach()
+	{
+		if (PeekCheck(0, TokenType::Else) && PeekCheck(1, TokenType::If)) 
+		{
+			Consume(); // 'else' token
+			Consume(); // 'if' token
+
+			CheckConsume(TokenType::OpenParenthesis, "Expected `(`.");
+
+			if (auto expr = ParseExpr())
+			{
+				auto elif = Node::ElseIfBranch::New(expr.value());
+
+				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+
+				if (auto scope = ParseScope())
+				{
+					elif->Scope = scope.value();
+					elif->Next = ParseConditionBrach(); // Note: Can be NULL
+					return Node::ConditionBranch::New(elif);
+				}
+				else
+					CompilerSuite::Error(GetLineNumber(), "Failed to retrieve valid scope.");
+			}
+			else
+				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
+
+			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+
+			return {};
+		}
+		else if (PeekCheck(0, TokenType::Else)) 
+		{
+			Consume(); // 'else' token
+
+			if (auto scope = ParseScope()) 
+				return Node::ConditionBranch::New(Node::ElseBranch::New(scope.value()));
+			else 
+				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve valid scope.");
+
+			return {};
+		}
+
+		return {};
 	}
 
 	std::optional<Node::Reference<Node::Statement>> Parser::ParseStatement()
@@ -214,6 +257,36 @@ namespace Dynamite
 				return Node::Statement::New(scope.value());
 			else
 				CompilerSuite::Error(GetLineNumber(), "Invalid scope.");
+		}
+
+		/////////////////////////////////////////////////////////////////
+		// If statement
+		/////////////////////////////////////////////////////////////////
+		else if (auto if_ = TryConsume(TokenType::If)) 
+		{
+			CheckConsume(TokenType::OpenParenthesis, "Expected `(`.");
+
+			if (auto expr = ParseExpr()) 
+			{
+				auto ifStatement = Node::IfStatement::New(expr.value());
+
+				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+			
+				if (auto scope = ParseScope())
+				{
+					ifStatement->Scope = scope.value();
+					ifStatement->Next = ParseConditionBrach(); // Note: Can be NULL
+					return Node::Statement::New(ifStatement);
+				}
+				else
+					CompilerSuite::Error(GetLineNumber(), "Failed to retrieve valid scope.");
+			}
+			else 
+				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
+			
+			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+
+			return {};
 		}
 
 		/////////////////////////////////////////////////////////////////

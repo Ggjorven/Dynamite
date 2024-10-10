@@ -29,6 +29,7 @@ namespace Dynamite
 		std::optional<Node::Reference<Node::TermExpr>> ParseTermExpr();
 		std::optional<Node::Reference<Node::Expression>> ParseExpr(const size_t minimumPrecedence = 0);
 		std::optional<Node::Reference<Node::ScopeStatement>> ParseScope();
+		std::optional<Node::Reference<Node::ConditionBranch>> ParseConditionBrach();
 		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
 	public:

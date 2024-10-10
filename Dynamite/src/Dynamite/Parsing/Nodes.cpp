@@ -32,23 +32,19 @@ namespace Dynamite::Node
 
 	ParenthesisTerm::ParenthesisTerm(Reference<Expression> expr) : ExprObj(expr) {}
 
-	TermExpr::TermExpr(Reference<LiteralTerm> literalTerm) : TermObj(literalTerm) {}
-	TermExpr::TermExpr(Reference<IdentifierTerm> identifier) : TermObj(identifier) {}
-	TermExpr::TermExpr(Reference<ParenthesisTerm> parenthesis) : TermObj(parenthesis) {}
+	TermExpr::TermExpr(Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>> term) : TermObj(term) {}
 
 	BinaryExpr::BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) : BinaryType(binaryType), LHS(lhs), RHS(rhs) {}
 
-	Expression::Expression(ValueType type, Reference<TermExpr> term) : Type(type), ExprObj(term) {}
-	Expression::Expression(ValueType type, Reference<BinaryExpr> binary) : Type(type), ExprObj(binary) {}
-
+	Expression::Expression(ValueType type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr) : Type(type), ExprObj(expr) {}
+	
 
 
 	ElseIfBranch::ElseIfBranch(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) : ExprObj(expr), Scope(scope), Next(next) {}
 
 	ElseBranch::ElseBranch(Reference<ScopeStatement> scope) : Scope(scope) {}
 
-	ConditionBranch::ConditionBranch(Reference<ElseIfBranch> elseIfBranch) : ConditionObj(elseIfBranch) {}
-	ConditionBranch::ConditionBranch(Reference<ElseBranch> elseBranch) : ConditionObj(elseBranch) {}
+	ConditionBranch::ConditionBranch(Variant<Reference<ElseIfBranch>, Reference<ElseBranch>> branch) : ConditionObj(branch) {}
 
 	IfStatement::IfStatement(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) : ExprObj(expr), Scope(scope), Next(next) {}
 
@@ -58,11 +54,7 @@ namespace Dynamite::Node
 
 	ScopeStatement::ScopeStatement(const std::vector<Reference<Statement>>& statements) : Statements(statements) {}
 
-	Statement::Statement(Reference<VariableStatement> var) : StatementObj(var) {}
-	Statement::Statement(Reference<ExitStatement> exit) : StatementObj(exit) {}
-	Statement::Statement(Reference<ScopeStatement> scope) : StatementObj(scope) {}
-	Statement::Statement(Reference<IfStatement> ifStatement) : StatementObj(ifStatement) {}
-	Statement::Statement(Reference<AssignmentStatement> assignment) : StatementObj(assignment) {}
+	Statement::Statement(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement) : StatementObj(statement) {}
 
 	/////////////////////////////////////////////////////////////////
 	// Custom allocator functions
@@ -73,14 +65,11 @@ namespace Dynamite::Node
 
 	Reference<ParenthesisTerm> ParenthesisTerm::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ParenthesisTerm>(expr); }
 
-	Reference<TermExpr> TermExpr::New(Reference<LiteralTerm> literalTerm) { return _DEREF s_Allocator.Construct<TermExpr>(literalTerm); }
-	Reference<TermExpr> TermExpr::New(Reference<IdentifierTerm> identifier) { return _DEREF s_Allocator.Construct<TermExpr>(identifier); }
-	Reference<TermExpr> TermExpr::New(Reference<ParenthesisTerm> parenthesis) { return _DEREF s_Allocator.Construct<TermExpr>(parenthesis); }
+	Reference<TermExpr> TermExpr::New(Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>> term) { return _DEREF s_Allocator.Construct<TermExpr>(term); }
 
 	Reference<BinaryExpr> BinaryExpr::New(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) { return _DEREF s_Allocator.Construct<BinaryExpr>(binaryType, lhs, rhs); }
 
-	Reference<Expression> Expression::New(ValueType type, Reference<TermExpr> term) { return _DEREF s_Allocator.Construct<Expression>(type, term); }
-	Reference<Expression> Expression::New(ValueType type, Reference<BinaryExpr> binary) { return _DEREF s_Allocator.Construct<Expression>(type, binary); }
+	Reference<Expression> Expression::New(ValueType type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr) { return _DEREF s_Allocator.Construct<Expression>(type, expr); }
 
 
 
@@ -88,8 +77,7 @@ namespace Dynamite::Node
 
 	Reference<ElseBranch> ElseBranch::New(Reference<ScopeStatement> scope) { return _DEREF s_Allocator.Construct<ElseBranch>(scope); }
 
-	Reference<ConditionBranch> ConditionBranch::New(Reference<ElseIfBranch> elseIfBranch) { return _DEREF s_Allocator.Construct<ConditionBranch>(elseIfBranch); }
-	Reference<ConditionBranch> ConditionBranch::New(Reference<ElseBranch> elseBranch) { return _DEREF s_Allocator.Construct<ConditionBranch>(elseBranch); }
+	Reference<ConditionBranch> ConditionBranch::New(Variant<Reference<ElseIfBranch>, Reference<ElseBranch>> branch) { return _DEREF s_Allocator.Construct<ConditionBranch>(branch); }
 
 	Reference<IfStatement> IfStatement::New(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) { return _DEREF s_Allocator.Construct<IfStatement>(expr, scope, next); }
 
@@ -99,11 +87,7 @@ namespace Dynamite::Node
 
 	Reference<ScopeStatement> ScopeStatement::New(const std::vector<Reference<Statement>>& statements) { return _DEREF s_Allocator.Construct<ScopeStatement>(statements); }
 
-	Reference<Statement> Statement::New(Reference<VariableStatement> var) { return _DEREF s_Allocator.Construct<Statement>(var); }
-	Reference<Statement> Statement::New(Reference<ExitStatement> exit) { return _DEREF s_Allocator.Construct<Statement>(exit); }
-	Reference<Statement> Statement::New(Reference<ScopeStatement> scope) { return _DEREF s_Allocator.Construct<Statement>(scope); }
-	Reference<Statement> Statement::New(Reference<IfStatement> ifStatement) { return _DEREF s_Allocator.Construct<Statement>(ifStatement); }
-	Reference<Statement> Statement::New(Reference<AssignmentStatement> assignment) { return _DEREF s_Allocator.Construct<Statement>(assignment); }
+	Reference<Statement> Statement::New(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement) { return _DEREF s_Allocator.Construct<Statement>(statement); }
 
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
@@ -161,6 +145,37 @@ namespace Dynamite::Node
 	}
 
 	// Note: Has to be manually updated
+	std::string FormatConditionBranch(const Reference<ConditionBranch> expr)
+	{
+		return std::visit([](auto&& obj) -> std::string
+		{
+			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ElseIfBranch>>)
+			{
+				std::string str = "\nelse if (" + FormatExpressionData(obj->ExprObj) + ")";
+
+				// Note: Maybe this should be changed, since we don't clear the memory.
+				str += FormatStatementData(Node::Statement::New(obj->Scope));
+
+				if (obj->Next.has_value())
+					str += FormatConditionBranch(obj->Next.value());
+
+				return str;
+			}
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ElseBranch>>)
+			{
+				std::string str = "\nelse";
+
+				// Note: Maybe this should be changed, since we don't clear the memory.
+				str += FormatStatementData(Node::Statement::New(obj->Scope));
+
+				return str;
+			}
+
+			return "Undefined Condition Branch";
+		}, expr->ConditionObj);
+	}
+
+	// Note: Has to be manually updated
 	std::string FormatStatementData(const Reference<Statement> statement)
 	{
 		return std::visit([](auto&& obj) -> std::string
@@ -184,12 +199,15 @@ namespace Dynamite::Node
 			}
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IfStatement>>)
 			{
-				// TODO: ...
+				std::string str = "\nif (" + FormatExpressionData(obj->ExprObj) + ")";
 
-				std::string str = "if (" + FormatExpressionData(obj->ExprObj) + ")\n";
+				// Note: Maybe this should be changed, since we don't clear the memory.
+				str += FormatStatementData(Node::Statement::New(obj->Scope));
 
-				//str += FormatStatementData(obj->Scope);
+				if (obj->Next.has_value())
+					str += FormatConditionBranch(obj->Next.value());
 
+				return str;
 			}
 			// TODO: Assignment
 

@@ -124,6 +124,39 @@ namespace Dynamite
                 m_Buffer.clear();
             }
 
+            // Single line comment
+            else if (Peek(0).value() == '/' && Peek(1).has_value() && Peek(1).value() == '/') 
+            {
+                Consume(); // '/' char
+                Consume(); // '/' char
+
+                while (Peek(0).has_value() && (Peek(0).value() != '\n' && Peek(0).value() != '\r'))
+                    Consume();
+
+                Consume(); // '\n' char
+                m_LineNumber++;
+            }
+            // Multiline comment
+            else if (Peek(0).value() == '/' && Peek(1).has_value() && Peek(1).value() == '*')
+            {
+                Consume(); // '/' char
+                Consume(); // '*' char
+
+                while (Peek(0).has_value()) 
+                {
+                    if (Peek(0).value() == '*' && Peek(1).has_value() && Peek(1).value() == '/')
+                    {
+                        Consume(); // '*' char
+                        Consume(); // '/' char
+                        break;
+                    }
+                    else if ((Peek(0).value() == '\n' || Peek(0).value() == '\r'))
+                        m_LineNumber++;
+
+                    Consume();
+                }
+            }
+
             // Handle operators and other chars
             else if (HandleOperators())
                 continue;
