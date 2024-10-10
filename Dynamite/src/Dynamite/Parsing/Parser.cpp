@@ -140,6 +140,28 @@ namespace Dynamite
 		return {};
 	}
 
+	std::optional<Node::Reference<Node::ScopeStatement>> Parser::ParseScope()
+	{
+		if (!TryConsume(TokenType::OpenCurlyBrace).has_value())
+			return {};
+
+		// TODO: Increment scope
+		
+		Node::Reference<Node::ScopeStatement> scope = Node::ScopeStatement::New();
+		while (auto stmt = ParseStatement()) 
+			scope->Statements.push_back(stmt.value());
+
+		// Note: We decrement, since if we did not retrieve any (valid) statements
+		// it will result in consuming the next token just to carry on, but this also means
+		// that the '}' has already been consumed. So we just go one back.
+		m_Index--;
+
+		// TODO: Decrement scope
+		
+		CheckConsume(TokenType::CloseCurlyBrace, "Expected `}}`");
+		return scope;
+	}
+
 	std::optional<Node::Reference<Node::Statement>> Parser::ParseStatement()
 	{
 		/////////////////////////////////////////////////////////////////
@@ -179,6 +201,17 @@ namespace Dynamite
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
 
 			return Node::Statement::New(exitStatement);
+		}
+
+		/////////////////////////////////////////////////////////////////
+		// Scope
+		/////////////////////////////////////////////////////////////////
+		else if (PeekCheck(0, TokenType::OpenCurlyBrace))
+		{
+			if (auto scope = ParseScope()) 
+				return Node::Statement::New(scope.value());
+			else
+				CompilerSuite::Error(GetLineNumber(), "Invalid scope.");
 		}
 
 		/////////////////////////////////////////////////////////////////

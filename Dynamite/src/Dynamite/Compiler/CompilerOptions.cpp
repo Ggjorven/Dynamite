@@ -27,6 +27,9 @@ namespace Dynamite
 			if (str.substr(2, 2) == "O=")
 				return CompilerFlag(CompilerFlag::Type::OutputDir, str.substr(4, str.size() - 4));
 
+			if (str.substr(2, str.size() - 2) == "Verbose")
+				return CompilerFlag(CompilerFlag::Type::Verbose);
+
 			return {};
 		}
 	}
@@ -69,6 +72,17 @@ namespace Dynamite
 		}
 
 		return result;
+	}
+
+	const bool CompilerOptions::Contains(CompilerFlag::Type type) const
+	{
+		for (const auto& element : Flags)
+		{
+			if (element.Flag == type)
+				return true;
+		}
+
+		return false;
 	}
 
 	void CompilerOptions::ParseArgs(int argc, char** argv)

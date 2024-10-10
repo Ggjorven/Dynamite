@@ -31,6 +31,13 @@ namespace Dynamite
 		String = (uint8_t)TokenType::String,
 	};
 
+	struct Variable
+	{
+	public:
+		std::string Name = {};
+		ValueType Type = ValueType::None;
+	};
+
 	/////////////////////////////////////////////////////////////////
 	// Conversion of Types
 	/////////////////////////////////////////////////////////////////

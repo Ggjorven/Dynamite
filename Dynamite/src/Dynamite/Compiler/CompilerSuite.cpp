@@ -57,6 +57,25 @@ namespace Dynamite
 
 			m_CurrentState = State::Generating;
 			// TODO: Generate something with the program
+
+
+			// Log extra info when verbosity is enabled
+			if (m_Options.Contains(CompilerFlag::Type::Verbose))
+			{
+				DY_LOG_TRACE("---------------------------------------");
+				DY_LOG_TRACE("-- Tokens generated.");
+				DY_LOG_TRACE("---------------------------------------");
+
+				for (const auto& token : m_CurrentTokens)
+					DY_LOG_TRACE(FormatToken(token));
+
+				DY_LOG_TRACE("---------------------------------------");
+				DY_LOG_TRACE("-- Tree generated.");
+				DY_LOG_TRACE("---------------------------------------");
+
+				for (const auto& statement : m_CurrentProgram.Statements)
+					DY_LOG_TRACE(Node::FormatStatementData(statement));
+			}
 		}
 	}
 

@@ -33,6 +33,7 @@ namespace Dynamite::Node
     // Term variants
 	struct IdentifierTerm;
 	struct LiteralTerm;
+    struct ParenthesisTerm;
 
     // Binary is not a variant, since we just store the
     // operator and the LHS & RHS, and can switch based on that.
@@ -42,6 +43,7 @@ namespace Dynamite::Node
 	// Statement types
 	struct VariableStatement;
 	struct ExitStatement;
+    struct ScopeStatement;
 	/////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////
@@ -208,14 +210,30 @@ namespace Dynamite::Node
         [[nodiscard]] static Reference<ExitStatement> New(Reference<Expression> expr = (Reference<Expression>)NullRef);
     };
 
+    struct ScopeStatement
+    {
+    private:
+        ScopeStatement(const std::vector<Reference<Statement>>& statements);
+
+    public:
+        std::vector<Reference<Statement>> Statements;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<ScopeStatement> New(const std::vector<Reference<Statement>>& statements = {});
+    };
+
     struct Statement
     {
     private:
         Statement(Reference<VariableStatement> var);
         Statement(Reference<ExitStatement> exit);
+        Statement(Reference<ScopeStatement> scope);
 
     public:
-        Variant<Reference<VariableStatement>, Reference<ExitStatement>> StatementObj;
+        Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>> StatementObj;
 
     public: // Custom allocator functions.
         template<typename T, typename ...TArgs>
@@ -223,6 +241,7 @@ namespace Dynamite::Node
 
         [[nodiscard]] static Reference<Statement> New(Reference<VariableStatement> var = (Reference<VariableStatement>)NullRef);
         [[nodiscard]] static Reference<Statement> New(Reference<ExitStatement> exit = (Reference<ExitStatement>)NullRef);
+        [[nodiscard]] static Reference<Statement> New(Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef);
     };
 	/////////////////////////////////////////////////////////////////
 

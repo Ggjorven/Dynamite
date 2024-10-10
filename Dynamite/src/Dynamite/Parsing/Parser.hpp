@@ -28,6 +28,7 @@ namespace Dynamite
 	public:
 		std::optional<Node::Reference<Node::TermExpr>> ParseTermExpr();
 		std::optional<Node::Reference<Node::Expression>> ParseExpr(size_t minimumPrecedence = 0);
+		std::optional<Node::Reference<Node::ScopeStatement>> ParseScope();
 		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
 	public:
@@ -57,6 +58,9 @@ namespace Dynamite
 		size_t m_Index = 0;
 
 		// TODO: Add support for scopes
+		std::vector<Variable> m_Variables = {};
+		std::vector<size_t> m_Scopes = {};
+
 		std::unordered_map<std::string, ValueType> m_SymbolTypes = { };
 	};
 

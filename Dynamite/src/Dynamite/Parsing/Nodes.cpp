@@ -47,8 +47,11 @@ namespace Dynamite::Node
 
 	ExitStatement::ExitStatement(Reference<Expression> expr) : ExprObj(expr) {}
 
+	ScopeStatement::ScopeStatement(const std::vector<Reference<Statement>>& statements) : Statements(statements) {}
+
 	Statement::Statement(Reference<VariableStatement> var) : StatementObj(var) {}
 	Statement::Statement(Reference<ExitStatement> exit) : StatementObj(exit) {}
+	Statement::Statement(Reference<ScopeStatement> scope) : StatementObj(scope) {}
 
 	/////////////////////////////////////////////////////////////////
 	// Custom allocator functions
@@ -74,8 +77,11 @@ namespace Dynamite::Node
 
 	Reference<ExitStatement> ExitStatement::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ExitStatement>(expr); }
 
+	Reference<ScopeStatement> ScopeStatement::New(const std::vector<Reference<Statement>>& statements) { return _DEREF s_Allocator.Construct<ScopeStatement>(statements); }
+
 	Reference<Statement> Statement::New(Reference<VariableStatement> var) { return _DEREF s_Allocator.Construct<Statement>(var); }
 	Reference<Statement> Statement::New(Reference<ExitStatement> exit) { return _DEREF s_Allocator.Construct<Statement>(exit); }
+	Reference<Statement> Statement::New(Reference<ScopeStatement> scope) { return _DEREF s_Allocator.Construct<Statement>(scope); }
 
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
@@ -116,14 +122,15 @@ namespace Dynamite::Node
 					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IdentifierTerm>>)
 						return FormatToken(obj->TokenObj);
 					else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ParenthesisTerm>>)
-							return Pulse::Text::Format("Parenthesis: ({0})", FormatExpressionData(obj->ExprObj));
+							return Pulse::Text::Format("({0})", FormatExpressionData(obj->ExprObj));
 
 					return "Undefined Term Type";
 				}, obj->TermObj);
 			}
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<BinaryExpr>>)
 			{
-				return Pulse::Text::Format("(LHS: {0}, '{1}' RHS: {2})", FormatExpressionData(obj->LHS), (char)obj->BinaryType, FormatExpressionData(obj->RHS));
+				return Pulse::Text::Format("LHS: {0}, '{1}' RHS: {2}", 
+					FormatExpressionData(obj->LHS), (char)obj->BinaryType, FormatExpressionData(obj->RHS));
 			}
 
 			return "Undefined Expression Data";
@@ -143,6 +150,15 @@ namespace Dynamite::Node
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ExitStatement>>)
 			{
 				return Pulse::Text::Format("[Exit] - {0}", FormatExpressionData(obj->ExprObj));
+			}
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ScopeStatement>>)
+			{
+				std::string str = "{{\n";
+				for (const auto& statement : obj->Statements)
+					str += '\t' + FormatStatementData(statement);
+
+				str += "\n}}";
+				return str;
 			}
 
 			return "Undefined Statement Data";
