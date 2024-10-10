@@ -69,7 +69,7 @@ namespace Dynamite
 			break;
 		}
 
-		return "Unnamed ValueType";
+		return "UNDEFINED ValueType";
 	}
 
 	bool ValueTypeCastable(ValueType from, ValueType to)

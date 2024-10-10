@@ -69,7 +69,7 @@ namespace Dynamite
 		return {};
 	}
 
-	std::optional<Node::Reference<Node::Expression>> Parser::ParseExpr(size_t minimumPrecedence)
+	std::optional<Node::Reference<Node::Expression>> Parser::ParseExpr(const size_t minimumPrecedence)
 	{
 		if (auto termLHS = ParseTermExpr())
 		{
@@ -81,7 +81,7 @@ namespace Dynamite
 				if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::LiteralTerm>>)
 					return GetValueType(obj->TokenObj.Type, obj->TokenObj.Value.value());
 				else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::IdentifierTerm>>)
-					return m_SymbolTypes[obj->TokenObj.Value.value()];
+					return GetVar(obj->TokenObj.Value.value()).Type;
 				else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::ParenthesisTerm>>)
 					return obj->ExprObj->Type;
 
@@ -145,8 +145,8 @@ namespace Dynamite
 		if (!TryConsume(TokenType::OpenCurlyBrace).has_value())
 			return {};
 
-		// TODO: Increment scope
-		
+		m_Scopes.push_back(m_Variables.size());
+
 		Node::Reference<Node::ScopeStatement> scope = Node::ScopeStatement::New();
 		while (auto stmt = ParseStatement()) 
 			scope->Statements.push_back(stmt.value());
@@ -156,7 +156,9 @@ namespace Dynamite
 		// that the '}' has already been consumed. So we just go one back.
 		m_Index--;
 
-		// TODO: Decrement scope
+		size_t popCount = m_Variables.size() - m_Scopes.back();
+		PopVar(popCount);
+		m_Scopes.pop_back();
 		
 		CheckConsume(TokenType::CloseCurlyBrace, "Expected `}}`");
 		return scope;
@@ -181,7 +183,7 @@ namespace Dynamite
 				// Enforce Int32 type
 				if (!ValueTypeCastable(expr.value()->Type, ValueType::UInt8))
 				{
-					CompilerSuite::Error(GetLineNumber(), "exit() expects an UInt8 type, got {0}, {0} is not castable to UInt8", ValueTypeToStr(expr.value()->Type));
+					CompilerSuite::Error(GetLineNumber(), "exit() expects an u8 type, got {0}, {0} is not castable to u8", ValueTypeToStr(expr.value()->Type));
 
 					// Close parenthesis ')' & semicolon `;` resolution
 					CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -226,8 +228,8 @@ namespace Dynamite
 
 			std::string varName = variable->TokenObj.Value.value();
 
-			// Add type to global scope with name of variable
-			m_SymbolTypes[varName] = variableType;
+			// Add type to current scope with name of variable
+			PushVar(varName, variableType);
 
 			Consume(); // '=' token
 
@@ -395,6 +397,33 @@ namespace Dynamite
 
 		if (dataLost) // Note: This outputs the new value, not the original value before cast
 			CompilerSuite::Warn(GetLineNumber(), "Lost data while casting expression. From: {0}, to {1}\n    Original: \t\t{2}\n    New: \t\t{3}", ValueTypeToStr(from), ValueTypeToStr(to), originalData, Node::FormatExpressionData(expression));
+	}
+
+	void Parser::PushVar(const std::string& name, ValueType type)
+	{
+		m_Variables.emplace_back(name, type);
+	}
+
+	void Parser::PopVar(size_t count)
+	{
+		for (size_t i = 0; i < count; i++)
+			m_Variables.pop_back();
+	}
+
+	Variable Parser::GetVar(const std::string& name)
+	{
+		const auto it = std::ranges::find_if(std::as_const(m_Variables), [&](const Variable& var) 
+		{
+			return var.Name == name;
+		});
+
+		if (it == m_Variables.cend())
+		{
+			CompilerSuite::Error(GetLineNumber(), "Undeclared identifier: {0}", name);
+			return {};
+		}
+	
+		return *it;
 	}
 
 }

@@ -43,6 +43,15 @@ namespace Dynamite::Node
 
 
 
+	ElseIfBranch::ElseIfBranch(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) : ExprObj(expr), Scope(scope), Next(next) {}
+
+	ElseBranch::ElseBranch(Reference<ScopeStatement> scope) : Scope(scope) {}
+
+	ConditionBranch::ConditionBranch(Reference<ElseIfBranch> elseIfBranch) : ConditionObj(elseIfBranch) {}
+	ConditionBranch::ConditionBranch(Reference<ElseBranch> elseBranch) : ConditionObj(elseBranch) {}
+
+	IfStatement::IfStatement(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) : ExprObj(expr), Scope(scope), Next(next) {}
+
 	VariableStatement::VariableStatement(ValueType type, const Token& token, Reference<Expression> expr) : Type(type), TokenObj(token), ExprObj(expr) {}
 
 	ExitStatement::ExitStatement(Reference<Expression> expr) : ExprObj(expr) {}
@@ -52,6 +61,8 @@ namespace Dynamite::Node
 	Statement::Statement(Reference<VariableStatement> var) : StatementObj(var) {}
 	Statement::Statement(Reference<ExitStatement> exit) : StatementObj(exit) {}
 	Statement::Statement(Reference<ScopeStatement> scope) : StatementObj(scope) {}
+	Statement::Statement(Reference<IfStatement> ifStatement) : StatementObj(ifStatement) {}
+	Statement::Statement(Reference<AssignmentStatement> assignment) : StatementObj(assignment) {}
 
 	/////////////////////////////////////////////////////////////////
 	// Custom allocator functions
@@ -73,6 +84,15 @@ namespace Dynamite::Node
 
 
 
+	Reference<ElseIfBranch> ElseIfBranch::New(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) { return _DEREF s_Allocator.Construct<ElseIfBranch>(expr, scope, next); }
+
+	Reference<ElseBranch> ElseBranch::New(Reference<ScopeStatement> scope) { return _DEREF s_Allocator.Construct<ElseBranch>(scope); }
+
+	Reference<ConditionBranch> ConditionBranch::New(Reference<ElseIfBranch> elseIfBranch) { return _DEREF s_Allocator.Construct<ConditionBranch>(elseIfBranch); }
+	Reference<ConditionBranch> ConditionBranch::New(Reference<ElseBranch> elseBranch) { return _DEREF s_Allocator.Construct<ConditionBranch>(elseBranch); }
+
+	Reference<IfStatement> IfStatement::New(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) { return _DEREF s_Allocator.Construct<IfStatement>(expr, scope, next); }
+
 	Reference<VariableStatement> VariableStatement::New(ValueType type, const Token& token, Reference<Expression> expr) { return _DEREF s_Allocator.Construct<VariableStatement>(type, token, expr); }
 
 	Reference<ExitStatement> ExitStatement::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ExitStatement>(expr); }
@@ -82,6 +102,8 @@ namespace Dynamite::Node
 	Reference<Statement> Statement::New(Reference<VariableStatement> var) { return _DEREF s_Allocator.Construct<Statement>(var); }
 	Reference<Statement> Statement::New(Reference<ExitStatement> exit) { return _DEREF s_Allocator.Construct<Statement>(exit); }
 	Reference<Statement> Statement::New(Reference<ScopeStatement> scope) { return _DEREF s_Allocator.Construct<Statement>(scope); }
+	Reference<Statement> Statement::New(Reference<IfStatement> ifStatement) { return _DEREF s_Allocator.Construct<Statement>(ifStatement); }
+	Reference<Statement> Statement::New(Reference<AssignmentStatement> assignment) { return _DEREF s_Allocator.Construct<Statement>(assignment); }
 
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
@@ -153,13 +175,23 @@ namespace Dynamite::Node
 			}
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ScopeStatement>>)
 			{
-				std::string str = "{{\n";
+				std::string str = "\n{{\n";
 				for (const auto& statement : obj->Statements)
-					str += '\t' + FormatStatementData(statement);
+					str += "\n\t" + FormatStatementData(statement);
 
 				str += "\n}}";
 				return str;
 			}
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<IfStatement>>)
+			{
+				// TODO: ...
+
+				std::string str = "if (" + FormatExpressionData(obj->ExprObj) + ")\n";
+
+				//str += FormatStatementData(obj->Scope);
+
+			}
+			// TODO: Assignment
 
 			return "Undefined Statement Data";
 		},

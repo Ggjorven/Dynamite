@@ -27,7 +27,7 @@ namespace Dynamite
 
 	public:
 		std::optional<Node::Reference<Node::TermExpr>> ParseTermExpr();
-		std::optional<Node::Reference<Node::Expression>> ParseExpr(size_t minimumPrecedence = 0);
+		std::optional<Node::Reference<Node::Expression>> ParseExpr(const size_t minimumPrecedence = 0);
 		std::optional<Node::Reference<Node::ScopeStatement>> ParseScope();
 		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
@@ -51,17 +51,19 @@ namespace Dynamite
 		// Note: Only casts if the internal type is a literalterm
 		void CastInternalValue(ValueType from, ValueType to, Node::Reference<Node::Expression> expression);
 
-		inline uint32_t GetLineNumber() const { return Peek(0).value().LineNumber; }
+		inline uint32_t GetLineNumber() const { return (Peek(0).has_value() ? Peek(0).value().LineNumber : Peek(-1).value().LineNumber); }
+
+	private:
+		void PushVar(const std::string& name, ValueType type);
+		void PopVar(size_t count);
+		Variable GetVar(const std::string& name);
 
 	private:
 		std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
 
-		// TODO: Add support for scopes
 		std::vector<Variable> m_Variables = {};
-		std::vector<size_t> m_Scopes = {};
-
-		std::unordered_map<std::string, ValueType> m_SymbolTypes = { };
+		std::vector<size_t> m_Scopes = { 0 };
 	};
 
 }

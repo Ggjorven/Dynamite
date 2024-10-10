@@ -25,5 +25,6 @@
 #include <span>
 #include <set>
 #include <map>
+#include <ranges>
 #include <unordered_map>
 #include <unordered_set>

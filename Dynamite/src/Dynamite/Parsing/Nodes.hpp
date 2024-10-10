@@ -9,6 +9,7 @@
 #include <vector>
 #include <variant>
 #include <string>
+#include <optional>
 #include <functional>
 
 namespace Dynamite::Node
@@ -41,9 +42,15 @@ namespace Dynamite::Node
 	struct Statement;
 
 	// Statement types
+    struct ElseIfBranch;
+    struct ElseBranch;
+    struct ScopeStatement;
+    struct ConditionBranch; // Note: This is just for wrapping else if and else statements
+    struct IfStatement;
+
 	struct VariableStatement;
 	struct ExitStatement;
-    struct ScopeStatement;
+    struct AssignmentStatement;
 	/////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////
@@ -178,6 +185,78 @@ namespace Dynamite::Node
 
 
 	/////////////////////////////////////////////////////////////////
+    struct ElseIfBranch
+    {
+    private:
+        ElseIfBranch(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next);
+
+    public:
+        Reference<Expression> ExprObj;
+        Reference<ScopeStatement> Scope;
+
+        // Note: Optional next branch, can be else if or else.
+        std::optional<Reference<ConditionBranch>> Next;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<ElseIfBranch> New(Reference<Expression> expr = (Reference<Expression>)NullRef, Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef, std::optional<Reference<ConditionBranch>> next = {});
+    };
+    
+    struct ElseBranch
+    {
+    private:
+        ElseBranch(Reference<ScopeStatement> scope);
+
+    public:
+        Reference<ScopeStatement> Scope;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<ElseBranch> New(Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef);
+    };
+
+    struct ConditionBranch
+    {
+    private:
+        ConditionBranch(Reference<ElseIfBranch> elseIfBranch);
+        ConditionBranch(Reference<ElseBranch> elseBranch);
+
+    public:
+        Variant<Reference<ElseIfBranch>, Reference<ElseBranch>> ConditionObj;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<ConditionBranch> New(Reference<ElseIfBranch> elseIfBranch = (Reference<ElseIfBranch>)NullRef);
+        [[nodiscard]] static Reference<ConditionBranch> New(Reference<ElseBranch> elseBranch = (Reference<ElseBranch>)NullRef);
+    };
+
+    struct IfStatement
+    {
+    private:
+        IfStatement(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next);
+
+    public:
+        Reference<Expression> ExprObj;
+        Reference<ScopeStatement> Scope;
+
+        // Note: Optional next branch, can be else if or else.
+        std::optional<Reference<ConditionBranch>> Next;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<IfStatement> New(Reference<Expression> expr = (Reference<Expression>)NullRef, Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef, std::optional<Reference<ConditionBranch>> next = {});
+    };
+	/////////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////////
     struct VariableStatement
     {
     private:
@@ -225,15 +304,23 @@ namespace Dynamite::Node
         [[nodiscard]] static Reference<ScopeStatement> New(const std::vector<Reference<Statement>>& statements = {});
     };
 
+    struct AssignmentStatement
+    {
+    private:
+        // TODO: ...
+    };
+
     struct Statement
     {
     private:
         Statement(Reference<VariableStatement> var);
         Statement(Reference<ExitStatement> exit);
         Statement(Reference<ScopeStatement> scope);
+        Statement(Reference<IfStatement> ifStatement);
+        Statement(Reference<AssignmentStatement> assignment);
 
     public:
-        Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>> StatementObj;
+        Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> StatementObj;
 
     public: // Custom allocator functions.
         template<typename T, typename ...TArgs>
@@ -242,6 +329,8 @@ namespace Dynamite::Node
         [[nodiscard]] static Reference<Statement> New(Reference<VariableStatement> var = (Reference<VariableStatement>)NullRef);
         [[nodiscard]] static Reference<Statement> New(Reference<ExitStatement> exit = (Reference<ExitStatement>)NullRef);
         [[nodiscard]] static Reference<Statement> New(Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef);
+        [[nodiscard]] static Reference<Statement> New(Reference<IfStatement> ifStatement = (Reference<IfStatement>)NullRef);
+        [[nodiscard]] static Reference<Statement> New(Reference<AssignmentStatement> assignment = (Reference<AssignmentStatement>)NullRef);
     };
 	/////////////////////////////////////////////////////////////////
 
