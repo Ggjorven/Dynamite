@@ -331,6 +331,26 @@ namespace Dynamite
 			return Node::Statement::New(variable);
 		}
 
+		/////////////////////////////////////////////////////////////////
+		// Variable assignment
+		/////////////////////////////////////////////////////////////////
+		if (PeekCheck(0, TokenType::Identifier) && PeekCheck(1, TokenType::Equals)) 
+		{
+			auto assignment = Node::AssignmentStatement::New(Consume());
+			Consume(); // '=' char
+
+			if (auto expr = ParseExpr()) 
+			{
+				assignment->ExprObj = expr.value();
+				CheckConsume(TokenType::Semicolon, "Expected `;`.");
+				return Node::Statement::New(assignment);
+			}
+			else 
+				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
+
+			return {};
+		}
+
 		// Consume() just 1 token, just to make sure we keep going.
 		// Since obviously from the previous token it was impossible to carry on.
 		Consume();

@@ -54,6 +54,8 @@ namespace Dynamite::Node
 
 	ScopeStatement::ScopeStatement(const std::vector<Reference<Statement>>& statements) : Statements(statements) {}
 
+	AssignmentStatement::AssignmentStatement(const Token& token, Reference<Expression> expr) : TokenObj(token), ExprObj(expr) {}
+
 	Statement::Statement(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement) : StatementObj(statement) {}
 
 	/////////////////////////////////////////////////////////////////
@@ -86,6 +88,8 @@ namespace Dynamite::Node
 	Reference<ExitStatement> ExitStatement::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ExitStatement>(expr); }
 
 	Reference<ScopeStatement> ScopeStatement::New(const std::vector<Reference<Statement>>& statements) { return _DEREF s_Allocator.Construct<ScopeStatement>(statements); }
+
+	Reference<AssignmentStatement> AssignmentStatement::New(const Token& token, Reference<Expression> expr) { return _DEREF s_Allocator.Construct<AssignmentStatement>(token, expr); }
 
 	Reference<Statement> Statement::New(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement) { return _DEREF s_Allocator.Construct<Statement>(statement); }
 
@@ -209,7 +213,10 @@ namespace Dynamite::Node
 
 				return str;
 			}
-			// TODO: Assignment
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<AssignmentStatement>>)
+			{
+				return Pulse::Text::Format("[Assignment] - {0}([{1}])", FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
+			}
 
 			return "Undefined Statement Data";
 		},

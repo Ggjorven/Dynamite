@@ -299,7 +299,17 @@ namespace Dynamite::Node
     struct AssignmentStatement
     {
     private:
-        // TODO: ...
+        AssignmentStatement(const Token& token, Reference<Expression> expr);
+
+    public:
+        Token TokenObj;
+        Reference<Expression> ExprObj;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<AssignmentStatement> New(const Token& token = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
     };
 
     struct Statement

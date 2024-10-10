@@ -8,6 +8,7 @@ if (1)
 else // Comment
 {
 	i32 z = 90;
+	z = 10;
 }
 
 /*
