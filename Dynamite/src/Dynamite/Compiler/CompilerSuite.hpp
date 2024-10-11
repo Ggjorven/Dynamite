@@ -57,7 +57,7 @@ namespace Dynamite
 
 		Pulse::Unique<Tokenizer> m_Tokenizer = nullptr;
 		Pulse::Unique<Parser> m_Parser = nullptr;
-		//Pulse::Unique<Generator> m_Generator = nullptr;
+		Pulse::Unique<Generator> m_Generator = nullptr;
 
 		std::filesystem::path m_CurrentFile = {};
 		std::string m_CurrentFileContent = {};

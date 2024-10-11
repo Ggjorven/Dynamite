@@ -70,6 +70,7 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	std::string ValueTypeToASM(ValueType type);
 	std::string ValueTypeToStr(ValueType type);
+	size_t ValueTypeSize(ValueType type);
 	bool ValueTypeCastable(ValueType from, ValueType to);
 	std::string ValueTypeCast(ValueType from, ValueType to, const std::string& value, bool* dataLostPtr = nullptr);
 

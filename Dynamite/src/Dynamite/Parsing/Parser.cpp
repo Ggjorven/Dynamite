@@ -292,7 +292,7 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		// Variable creation
 		/////////////////////////////////////////////////////////////////
-		else if (PeekIsVariableType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
+		else if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
 		{
 			Token typeToken = Consume(); // Type token
 			ValueType variableType = static_cast<ValueType>(typeToken.Type);
@@ -425,7 +425,7 @@ namespace Dynamite
 	}
 
 	// Note: Has to be manually updated
-	bool Parser::PeekIsVariableType()
+	bool Parser::PeekIsValueType()
 	{
 		return PeekIs({
 			TokenType::Bool, 

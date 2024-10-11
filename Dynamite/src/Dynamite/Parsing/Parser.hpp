@@ -46,7 +46,7 @@ namespace Dynamite
 		std::optional<Token> TryConsumeLiteral();
 
 		bool PeekIs(const std::vector<TokenType>& allowedValues);
-		bool PeekIsVariableType();
+		bool PeekIsValueType();
 		bool PeekIsBinaryOperator();
 
 		// Note: Only casts if the internal type is a literalterm

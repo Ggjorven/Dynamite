@@ -69,7 +69,38 @@ namespace Dynamite
 			break;
 		}
 
+		DY_LOG_ERROR("ValueType::{0}, Name has not been defined.", Pulse::Enum::Name(type));
 		return "UNDEFINED ValueType";
+	}
+
+	size_t ValueTypeSize(ValueType type)
+	{
+		switch (type)
+		{
+		case ValueType::Bool:		return sizeof(ValueTypeToCType<ValueType::Bool>);
+
+		case ValueType::Int8:		return sizeof(ValueTypeToCType<ValueType::Int8>);
+		case ValueType::Int16:		return sizeof(ValueTypeToCType<ValueType::Int16>);
+		case ValueType::Int32:		return sizeof(ValueTypeToCType<ValueType::Int32>);
+		case ValueType::Int64:		return sizeof(ValueTypeToCType<ValueType::Int64>);
+
+		case ValueType::UInt8:		return sizeof(ValueTypeToCType<ValueType::UInt8>);
+		case ValueType::UInt16:		return sizeof(ValueTypeToCType<ValueType::UInt16>);
+		case ValueType::UInt32:		return sizeof(ValueTypeToCType<ValueType::UInt32>);
+		case ValueType::UInt64:		return sizeof(ValueTypeToCType<ValueType::UInt64>);
+
+		case ValueType::Float32:	return sizeof(ValueTypeToCType<ValueType::Float32>);
+		case ValueType::Float64:	return sizeof(ValueTypeToCType<ValueType::Float64>);
+
+		case ValueType::Char:		return sizeof(ValueTypeToCType<ValueType::Char>);
+		//case ValueType::String:		return sizeof(ValueTypeToCType<ValueType::String>);
+
+		default:
+			break;
+		}
+
+		DY_LOG_ERROR("ValueType::{0}, Size has not been defined.", Pulse::Enum::Name(type));
+		return 0;
 	}
 
 	bool ValueTypeCastable(ValueType from, ValueType to)

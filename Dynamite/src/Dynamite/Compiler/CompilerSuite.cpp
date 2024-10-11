@@ -18,6 +18,7 @@ namespace Dynamite
 
 		m_Tokenizer = Pulse::Unique<Tokenizer>::Create(m_CurrentFileContent);
 		m_Parser = Pulse::Unique<Parser>::Create(m_CurrentTokens);
+		m_Generator = Generator::Create(Generator::Type::ASM);
 	}
 
 	CompilerSuite::~CompilerSuite()
@@ -35,7 +36,7 @@ namespace Dynamite
 			return;
 		}
 
-		const std::string outputDir = m_Options.Get(CompilerFlag::Type::OutputDir).back();
+		const std::filesystem::path outputDir = m_Options.Get(CompilerFlag::Type::OutputDir).back();
 		for (const auto& file : files)
 		{
 			DY_LOG_TRACE("Compiling '{0}'.", file);
@@ -56,8 +57,7 @@ namespace Dynamite
 			m_CurrentProgram = m_Parser->GetProgram();
 
 			m_CurrentState = State::Generating;
-			// TODO: Generate something with the program
-
+			m_Generator->Generate(m_CurrentProgram, outputDir / std::filesystem::path(file).filename());
 
 			// Log extra info when verbosity is enabled
 			if (m_Options.Contains(CompilerFlag::Type::Verbose))

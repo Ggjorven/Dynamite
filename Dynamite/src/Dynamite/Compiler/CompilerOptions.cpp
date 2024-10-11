@@ -55,7 +55,7 @@ namespace Dynamite
 	CompilerOptions::CompilerOptions(int argc, char** argv)
 		: WorkingDir(std::filesystem::current_path())
 	{
-		Flags.emplace_back(CompilerFlag::Type::OutputDir, "bin"); // Set a default output directory
+		Flags.emplace_back(CompilerFlag::Type::OutputDir, "bin/int"); // Set a default output directory
 		
 		ParseArgs(argc, argv);
 	}
