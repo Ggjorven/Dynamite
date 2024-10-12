@@ -4,7 +4,7 @@ project "Dynamite"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++20"
-	staticruntime "on"
+	staticruntime "Off"
 
 	architecture "x86_64"
 
@@ -34,6 +34,7 @@ project "Dynamite"
 		"src/Dynamite",
 
 		"%{Dependencies.Pulse.IncludeDir}",
+		"%{Dependencies.LLVM.IncludeDir}",
 		"%{Dependencies.spdlog.IncludeDir}",
 	}
 
@@ -46,6 +47,7 @@ project "Dynamite"
 	links
 	{
 		"%{Dependencies.Pulse.LibName}",
+		"%{Dependencies.LLVM.LibName}",
 	}
 
 	--------------------------------------
@@ -54,17 +56,14 @@ project "Dynamite"
 	filter "system:windows"
 		defines "DY_PLATFORM_WINDOWS"
 		systemversion "latest"
-		staticruntime "on"
 
 	filter "system:linux"
 		defines "DY_PLATFORM_LINUX"
 		systemversion "latest"
-		staticruntime "on"
 
     filter "system:macosx"
 		defines "DY_PLATFORM_MACOS"
 		systemversion(MacOSVersion)
-		staticruntime "on"
 
 	filter "action:xcode*"
 		-- Note: XCode needs the full pch header path

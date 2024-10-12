@@ -11,6 +11,11 @@ Dependencies =
 		IncludeDir = "%{wks.location}/vendor/Pulse/Pulse/src",
 		LibName = "Pulse"
 	},
+	LLVM = 
+	{
+		IncludeDir = "%{wks.location}/vendor/llvm/LLVM/include",
+		LibName = "LLVM"
+	},
 
 	-- Includedirs
 	spdlog =
@@ -43,6 +48,7 @@ workspace "Dynamite"
 
 group "Dependencies"
 	include "vendor/Pulse/Pulse"
+	include "vendor/llvm"
 group ""
 
 include "Dynamite"
