@@ -43,17 +43,17 @@ int main()
 
     // Create a function signature (int32_t foo())
     llvm::FunctionType* functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(context), false);
-    llvm::Function* fooFunction = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "foo", module.get());
+    llvm::Function* mainFunction = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", module.get());
 
     // Create a basic block and set an IR builder to insert instructions
-    llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(context, "entry", fooFunction);
+    llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(context, "entry", mainFunction);
     llvm::IRBuilder<> builder(entryBlock);
 
     // Return a constant value (e.g., return 42;)
     builder.CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 42));
 
     // Verify the generated module
-    if (llvm::verifyFunction(*fooFunction, &llvm::errs())) {
+    if (llvm::verifyFunction(*mainFunction, &llvm::errs())) {
         llvm::errs() << "Function verification failed!\n";
         return 1;
     }
