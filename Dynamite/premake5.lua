@@ -4,7 +4,7 @@ project "Dynamite"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++20"
-	staticruntime "Off"
+	staticruntime "Off" -- Needs to be Off for LLVM
 
 	architecture "x86_64"
 
@@ -34,7 +34,6 @@ project "Dynamite"
 		"src/Dynamite",
 
 		"%{Dependencies.Pulse.IncludeDir}",
-		"%{Dependencies.LLVM.IncludeDir}",
 		"%{Dependencies.spdlog.IncludeDir}",
 	}
 
@@ -47,8 +46,25 @@ project "Dynamite"
 	links
 	{
 		"%{Dependencies.Pulse.LibName}",
-		"%{Dependencies.LLVM.LibName}",
 	}
+
+	--------------------------------------
+	-- LLVM Flags
+	--------------------------------------
+	buildoptions
+	{
+		LLVM_Flags,
+	}
+
+	linkoptions
+	{
+		LLVM_Libs,
+	}
+
+    libdirs
+    {
+        LLVM_Libdir,
+    }
 
 	--------------------------------------
 	-- Platforms
@@ -57,9 +73,30 @@ project "Dynamite"
 		defines "DY_PLATFORM_WINDOWS"
 		systemversion "latest"
 
+		-- For LLVM
+		links
+		{
+			"ntdll.lib"
+		}
+
 	filter "system:linux"
 		defines "DY_PLATFORM_LINUX"
 		systemversion "latest"
+
+		-- For LLVM
+		buildoptions
+        {
+            "-fPIC"
+        }
+
+		-- For LLVM
+        linkoptions
+        {
+            "-no-pie",
+
+            "-lz",
+            "-lzstd"
+        }
 
     filter "system:macosx"
 		defines "DY_PLATFORM_MACOS"
@@ -85,7 +122,7 @@ project "Dynamite"
 	--------------------------------------
 	filter "configurations:Debug"
 		defines "DY_CONFIG_DEBUG"
-		runtime "Debug"
+		runtime "Release" -- This is necessary for LLVM's binaries
 		symbols "on"
 
 	filter "configurations:Release"
