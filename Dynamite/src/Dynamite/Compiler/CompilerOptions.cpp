@@ -8,92 +8,74 @@
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
 
+using namespace Pulse::Enum::Bitwise;
+
 namespace Dynamite
 {
 
 	namespace
 	{
-		std::optional<CompilerFlag> GetFlag(const std::string& str)
+		template<typename TFunc>
+		std::string StrManip(std::string& val, TFunc&& func)
 		{
-			if (str.empty() || str.size() < 2)
-				return {};
+			for (char& c : val)
+				c = func(c);
+		}
 
-			if (str.substr(0, 2) != "--")
-				return CompilerFlag(CompilerFlag::Type::File, str);
+		std::string& StrLower(std::string& val)
+		{
+			for (char& c : val)
+				c = std::tolower(c);
 
-			if (str.substr(2, 2) == "I=")
-				return CompilerFlag(CompilerFlag::Type::IncludeDir, str.substr(4, str.size() - 4));
-
-			if (str.substr(2, 2) == "O=")
-				return CompilerFlag(CompilerFlag::Type::OutputDir, str.substr(4, str.size() - 4));
-
-			if (str.substr(2, str.size() - 2) == "Verbose")
-				return CompilerFlag(CompilerFlag::Type::Verbose);
-
-			return {};
+			return val;
 		}
 	}
 
-	CompilerFlag::CompilerFlag(const std::optional<std::string>& value)
-		: CompilerFlag(Type::File, value)
-	{
-	}
 
-	CompilerFlag::CompilerFlag(Type flag, const std::optional<std::string>& value)
-		: Flag(flag), Value(value)
-	{
-	}
-
-	std::string CompilerFlag::Format(const CompilerFlag& flag)
-	{
-		if (flag.Value.has_value())
-			return Pulse::Text::Format("CompilerFlag::Type::{0} - {1}", Pulse::Enum::Name(flag.Flag), flag.Value.value());
-		else
-			return Pulse::Text::Format("CompilerFlag::Type::{0}", Pulse::Enum::Name(flag.Flag));
-	}
 
 	CompilerOptions::CompilerOptions(int argc, char** argv)
-		: WorkingDir(std::filesystem::current_path())
+		: Argc(argc), Argv(argv), WorkingDir(std::filesystem::current_path()), OutputDir("bin")
 	{
-		Flags.emplace_back(CompilerFlag::Type::OutputDir, "bin/int"); // Set a default output directory
-		
 		ParseArgs(argc, argv);
 	}
 
-	std::vector<std::string> CompilerOptions::Get(CompilerFlag::Type type) const
+	const bool CompilerOptions::Contains(CompilerFlag type) const
 	{
-		std::vector<std::string> result;
-		result.reserve(Flags.size());
-
-		for (const auto& element : Flags)
-		{
-			if (element.Flag == type && element.Value.has_value())
-				result.push_back(element.Value.value());
-		}
-
-		return result;
-	}
-
-	const bool CompilerOptions::Contains(CompilerFlag::Type type) const
-	{
-		for (const auto& element : Flags)
-		{
-			if (element.Flag == type)
-				return true;
-		}
-
-		return false;
+		return static_cast<bool>((Flags & type));
 	}
 
 	void CompilerOptions::ParseArgs(int argc, char** argv)
 	{
 		for (int i = 1; i < argc; i++)
 		{
-			auto flag = GetFlag(std::string(argv[i]));
-			if (!flag.has_value())
-				continue;
+			std::string flag = argv[i];
+			
+			// After '--X=' flag value
+			std::string value = {};
+			
+			///////////////////////////////////
+			// Files/Directories
+			///////////////////////////////////
+			if (flag.size() > 4)
+				value = flag.substr(4, flag.size() - 4);
 
-			Flags.push_back(flag.value());
+			// If not '--' it's a file.
+			if (flag.substr(0, 2) != "--")
+				Files.push_back(flag);
+
+			// IncludeDir
+			else if (flag.substr(2, 2) == "I=")
+				IncludeDirs.push_back(value);
+
+			// OutputDir
+			else if (flag.substr(2, 2) == "O=")
+				OutputDir = value;
+
+			///////////////////////////////////
+			// Flags
+			///////////////////////////////////
+			else if (StrLower(value) == "verbose")
+				Flags |= CompilerFlag::Verbose;
 		}
 	}
 

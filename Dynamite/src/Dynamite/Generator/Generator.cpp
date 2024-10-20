@@ -3,9 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
-#include "Dynamite/Generator/ASMGenerator.hpp"
-
-#include <Pulse/Text/Format.hpp>
+// No ASM
+#include "Dynamite/Generator/LLVM/LLVMGenerator.hpp"
 
 namespace Dynamite
 {
@@ -15,9 +14,9 @@ namespace Dynamite
 		switch (type)
 		{
 		case Type::ASM:
-			return Pulse::Unique<ASMGenerator>::Create();
+			//return Pulse::Unique<ASMGenerator>::Create();
 		case Type::LLVM:
-			//return Unique<LLVMGenerator>::Create();
+			return Pulse::Unique<LLVMGenerator>::Create();
 
 		default:
 			break;

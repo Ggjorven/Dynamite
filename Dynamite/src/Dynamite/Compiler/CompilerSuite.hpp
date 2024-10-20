@@ -34,6 +34,9 @@ namespace Dynamite
 		inline const Tokenizer* GetTokenizer() const { return m_Tokenizer.Raw(); }
 		inline const Parser* GetParser() const { return m_Parser.Raw(); }
 
+		inline CompilerOptions& GetOptions() { return m_Options; }
+		inline const CompilerOptions& GetOptions() const { return m_Options; }
+
 		static CompilerSuite& Get();
 
 	public:
@@ -44,26 +47,44 @@ namespace Dynamite
 
 	public:
 		template<typename ...Args>
+		static void Print(LogLevel logLevel, const std::string& fmt, Args&& ...args);
+		template<typename ...Args>
 		static void Print(LogLevel logLevel, uint32_t line, const std::string& fmt, Args&& ...args);
 
 		template<typename ...Args>
+		static void Warn(const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Warn, fmt, std::forward<Args>(args)...); }
+		template<typename ...Args>
 		static void Warn(uint32_t line, const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Warn, line, fmt, std::forward<Args>(args)...); }
+		
+		template<typename ...Args>
+		static void Error(const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Error, fmt, std::forward<Args>(args)...); }
 		template<typename ...Args>
 		static void Error(uint32_t line, const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Error, line, fmt, std::forward<Args>(args)...); }
 
 	private:
-		const CompilerOptions m_Options;
+		CompilerOptions m_Options;
 		State m_CurrentState = State::Tokenizing;
 
+		// State machines
 		Pulse::Unique<Tokenizer> m_Tokenizer = nullptr;
 		Pulse::Unique<Parser> m_Parser = nullptr;
 		Pulse::Unique<Generator> m_Generator = nullptr;
 
+		// File specific content
 		std::filesystem::path m_CurrentFile = {};
 		std::string m_CurrentFileContent = {};
 		std::vector<Token> m_CurrentTokens = { };
 		Node::Program m_CurrentProgram = {};
 	};
+
+	template<typename ...Args>
+	inline void CompilerSuite::Print(LogLevel logLevel, const std::string& fmt, Args && ...args)
+	{
+		CompilerSuite& instance = Get();
+
+		std::string str = Pulse::Text::Format(fmt, std::forward<Args>(args)...);
+		Logger::LogMessage(logLevel, "While {0}:\n    {1}", Pulse::Enum::Name(instance.GetState()), str);
+	}
 
 	template<typename ...Args>
 	void CompilerSuite::Print(LogLevel logLevel, uint32_t line, const std::string& fmt, Args&& ...args)

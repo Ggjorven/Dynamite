@@ -9,35 +9,34 @@
 namespace Dynamite
 {
 
-	struct CompilerFlag
+	enum class CompilerFlag : uint8_t
 	{
-	public:
-		enum class Type : uint8_t { None = 0, File, IncludeDir, OutputDir, Verbose };
-	public:
-		Type Flag;
-		const std::optional<std::string> Value;
-
-	public:
-		CompilerFlag(const std::optional<std::string>& value);
-		CompilerFlag(Type flag = Type::None, const std::optional<std::string>& value = {});
-
-		static std::string Format(const CompilerFlag& flag);
+		None = 0, Verbose = 1 << 0,
 	};
 
 	struct CompilerOptions
 	{
 	public:
-		std::vector<CompilerFlag> Flags = { };
+		constexpr static const char* IntermediatePath = "int";
+	public:
+		int Argc;
+		char** Argv;
+
+	public:
 		std::filesystem::path WorkingDir;
+
+		std::vector<std::filesystem::path> Files = { };
+		std::vector<std::filesystem::path> IncludeDirs = { };
+		
+		std::filesystem::path OutputDir;
+
+		CompilerFlag Flags = CompilerFlag::None;
 
 	public:
 		CompilerOptions(int argc, char** argv);
 
-		// Returns the values of all flags with current type
-		std::vector<std::string> Get(CompilerFlag::Type type) const;
-
 		// Returns true if there is a flag with type value
-		const bool Contains(CompilerFlag::Type type) const;
+		const bool Contains(CompilerFlag type) const;
 
 	public:
 		void ParseArgs(int argc, char** argv);

@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Generator/Linker.hpp"
+
 namespace Dynamite
 {
 
@@ -29,17 +31,16 @@ namespace Dynamite
 	void CompilerSuite::Compile()
 	{
 		// Note: IncludeDirs are currently not used.
-		const std::vector<std::string> files = m_Options.Get(CompilerFlag::Type::File);
-		if (files.size() == 0)
+		if (m_Options.Files.empty())
 		{
 			DY_LOG_ERROR("Compilation terminated, no files specified.");
 			return;
 		}
 
-		const std::filesystem::path outputDir = m_Options.Get(CompilerFlag::Type::OutputDir).back();
-		for (const auto& file : files)
+		const std::filesystem::path outputDir = m_Options.OutputDir;
+		for (const auto& file : m_Options.Files)
 		{
-			DY_LOG_TRACE("Compiling '{0}'.", file);
+			DY_LOG_TRACE("Compiling '{0}'.", file.string());
 			m_CurrentFile = file;
 
 			std::ifstream input(file);
@@ -60,7 +61,7 @@ namespace Dynamite
 			m_Generator->Generate(m_CurrentProgram, outputDir / std::filesystem::path(file).filename());
 
 			// Log extra info when verbosity is enabled
-			if (m_Options.Contains(CompilerFlag::Type::Verbose))
+			if (m_Options.Contains(CompilerFlag::Verbose))
 			{
 				DY_LOG_TRACE("---------------------------------------");
 				DY_LOG_TRACE("-- Tokens generated.");
@@ -77,6 +78,14 @@ namespace Dynamite
 					DY_LOG_TRACE(Node::FormatStatementData(statement));
 			}
 		}
+
+		std::vector<std::filesystem::path> objectPaths = m_Options.Files;
+		for (auto& path : objectPaths)
+			path = m_Options.OutputDir / CompilerOptions::IntermediatePath / path.filename().replace_extension(".o");
+
+	#if defined(DY_PLATFORM_WINDOWS)
+		Linker::Link(m_Options.OutputDir, objectPaths);
+	#endif // TODO: Linux support
 	}
 
 	CompilerSuite& CompilerSuite::Get()
