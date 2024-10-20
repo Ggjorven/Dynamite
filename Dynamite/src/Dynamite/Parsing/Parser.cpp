@@ -31,8 +31,10 @@ namespace Dynamite
 		{
 			if (auto statement = ParseStatement())
 				program.Statements.emplace_back(statement.value());
+			else if (auto function = ParseFunction())
+				program.Functions.emplace_back(function.value());
 			else // Failed to retrieve a valid statement
-				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve a valid statement");
+				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve a valid statement or function.");
 		}
 
 		m_Index = 0;
@@ -148,11 +150,6 @@ namespace Dynamite
 		while (auto stmt = ParseStatement()) 
 			scope->Statements.push_back(stmt.value());
 
-		// Note: We decrement, since if we did not retrieve any (valid) statements
-		// it will result in consuming the next token just to carry on, but this also means
-		// that the '}' has already been consumed. So we just go one back.
-		m_Index--;
-
 		size_t popCount = m_Variables.size() - m_Scopes.back();
 		PopVar(popCount);
 		m_Scopes.pop_back();
@@ -211,7 +208,7 @@ namespace Dynamite
 	{
 		/////////////////////////////////////////////////////////////////
 		// Exit statement (Enforces UInt8 expr :) ) 
-		// TODO: Make a table with functions and make code underneath reusable.
+		// TODO: Move to functions
 		/////////////////////////////////////////////////////////////////
 		if (PeekCheck(0, TokenType::Exit) && PeekCheck(1, TokenType::OpenParenthesis))
 		{
@@ -330,6 +327,23 @@ namespace Dynamite
 
 			return Node::Statement::New(variable);
 		}
+		// A variable with no initializer
+		else if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Semicolon))
+		{
+			Token typeToken = Consume(); // Type token
+			ValueType variableType = static_cast<ValueType>(typeToken.Type);
+
+			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
+
+			std::string varName = variable->TokenObj.Value.value();
+
+			// Add type to current scope with name of variable
+			PushVar(varName, variableType);
+
+			CheckConsume(TokenType::Semicolon, "Expected `;`.");
+
+			return Node::Statement::New(variable);
+		}
 
 		/////////////////////////////////////////////////////////////////
 		// Variable assignment
@@ -351,9 +365,71 @@ namespace Dynamite
 			return {};
 		}
 
-		// Consume() just 1 token, just to make sure we keep going.
-		// Since obviously from the previous token it was impossible to carry on.
-		Consume();
+		return {};
+	}
+
+	std::optional<Node::Reference<Node::Function>> Parser::ParseFunction()
+	{
+		/////////////////////////////////////////////////////////////////
+		// Function
+		/////////////////////////////////////////////////////////////////
+		if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::OpenParenthesis))
+		{
+			Token typeToken = Consume(); // Type token
+			ValueType returnType = static_cast<ValueType>(typeToken.Type);
+
+			Node::Reference<Node::Function> func = Node::Function::New(returnType, Consume()); // Identifier token
+
+			std::string funcName = func->Name.Value.value();
+
+			CheckConsume(TokenType::OpenParenthesis, "Expected `(`.");
+
+			while (true)
+			{
+				if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier))
+				{
+					Token typeToken = Consume(); // Type token
+					ValueType variableType = static_cast<ValueType>(typeToken.Type);
+
+					Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
+
+					std::string varName = variable->TokenObj.Value.value();
+
+					if (PeekCheck(0, TokenType::Equals))
+					{
+						Consume(); // '=' token
+
+						if (auto expr = ParseExpr())
+							variable->ExprObj = expr.value();
+						else
+							CompilerSuite::Get().Error("Expected expression.");
+					}
+
+					func->Parameters.push_back(variable);
+
+					if (PeekCheck(0, TokenType::Comma))
+					{
+						Consume(); // ',' token
+						continue;
+					}
+				}
+				else
+					break;
+			}
+
+			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+
+			// TODO: Make parameters available to scope.
+			if (auto body = ParseScope())
+			{
+				func->Body = body.value();
+			}
+			else
+				CompilerSuite::Error(GetLineNumber(), "Expected scope.");
+
+			return func;
+		}
+
 		return {};
 	}
 
@@ -428,6 +504,8 @@ namespace Dynamite
 	bool Parser::PeekIsValueType()
 	{
 		return PeekIs({
+			TokenType::Void,
+
 			TokenType::Bool, 
 
 			TokenType::Int8,

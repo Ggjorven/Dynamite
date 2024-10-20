@@ -329,10 +329,35 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 
 	/////////////////////////////////////////////////////////////////
-    struct Program
+    struct Function
+    {
+    private:
+        Function(ValueType returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body);
+
+    public:
+        ValueType ReturnType;
+        Token Name;
+    
+        // Note: The expression can be a NullRef, since not every
+        // arguments has a default value.
+        std::vector<Reference<VariableStatement>> Parameters;
+
+        Reference<ScopeStatement> Body;
+
+    public: // Custom allocator functions.
+        template<typename T, typename ...TArgs>
+        friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
+
+        [[nodiscard]] static Reference<Function> New(ValueType returnType = ValueType::None, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = { }, Reference<ScopeStatement> body = (Reference<ScopeStatement>)NullRef);
+    };
+
+    struct Program // TODO: Add some kind of order
     {
     public:
+        // Note: Global statements
         std::vector<Reference<Statement>> Statements = { };
+
+        std::vector<Reference<Function>> Functions = { };
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -342,7 +367,8 @@ namespace Dynamite::Node
     std::optional<size_t> GetBinaryExprPrecendce(BinaryExpr::Type type);
 
     std::string FormatExpressionData(const Reference<Expression> expr);
-    std::string FormatConditionBranch(const Reference<ConditionBranch> expr);
+    std::string FormatConditionBranch(const Reference<ConditionBranch> branch);
     std::string FormatStatementData(const Reference<Statement> statement);
+    std::string FormatFunction(const Reference<Function> function);
 
 }

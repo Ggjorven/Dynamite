@@ -50,15 +50,19 @@ namespace Dynamite
 		{
 			std::string flag = argv[i];
 			
+			// After '--' value
+			std::string flagName = {};
+			if (flag.size() > 2)
+				flagName = flag.substr(2, flag.size() - 2);
+
 			// After '--X=' flag value
 			std::string value = {};
+			if (flag.size() > 4)
+				value = flag.substr(4, flag.size() - 4);
 			
 			///////////////////////////////////
 			// Files/Directories
 			///////////////////////////////////
-			if (flag.size() > 4)
-				value = flag.substr(4, flag.size() - 4);
-
 			// If not '--' it's a file.
 			if (flag.substr(0, 2) != "--")
 				Files.push_back(flag);
@@ -74,7 +78,7 @@ namespace Dynamite
 			///////////////////////////////////
 			// Flags
 			///////////////////////////////////
-			else if (StrLower(value) == "verbose")
+			else if (StrLower(flagName) == "verbose")
 				Flags |= CompilerFlag::Verbose;
 		}
 	}

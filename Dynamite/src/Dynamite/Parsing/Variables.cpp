@@ -13,40 +13,12 @@
 namespace Dynamite
 {
 
-	std::string ValueTypeToASM(ValueType type)
-	{
-		switch (type)
-		{
-		case ValueType::Int8:
-		case ValueType::UInt8:
-			return "BYTE";
-
-		case ValueType::Int16:
-		case ValueType::UInt16:
-			return "WORD";
-
-		case ValueType::Int32:     
-		case ValueType::UInt32:     
-			return "DWORD";
-
-		case ValueType::Int64:     
-		case ValueType::UInt64:     
-			return "QWORD";
-
-		// TODO: Other types
-
-		default:
-			break;
-		}
-
-		DY_LOG_ERROR("ValueType::{0}, ASM type has not been defined.", Pulse::Enum::Name(type));
-		return "Undefined ASM Type";
-	}
-
 	std::string ValueTypeToStr(ValueType type)
 	{
 		switch (type)
 		{
+		case ValueType::Void:		return "void";
+
 		case ValueType::Bool:		return "bool";
 
 		case ValueType::Int8:		return "i8";
@@ -77,6 +49,8 @@ namespace Dynamite
 	{
 		switch (type)
 		{
+		case ValueType::Void:		return 0;
+
 		case ValueType::Bool:		return sizeof(ValueTypeToCType<ValueType::Bool>);
 
 		case ValueType::Int8:		return sizeof(ValueTypeToCType<ValueType::Int8>);
@@ -107,6 +81,9 @@ namespace Dynamite
 	{
 		if (from == to)
 			return true;
+
+		if (from == ValueType::Void || to == ValueType::Void)
+			return false;
 
 		using namespace Pulse::Enum;
 		switch (Fuse(from, to))

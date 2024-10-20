@@ -21,7 +21,13 @@ namespace Dynamite
 		CloseParenthesis = ')',		// ')'
 		OpenCurlyBrace = '{',		// '{'
 		CloseCurlyBrace = '}',		// '}'
+		OpenSquareBracket = '[',	// '['
+		CloseSquareBracket = ']',	// ']'
 		Equals = '=',				// '='
+
+		Period = '.',				// '.'
+		Dot = Period,
+		Comma = ',',				// ','
 
 		// Operators
 		Plus = '+',					// '+'
@@ -51,9 +57,12 @@ namespace Dynamite
 		If,
 		Else,
 
-		Exit,						// Exit from Program
+		Return,
+		Exit,						// Exit from Program // TODO: Remove when it's a function
 
 		// Types
+		Void,
+
 		Bool,
 
 		Int8,

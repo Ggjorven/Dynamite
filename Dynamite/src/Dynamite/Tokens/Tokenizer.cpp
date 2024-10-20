@@ -207,6 +207,8 @@ namespace Dynamite
                 return true;                                                        \
             }
 
+        HandleType(TokenType::Void);
+
         HandleType(TokenType::Bool);
 
         HandleType(TokenType::Int8);
@@ -258,6 +260,14 @@ namespace Dynamite
             return;
         }
 
+        // Other
+        if (m_Buffer == "return")
+        {
+            m_Tokens.emplace_back(TokenType::Return, m_LineNumber);
+            m_Buffer.clear();
+            return;
+        }
+
         // Exit function // TODO: Make reusable for all functions
         if (m_Buffer == "exit")
         {
@@ -289,7 +299,12 @@ namespace Dynamite
         CharOperator(')', TokenType::CloseParenthesis);
         CharOperator('{', TokenType::OpenCurlyBrace);
         CharOperator('}', TokenType::CloseCurlyBrace);
+        CharOperator('[', TokenType::OpenSquareBracket);
+        CharOperator(']', TokenType::CloseSquareBracket);
         CharOperator('=', TokenType::Equals);
+
+        CharOperator('.', TokenType::Period);
+        CharOperator(',', TokenType::Comma);
 
         // Operators
         CharOperator('+', TokenType::Plus);

@@ -32,6 +32,8 @@ namespace Dynamite
 		std::optional<Node::Reference<Node::ConditionBranch>> ParseConditionBrach();
 		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
+		std::optional<Node::Reference<Node::Function>> ParseFunction();
+
 	public:
 		// Returns the Token at m_Index + offset, if it is out of bounds it
 		// will return an optional with no value. Checkable with .has_value()

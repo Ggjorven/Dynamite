@@ -1,20 +1,5 @@
-u8 x = 10 + 6 * (7 - 2);
-u8 y = 255;
-
-if (1)
+u8 main(char a, char b = 't')
 {
-	i32 z = 89;
+	i32 x = 10;
+	u64 y = 218093280;
 }
-else // Comment
-{
-	i32 z = 90;
-	z = 10;
-}
-
-/*
-Multi 
-line
-comment
-*/
-
-exit(x);

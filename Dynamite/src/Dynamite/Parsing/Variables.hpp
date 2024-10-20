@@ -12,6 +12,8 @@ namespace Dynamite
 	{
 		None = 0,
 
+		Void = (uint8_t)TokenType::Void,
+
 		Bool = (uint8_t)TokenType::Bool,
 
 		Int8 = (uint8_t)TokenType::Int8,
@@ -43,6 +45,8 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	template<ValueType T> struct ValueTypeToCTypeImpl;
 
+	template<> struct ValueTypeToCTypeImpl<ValueType::Void> { using Type = void; };
+
 	template<> struct ValueTypeToCTypeImpl<ValueType::Bool> { using Type = bool; };
 
 	template<> struct ValueTypeToCTypeImpl<ValueType::Int8> { using Type = int8_t; };
@@ -68,7 +72,6 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
-	std::string ValueTypeToASM(ValueType type);
 	std::string ValueTypeToStr(ValueType type);
 	size_t ValueTypeSize(ValueType type);
 	bool ValueTypeCastable(ValueType from, ValueType to);

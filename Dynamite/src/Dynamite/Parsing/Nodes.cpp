@@ -58,6 +58,10 @@ namespace Dynamite::Node
 
 	Statement::Statement(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement) : StatementObj(statement) {}
 
+
+
+	Function::Function(ValueType returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body) : ReturnType(returnType), Name(name), Parameters(parameters), Body(body) {}
+
 	/////////////////////////////////////////////////////////////////
 	// Custom allocator functions
 	/////////////////////////////////////////////////////////////////
@@ -93,6 +97,10 @@ namespace Dynamite::Node
 
 	Reference<Statement> Statement::New(Variant<Reference<VariableStatement>, Reference<ExitStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>> statement) { return _DEREF s_Allocator.Construct<Statement>(statement); }
 
+
+
+	Reference<Function> Function::New(ValueType returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body) { return _DEREF s_Allocator.Construct<Function>(returnType, name, parameters, body); }
+
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
@@ -121,6 +129,9 @@ namespace Dynamite::Node
 	// Note: Has to be manually updated
 	std::string FormatExpressionData(const Reference<Expression> expr)
 	{
+		if (expr == NullRef)
+			return {};
+
 		return std::visit([](auto&& obj) -> std::string
 		{
 			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<TermExpr>>)
@@ -149,8 +160,11 @@ namespace Dynamite::Node
 	}
 
 	// Note: Has to be manually updated
-	std::string FormatConditionBranch(const Reference<ConditionBranch> expr)
+	std::string FormatConditionBranch(const Reference<ConditionBranch> branch)
 	{
+		if (branch == NullRef)
+			return {};
+
 		return std::visit([](auto&& obj) -> std::string
 		{
 			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ElseIfBranch>>)
@@ -176,17 +190,20 @@ namespace Dynamite::Node
 			}
 
 			return "Undefined Condition Branch";
-		}, expr->ConditionObj);
+		}, branch->ConditionObj);
 	}
 
 	// Note: Has to be manually updated
 	std::string FormatStatementData(const Reference<Statement> statement)
 	{
+		if (statement == NullRef)
+			return {};
+
 		return std::visit([](auto&& obj) -> std::string
 		{
 			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<VariableStatement>>)
 			{
-				return Pulse::Text::Format("[Variable({0})] - {1}([{2}])", ValueTypeToStr(obj->Type), FormatToken(obj->TokenObj), FormatExpressionData(obj->ExprObj));
+				return Pulse::Text::Format("[Variable({0})] - {1}([{2}])", ValueTypeToStr(obj->Type), FormatToken(obj->TokenObj), ((obj->ExprObj == NullRef) ? "" : FormatExpressionData(obj->ExprObj)));
 			}
 			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<ExitStatement>>)
 			{
@@ -221,6 +238,27 @@ namespace Dynamite::Node
 			return "Undefined Statement Data";
 		},
 		statement->StatementObj);
+	}
+
+	// Note: Has to be manually updated
+	std::string FormatFunction(const Reference<Function> function)
+	{
+		if (function == NullRef)
+			return {};
+
+		std::string str = ValueTypeToStr(function->ReturnType) + ' ' + function->Name.Value.value();
+		str += '(';
+		for (const auto& parameter : function->Parameters)
+		{
+			// Note: Maybe this should be changed, since we don't clear the memory.
+			str += FormatStatementData(Node::Statement::New(parameter));
+		}
+		str += ')';
+
+		// Note: Maybe this should be changed, since we don't clear the memory.
+		str += FormatStatementData(Node::Statement::New(function->Body));
+
+		return str;
 	}
 
 }
