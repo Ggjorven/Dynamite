@@ -1,5 +1,6 @@
-u8 main(char a, char b = 't')
+// TODO: Support pointers
+i32 main(i32 argc, char argv)
 {
-	i32 x = 10;
+	i8 x = 10;
 	u64 y = 218093280;
 }

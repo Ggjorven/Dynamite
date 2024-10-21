@@ -30,6 +30,7 @@ namespace Dynamite
 		std::optional<Node::Reference<Node::Expression>> ParseExpr(const size_t minimumPrecedence = 0);
 		std::optional<Node::Reference<Node::ScopeStatement>> ParseScope();
 		std::optional<Node::Reference<Node::ConditionBranch>> ParseConditionBrach();
+		std::optional<Node::Reference<Node::VariableStatement>> ParseVariable();
 		std::optional<Node::Reference<Node::Statement>> ParseStatement();
 
 		std::optional<Node::Reference<Node::Function>> ParseFunction();
@@ -47,9 +48,9 @@ namespace Dynamite
 
 		std::optional<Token> TryConsumeLiteral();
 
-		bool PeekIs(const std::vector<TokenType>& allowedValues);
-		bool PeekIsValueType();
-		bool PeekIsBinaryOperator();
+		bool PeekIs(const std::vector<TokenType>& allowedValues) const;
+		bool PeekIsValueType() const;
+		bool PeekIsBinaryOperator() const;
 
 		// Note: Only casts if the internal type is a literalterm
 		void CastInternalValue(ValueType from, ValueType to, Node::Reference<Node::Expression> expression);
@@ -58,12 +59,20 @@ namespace Dynamite
 
 	private:
 		void PushVar(const std::string& name, ValueType type);
+		void PushOffsetVar(const std::string& name, ValueType type); // Used for parameter variables
 		void PopVar(size_t count);
 		Variable GetVar(const std::string& name);
 
 	private:
 		std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
+
+		// Used for adding variables to function scope
+		// For example parameters need to be available in the scope
+		// but have to be declared outside, so we have an offset to 
+		// allow these parameters to be accessed in the scope and still
+		// be deleted afterwards.
+		size_t m_VariableOffset = 0;
 
 		std::vector<Variable> m_Variables = {};
 		std::vector<size_t> m_Scopes = { 0 };

@@ -74,13 +74,8 @@ namespace Dynamite
 				DY_LOG_TRACE("-- Tree generated.");
 				DY_LOG_TRACE("---------------------------------------");
 
-				DY_LOG_TRACE("Functions:");
-				for (const auto& function : m_CurrentProgram.Functions)
-					DY_LOG_TRACE(Node::FormatFunction(function));
-
-				DY_LOG_TRACE("Statements:");
-				for (const auto& statement : m_CurrentProgram.Statements)
-					DY_LOG_TRACE(Node::FormatStatementData(statement));
+				for (const auto& function : m_CurrentProgram.Defines)
+					DY_LOG_TRACE(Node::FormatDefine(function));
 			}
 		}
 

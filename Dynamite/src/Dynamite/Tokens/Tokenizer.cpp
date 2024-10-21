@@ -295,13 +295,16 @@ namespace Dynamite
 
         // Signs
         CharOperator(';', TokenType::Semicolon);
+
         CharOperator('(', TokenType::OpenParenthesis);
         CharOperator(')', TokenType::CloseParenthesis);
         CharOperator('{', TokenType::OpenCurlyBrace);
         CharOperator('}', TokenType::CloseCurlyBrace);
         CharOperator('[', TokenType::OpenSquareBracket);
         CharOperator(']', TokenType::CloseSquareBracket);
+
         CharOperator('=', TokenType::Equals);
+        CharOperator(':', TokenType::Colon);
 
         CharOperator('.', TokenType::Period);
         CharOperator(',', TokenType::Comma);

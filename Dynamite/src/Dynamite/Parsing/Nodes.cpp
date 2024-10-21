@@ -261,4 +261,24 @@ namespace Dynamite::Node
 		return str;
 	}
 
+	// Note: Has to be manually updated
+	std::string FormatDefine(const Program::Define& define)
+	{
+		return std::visit([](auto&& obj) -> std::string
+		{
+			if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<VariableStatement>>)
+			{
+				// Note: Maybe this should be changed, since we don't clear the memory.
+				return FormatStatementData(Node::Statement::New(obj));
+			}
+			else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Reference<Function>>)
+			{
+				// Note: Maybe this should be changed, since we don't clear the memory.
+				return FormatFunction(obj);
+			}
+
+			return "Undefined Define Value";
+		}, define);
+	}
+
 }

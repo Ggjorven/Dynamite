@@ -17,13 +17,16 @@ namespace Dynamite
 
 		// Char tokens
 		Semicolon = ';',			// End of 'statement'
+
 		OpenParenthesis = '(',		// '('
 		CloseParenthesis = ')',		// ')'
 		OpenCurlyBrace = '{',		// '{'
 		CloseCurlyBrace = '}',		// '}'
 		OpenSquareBracket = '[',	// '['
 		CloseSquareBracket = ']',	// ']'
+
 		Equals = '=',				// '='
+		Colon = ':',
 
 		Period = '.',				// '.'
 		Dot = Period,
@@ -36,6 +39,7 @@ namespace Dynamite
 		Subtract = Minus,
 		Star = '*',					// '*'
 		Multiply = Star,
+		Pointer = Star,
 		ForwardSlash = '/',			// '/'
 		Divide = ForwardSlash,
 

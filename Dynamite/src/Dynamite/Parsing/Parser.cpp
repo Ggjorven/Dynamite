@@ -29,12 +29,12 @@ namespace Dynamite
 		// Parse statements
 		while (Peek().has_value())
 		{
-			if (auto statement = ParseStatement())
-				program.Statements.emplace_back(statement.value());
+			if (auto var = ParseVariable())
+				program.Defines.emplace_back(var.value());
 			else if (auto function = ParseFunction())
-				program.Functions.emplace_back(function.value());
+				program.Defines.emplace_back(function.value());
 			else // Failed to retrieve a valid statement
-				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve a valid statement or function.");
+				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve a valid variable or function.");
 		}
 
 		m_Index = 0;
@@ -91,6 +91,9 @@ namespace Dynamite
 				return {};
 			}, termLHS.value()->TermObj);
 
+			if (type == ValueType::None)
+				return {};
+
 			/////////////////////////////////////////////////////////////////
 			// Expression retrieval/creation
 			/////////////////////////////////////////////////////////////////
@@ -144,7 +147,8 @@ namespace Dynamite
 		if (!TryConsume(TokenType::OpenCurlyBrace).has_value())
 			return {};
 
-		m_Scopes.push_back(m_Variables.size());
+		m_Scopes.push_back(m_Variables.size() - m_VariableOffset);
+		m_VariableOffset = 0; // Reset the offset.
 
 		Node::Reference<Node::ScopeStatement> scope = Node::ScopeStatement::New();
 		while (auto stmt = ParseStatement()) 
@@ -199,6 +203,70 @@ namespace Dynamite
 				CompilerSuite::Error(GetLineNumber(), "Failed to retrieve valid scope.");
 
 			return {};
+		}
+
+		return {};
+	}
+
+	std::optional<Node::Reference<Node::VariableStatement>> Parser::ParseVariable()
+	{
+		/////////////////////////////////////////////////////////////////
+		// Variable creation
+		/////////////////////////////////////////////////////////////////
+		if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
+		{
+			Token typeToken = Consume(); // Type token
+			ValueType variableType = static_cast<ValueType>(typeToken.Type);
+
+			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
+
+			std::string varName = variable->TokenObj.Value.value();
+
+			// Add type to current scope with name of variable
+			PushVar(varName, variableType);
+
+			Consume(); // '=' token
+
+			// Expression resolution
+			if (auto expr = ParseExpr())
+			{
+				if (!ValueTypeCastable(expr.value()->Type, variableType))
+				{
+					CompilerSuite::Error(GetLineNumber(), "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type));
+
+					// Semicolon `;` resolution
+					CheckConsume(TokenType::Semicolon, "Expected `;`.");
+					return variable;
+				}
+
+				// Note: Only casts if the internal type is a literalterm
+				CastInternalValue(expr.value()->Type, variableType, expr.value());
+				variable->ExprObj = expr.value();
+			}
+			else
+				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
+
+			// Semicolon ';' resolution
+			CheckConsume(TokenType::Semicolon, "Expected `;`.");
+
+			return variable;
+		}
+		// A variable with no initializer
+		else if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Semicolon))
+		{
+			Token typeToken = Consume(); // Type token
+			ValueType variableType = static_cast<ValueType>(typeToken.Type);
+
+			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
+
+			std::string varName = variable->TokenObj.Value.value();
+
+			// Add type to current scope with name of variable
+			PushVar(varName, variableType);
+
+			CheckConsume(TokenType::Semicolon, "Expected `;`.");
+
+			return variable;
 		}
 
 		return {};
@@ -289,66 +357,15 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		// Variable creation
 		/////////////////////////////////////////////////////////////////
-		else if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
+		else if (auto var = ParseVariable())
 		{
-			Token typeToken = Consume(); // Type token
-			ValueType variableType = static_cast<ValueType>(typeToken.Type);
-
-			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
-
-			std::string varName = variable->TokenObj.Value.value();
-
-			// Add type to current scope with name of variable
-			PushVar(varName, variableType);
-
-			Consume(); // '=' token
-
-			// Expression resolution
-			if (auto expr = ParseExpr())
-			{
-				if (!ValueTypeCastable(expr.value()->Type, variableType))
-				{
-					CompilerSuite::Error(GetLineNumber(), "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type));
-
-					// Semicolon `;` resolution
-					CheckConsume(TokenType::Semicolon, "Expected `;`.");
-					return {};
-				}
-
-				// Note: Only casts if the internal type is a literalterm
-				CastInternalValue(expr.value()->Type, variableType, expr.value());
-				variable->ExprObj = expr.value();
-			}
-			else
-				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
-
-			// Semicolon ';' resolution
-			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-
-			return Node::Statement::New(variable);
-		}
-		// A variable with no initializer
-		else if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Semicolon))
-		{
-			Token typeToken = Consume(); // Type token
-			ValueType variableType = static_cast<ValueType>(typeToken.Type);
-
-			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
-
-			std::string varName = variable->TokenObj.Value.value();
-
-			// Add type to current scope with name of variable
-			PushVar(varName, variableType);
-
-			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-
-			return Node::Statement::New(variable);
+			return Node::Statement::New(var.value());
 		}
 
 		/////////////////////////////////////////////////////////////////
 		// Variable assignment
 		/////////////////////////////////////////////////////////////////
-		if (PeekCheck(0, TokenType::Identifier) && PeekCheck(1, TokenType::Equals)) 
+		else if (PeekCheck(0, TokenType::Identifier) && PeekCheck(1, TokenType::Equals)) 
 		{
 			auto assignment = Node::AssignmentStatement::New(Consume());
 			Consume(); // '=' char
@@ -395,6 +412,10 @@ namespace Dynamite
 
 					std::string varName = variable->TokenObj.Value.value();
 
+					// Push it as an offset variable so it is available
+					// in the next scope and will be deleted after the scope
+					PushOffsetVar(varName, variableType);
+
 					if (PeekCheck(0, TokenType::Equals))
 					{
 						Consume(); // '=' token
@@ -419,7 +440,6 @@ namespace Dynamite
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
-			// TODO: Make parameters available to scope.
 			if (auto body = ParseScope())
 			{
 				func->Body = body.value();
@@ -483,7 +503,7 @@ namespace Dynamite
 		return {};
 	}
 
-	bool Parser::PeekIs(const std::vector<TokenType>& allowedValues)
+	bool Parser::PeekIs(const std::vector<TokenType>& allowedValues) const
 	{
 		std::optional<Token> peek = Peek(0);
 		if (!peek.has_value())
@@ -501,7 +521,7 @@ namespace Dynamite
 	}
 
 	// Note: Has to be manually updated
-	bool Parser::PeekIsValueType()
+	bool Parser::PeekIsValueType() const
 	{
 		return PeekIs({
 			TokenType::Void,
@@ -527,7 +547,7 @@ namespace Dynamite
 	}
 
 	// Note: Has to be manually updated
-	bool Parser::PeekIsBinaryOperator()
+	bool Parser::PeekIsBinaryOperator() const
 	{
 		return PeekIs({
 			TokenType::Add,
@@ -573,6 +593,12 @@ namespace Dynamite
 	void Parser::PushVar(const std::string& name, ValueType type)
 	{
 		m_Variables.emplace_back(name, type);
+	}
+
+	void Parser::PushOffsetVar(const std::string& name, ValueType type)
+	{
+		m_VariableOffset++;
+		PushVar(name, type);
 	}
 
 	void Parser::PopVar(size_t count)

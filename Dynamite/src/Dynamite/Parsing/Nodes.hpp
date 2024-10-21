@@ -351,13 +351,11 @@ namespace Dynamite::Node
         [[nodiscard]] static Reference<Function> New(ValueType returnType = ValueType::None, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = { }, Reference<ScopeStatement> body = (Reference<ScopeStatement>)NullRef);
     };
 
-    struct Program // TODO: Add some kind of order
+    struct Program
     {
     public:
-        // Note: Global statements
-        std::vector<Reference<Statement>> Statements = { };
-
-        std::vector<Reference<Function>> Functions = { };
+        using Define = Variant<Reference<VariableStatement>, Reference<Function>>;
+        std::vector<Define> Defines = { };
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -370,5 +368,7 @@ namespace Dynamite::Node
     std::string FormatConditionBranch(const Reference<ConditionBranch> branch);
     std::string FormatStatementData(const Reference<Statement> statement);
     std::string FormatFunction(const Reference<Function> function);
+
+    std::string FormatDefine(const Program::Define& define);
 
 }
