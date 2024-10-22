@@ -9,7 +9,7 @@ namespace Dynamite
 	// Types
 	/////////////////////////////////////////////////////////////////
 	// TODO: Add pointers somehow
-	enum class ValueType : uint8_t
+	enum class BaseType : uint8_t
 	{
 		None = 0,
 
@@ -32,52 +32,48 @@ namespace Dynamite
 
 		Char = (uint8_t)TokenType::Char,
 		String = (uint8_t)TokenType::String,
+
+		Pointer
+	};
+
+	// Note: Allocate next with 'new' and the destructor will 'delete' it for you.
+	struct ValueType
+	{
+	public:
+		BaseType Base;
+
+		// Will have a next if base is a pointer
+		// else its a nullptr.
+		// TODO: Add a better way of storing than pointers
+		ValueType* Next;
+
+	public:
+		ValueType(BaseType base = BaseType::None, ValueType* next = nullptr);
+		~ValueType();
+
+	public:
+		bool operator == (BaseType otherBase) const;
+		bool operator != (BaseType otherBase) const;
+
+		bool operator == (const ValueType& other) const;
+		bool operator != (const ValueType& other) const;
 	};
 
 	struct Variable
 	{
 	public:
 		std::string Name = {};
-		ValueType Type = ValueType::None;
+		ValueType Type = {};
 	};
-
-	/////////////////////////////////////////////////////////////////
-	// Conversion of Types
-	/////////////////////////////////////////////////////////////////
-	template<ValueType T> struct ValueTypeToCTypeImpl;
-
-	template<> struct ValueTypeToCTypeImpl<ValueType::Void> { using Type = void; };
-
-	template<> struct ValueTypeToCTypeImpl<ValueType::Bool> { using Type = bool; };
-
-	template<> struct ValueTypeToCTypeImpl<ValueType::Int8> { using Type = int8_t; };
-	template<> struct ValueTypeToCTypeImpl<ValueType::Int16> { using Type = int16_t; };
-	template<> struct ValueTypeToCTypeImpl<ValueType::Int32> { using Type = int32_t; };
-	template<> struct ValueTypeToCTypeImpl<ValueType::Int64> { using Type = int64_t; };
-
-	template<> struct ValueTypeToCTypeImpl<ValueType::UInt8> { using Type = uint8_t; };
-	template<> struct ValueTypeToCTypeImpl<ValueType::UInt16> { using Type = uint16_t; };
-	template<> struct ValueTypeToCTypeImpl<ValueType::UInt32> { using Type = uint32_t; };
-	template<> struct ValueTypeToCTypeImpl<ValueType::UInt64> { using Type = uint64_t; };
-
-	template<> struct ValueTypeToCTypeImpl<ValueType::Float32> { using Type = float; };
-	template<> struct ValueTypeToCTypeImpl<ValueType::Float64> { using Type = double; };
-
-	template<> struct ValueTypeToCTypeImpl<ValueType::Char> { using Type = char; };
-
-	// Note: String doesn't have a C(++) equivalent at the moment.
-
-	template<ValueType T>
-	using ValueTypeToCType = ValueTypeToCTypeImpl<T>::Type;
 
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
-	std::string ValueTypeToStr(ValueType type);
-	size_t ValueTypeSize(ValueType type);
-	bool ValueTypeCastable(ValueType from, ValueType to);
-	std::string ValueTypeCast(ValueType from, ValueType to, const std::string& value, bool* dataLostPtr = nullptr);
+	std::string ValueTypeToStr(const ValueType& type);
+	size_t ValueTypeSize(const ValueType& type);
+	bool ValueTypeCastable(const ValueType& from, const ValueType& to);
+	std::string ValueTypeCast(const ValueType& from, const ValueType& to, const std::string& value, bool* dataLostPtr = nullptr);
 
-	ValueType GetValueType(TokenType literalType, const std::string& value);
+	BaseType GetBaseType(TokenType literalType, const std::string& value);
 
 }

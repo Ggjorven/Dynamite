@@ -162,7 +162,7 @@ namespace Dynamite::Node
     struct Expression
     {
     private:
-        Expression(ValueType type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr);
+        Expression(const ValueType& type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr);
 
     public:
         ValueType Type;
@@ -172,7 +172,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<Expression> New(ValueType type = ValueType::None, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr = {});
+        [[nodiscard]] static Reference<Expression> New(const ValueType& type = {}, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr = {});
     };
 	/////////////////////////////////////////////////////////////////
 
@@ -252,7 +252,7 @@ namespace Dynamite::Node
     struct VariableStatement
     {
     private:
-        VariableStatement(ValueType type, const Token& token, Reference<Expression> expr);
+        VariableStatement(const ValueType& type, const Token& token, Reference<Expression> expr);
 
     public:
         ValueType Type;
@@ -263,7 +263,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<VariableStatement> New(ValueType type = ValueType::None, const Token& token = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
+        [[nodiscard]] static Reference<VariableStatement> New(const ValueType& type = {}, const Token& token = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
     };
 
     struct ExitStatement
@@ -332,7 +332,7 @@ namespace Dynamite::Node
     struct Function
     {
     private:
-        Function(ValueType returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body);
+        Function(const ValueType& returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body);
 
     public:
         ValueType ReturnType;
@@ -348,7 +348,7 @@ namespace Dynamite::Node
         template<typename T, typename ...TArgs>
         friend T* Pulse::Memory::DynamicArenaAllocator::Construct(TArgs&& ...args);
 
-        [[nodiscard]] static Reference<Function> New(ValueType returnType = ValueType::None, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = { }, Reference<ScopeStatement> body = (Reference<ScopeStatement>)NullRef);
+        [[nodiscard]] static Reference<Function> New(const ValueType& returnType = {}, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = {}, Reference<ScopeStatement> body = (Reference<ScopeStatement>)NullRef);
     };
 
     struct Program

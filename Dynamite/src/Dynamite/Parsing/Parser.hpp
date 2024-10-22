@@ -48,9 +48,10 @@ namespace Dynamite
 
 		std::optional<Token> TryConsumeLiteral();
 
-		bool PeekIs(const std::vector<TokenType>& allowedValues) const;
-		bool PeekIsValueType() const;
-		bool PeekIsBinaryOperator() const;
+		bool PeekIs(size_t& offset, const std::vector<TokenType>& allowedValues) const;
+		inline bool PeekIs(size_t& offset, TokenType allowed) const { return PeekIs(offset, std::vector<TokenType>(1, allowed)); }
+		bool PeekIsValueType(size_t& offset) const;
+		bool PeekIsBinaryOperator(size_t& offset) const;
 
 		// Note: Only casts if the internal type is a literalterm
 		void CastInternalValue(ValueType from, ValueType to, Node::Reference<Node::Expression> expression);
@@ -62,6 +63,9 @@ namespace Dynamite
 		void PushOffsetVar(const std::string& name, ValueType type); // Used for parameter variables
 		void PopVar(size_t count);
 		Variable GetVar(const std::string& name);
+
+		// Also takes in pointers
+		ValueType GetFullType(BaseType base);
 
 	private:
 		std::vector<Token>& m_Tokens;

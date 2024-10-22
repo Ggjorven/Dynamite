@@ -36,7 +36,7 @@ namespace Dynamite::Node
 
 	BinaryExpr::BinaryExpr(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) : BinaryType(binaryType), LHS(lhs), RHS(rhs) {}
 
-	Expression::Expression(ValueType type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr) : Type(type), ExprObj(expr) {}
+	Expression::Expression(const ValueType& type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr) : Type(type), ExprObj(expr) {}
 	
 
 
@@ -48,7 +48,7 @@ namespace Dynamite::Node
 
 	IfStatement::IfStatement(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) : ExprObj(expr), Scope(scope), Next(next) {}
 
-	VariableStatement::VariableStatement(ValueType type, const Token& token, Reference<Expression> expr) : Type(type), TokenObj(token), ExprObj(expr) {}
+	VariableStatement::VariableStatement(const ValueType& type, const Token& token, Reference<Expression> expr) : Type(type), TokenObj(token), ExprObj(expr) {}
 
 	ExitStatement::ExitStatement(Reference<Expression> expr) : ExprObj(expr) {}
 
@@ -60,7 +60,7 @@ namespace Dynamite::Node
 
 
 
-	Function::Function(ValueType returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body) : ReturnType(returnType), Name(name), Parameters(parameters), Body(body) {}
+	Function::Function(const ValueType& returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body) : ReturnType(returnType), Name(name), Parameters(parameters), Body(body) {}
 
 	/////////////////////////////////////////////////////////////////
 	// Custom allocator functions
@@ -75,7 +75,7 @@ namespace Dynamite::Node
 
 	Reference<BinaryExpr> BinaryExpr::New(Type binaryType, Reference<Expression> lhs, Reference<Expression> rhs) { return _DEREF s_Allocator.Construct<BinaryExpr>(binaryType, lhs, rhs); }
 
-	Reference<Expression> Expression::New(ValueType type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr) { return _DEREF s_Allocator.Construct<Expression>(type, expr); }
+	Reference<Expression> Expression::New(const ValueType& type, Variant<Reference<TermExpr>, Reference<BinaryExpr>> expr) { return _DEREF s_Allocator.Construct<Expression>(type, expr); }
 
 
 
@@ -87,7 +87,7 @@ namespace Dynamite::Node
 
 	Reference<IfStatement> IfStatement::New(Reference<Expression> expr, Reference<ScopeStatement> scope, std::optional<Reference<ConditionBranch>> next) { return _DEREF s_Allocator.Construct<IfStatement>(expr, scope, next); }
 
-	Reference<VariableStatement> VariableStatement::New(ValueType type, const Token& token, Reference<Expression> expr) { return _DEREF s_Allocator.Construct<VariableStatement>(type, token, expr); }
+	Reference<VariableStatement> VariableStatement::New(const ValueType& type, const Token& token, Reference<Expression> expr) { return _DEREF s_Allocator.Construct<VariableStatement>(type, token, expr); }
 
 	Reference<ExitStatement> ExitStatement::New(Reference<Expression> expr) { return _DEREF s_Allocator.Construct<ExitStatement>(expr); }
 
@@ -99,7 +99,7 @@ namespace Dynamite::Node
 
 
 
-	Reference<Function> Function::New(ValueType returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body) { return _DEREF s_Allocator.Construct<Function>(returnType, name, parameters, body); }
+	Reference<Function> Function::New(const ValueType& returnType, const Token& name, const std::vector<Reference<VariableStatement>>& parameters, Reference<ScopeStatement> body) { return _DEREF s_Allocator.Construct<Function>(returnType, name, parameters, body); }
 
 	/////////////////////////////////////////////////////////////////
 	// Helper functions

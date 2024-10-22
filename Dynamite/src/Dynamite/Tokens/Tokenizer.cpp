@@ -200,7 +200,7 @@ namespace Dynamite
         // Note: It's okay to use if instead of else if, since
         // we return from the function if it has been found.
         #define HandleType(tokenType)                                               \
-            if (m_Buffer == ValueTypeToStr(static_cast<ValueType>(tokenType)))      \
+            if (m_Buffer == ValueTypeToStr({ static_cast<BaseType>(tokenType) }))   \
             {                                                                       \
                 m_Tokens.emplace_back(tokenType, m_LineNumber);                     \
                 m_Buffer.clear();                                                   \

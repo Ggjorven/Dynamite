@@ -13,147 +13,189 @@
 namespace Dynamite
 {
 
-	std::string ValueTypeToStr(ValueType type)
+	ValueType::ValueType(BaseType base, ValueType* next)
+		: Base(base), Next(next)
 	{
-		switch (type)
+	}
+
+	ValueType::~ValueType()
+	{
+		//if (Next)
+		//	delete Next;
+	}
+
+	bool ValueType::operator == (BaseType otherBase) const
+	{
+		return this->Base == otherBase;
+	}
+
+	bool ValueType::operator != (BaseType otherBase) const
+	{
+		return !(this->Base == otherBase);
+	}
+
+	bool ValueType::operator == (const ValueType& other) const
+	{
+		bool result = (this->Base == other.Base);
+		
+		if (this->Next && other.Next)
+			result |= (*(this->Next) == *other.Next);
+		
+		return result;
+	}
+
+	bool ValueType::operator != (const ValueType& other) const
+	{
+		return !(*this == other);
+	}
+
+	std::string ValueTypeToStr(const ValueType& type)
+	{
+		switch (type.Base)
 		{
-		case ValueType::Void:		return "void";
+		case BaseType::Void:		return "void";
 
-		case ValueType::Bool:		return "bool";
+		case BaseType::Bool:		return "bool";
 
-		case ValueType::Int8:		return "i8";
-		case ValueType::Int16:		return "i16";
-		case ValueType::Int32:		return "i32";
-		case ValueType::Int64:		return "i64";
+		case BaseType::Int8:		return "i8";
+		case BaseType::Int16:		return "i16";
+		case BaseType::Int32:		return "i32";
+		case BaseType::Int64:		return "i64";
 
-		case ValueType::UInt8:		return "u8";
-		case ValueType::UInt16:		return "u16";
-		case ValueType::UInt32:		return "u32";
-		case ValueType::UInt64:		return "u64";
+		case BaseType::UInt8:		return "u8";
+		case BaseType::UInt16:		return "u16";
+		case BaseType::UInt32:		return "u32";
+		case BaseType::UInt64:		return "u64";
 
-		case ValueType::Float32:	return "f32";
-		case ValueType::Float64:	return "f64";
+		case BaseType::Float32:		return "f32";
+		case BaseType::Float64:		return "f64";
 
-		case ValueType::Char:		return "char";
-		case ValueType::String:		return "str";
+		case BaseType::Char:		return "char";
+		case BaseType::String:		return "str";
+
+		case BaseType::Pointer:		return ValueTypeToStr(*type.Next) + '*';
 
 		default:
 			break;
 		}
 
-		DY_LOG_ERROR("ValueType::{0}, Name has not been defined.", Pulse::Enum::Name(type));
+		DY_LOG_ERROR("ValueType::{0}, Name has not been defined.", Pulse::Enum::Name(type.Base));
 		return "UNDEFINED ValueType";
 	}
 
-	size_t ValueTypeSize(ValueType type)
+	size_t ValueTypeSize(const ValueType& type)
 	{
-		switch (type)
+		switch (type.Base)
 		{
-		case ValueType::Void:		return 0;
+		case BaseType::Void:		return 0;
 
-		case ValueType::Bool:		return sizeof(ValueTypeToCType<ValueType::Bool>);
+		case BaseType::Bool:		return sizeof(bool);
 
-		case ValueType::Int8:		return sizeof(ValueTypeToCType<ValueType::Int8>);
-		case ValueType::Int16:		return sizeof(ValueTypeToCType<ValueType::Int16>);
-		case ValueType::Int32:		return sizeof(ValueTypeToCType<ValueType::Int32>);
-		case ValueType::Int64:		return sizeof(ValueTypeToCType<ValueType::Int64>);
+		case BaseType::Int8:		return sizeof(int8_t);
+		case BaseType::Int16:		return sizeof(int16_t);
+		case BaseType::Int32:		return sizeof(int32_t);
+		case BaseType::Int64:		return sizeof(int64_t);
 
-		case ValueType::UInt8:		return sizeof(ValueTypeToCType<ValueType::UInt8>);
-		case ValueType::UInt16:		return sizeof(ValueTypeToCType<ValueType::UInt16>);
-		case ValueType::UInt32:		return sizeof(ValueTypeToCType<ValueType::UInt32>);
-		case ValueType::UInt64:		return sizeof(ValueTypeToCType<ValueType::UInt64>);
+		case BaseType::UInt8:		return sizeof(uint8_t);
+		case BaseType::UInt16:		return sizeof(uint16_t);
+		case BaseType::UInt32:		return sizeof(uint32_t);
+		case BaseType::UInt64:		return sizeof(uint64_t);
 
-		case ValueType::Float32:	return sizeof(ValueTypeToCType<ValueType::Float32>);
-		case ValueType::Float64:	return sizeof(ValueTypeToCType<ValueType::Float64>);
+		case BaseType::Float32:		return sizeof(float);
+		case BaseType::Float64:		return sizeof(double);
 
-		case ValueType::Char:		return sizeof(ValueTypeToCType<ValueType::Char>);
+		case BaseType::Char:		return sizeof(char);
 		//case ValueType::String:		return sizeof(ValueTypeToCType<ValueType::String>);
+
+		case BaseType::Pointer:		return sizeof(void*);
 
 		default:
 			break;
 		}
 
-		DY_LOG_ERROR("ValueType::{0}, Size has not been defined.", Pulse::Enum::Name(type));
+		DY_LOG_ERROR("ValueType::{0}, Size has not been defined.", Pulse::Enum::Name(type.Base));
 		return 0;
 	}
 
-	bool ValueTypeCastable(ValueType from, ValueType to)
+	bool ValueTypeCastable(const ValueType& from, const ValueType& to)
 	{
-		if (from == to)
+		if (from.Base == to.Base)
 			return true;
 
-		if (from == ValueType::Void || to == ValueType::Void)
+		if (from.Base == BaseType::Void || to.Base == BaseType::Void)
 			return false;
 
 		using namespace Pulse::Enum;
-		switch (Fuse(from, to))
+		switch (Fuse(from.Base, to.Base))
 		{
 		// Bool conversions
-		case Fuse(ValueType::Int8, ValueType::Bool):		return true;
-		case Fuse(ValueType::Int16, ValueType::Bool):		return true;
-		case Fuse(ValueType::Int32, ValueType::Bool):		return true;
-		case Fuse(ValueType::Int64, ValueType::Bool):		return true;
-		case Fuse(ValueType::UInt8, ValueType::Bool):		return true;
-		case Fuse(ValueType::UInt16, ValueType::Bool):		return true;
-		case Fuse(ValueType::UInt32, ValueType::Bool):		return true;
-		case Fuse(ValueType::UInt64, ValueType::Bool):		return true;
+		case Fuse(BaseType::Int8, BaseType::Bool):			return true;
+		case Fuse(BaseType::Int16, BaseType::Bool):			return true;
+		case Fuse(BaseType::Int32, BaseType::Bool):			return true;
+		case Fuse(BaseType::Int64, BaseType::Bool):			return true;
+		case Fuse(BaseType::UInt8, BaseType::Bool):			return true;
+		case Fuse(BaseType::UInt16, BaseType::Bool):		return true;
+		case Fuse(BaseType::UInt32, BaseType::Bool):		return true;
+		case Fuse(BaseType::UInt64, BaseType::Bool):		return true;
 
 		// Int to other Int conversions
-		case Fuse(ValueType::Int8, ValueType::Int16):		return true;
-		case Fuse(ValueType::Int8, ValueType::Int32):		return true;
-		case Fuse(ValueType::Int8, ValueType::Int64):		return true;
-		case Fuse(ValueType::Int16, ValueType::Int32):		return true;
-		case Fuse(ValueType::Int16, ValueType::Int64):		return true;
-		case Fuse(ValueType::Int32, ValueType::Int64):		return true;
+		case Fuse(BaseType::Int8, BaseType::Int16):			return true;
+		case Fuse(BaseType::Int8, BaseType::Int32):			return true;
+		case Fuse(BaseType::Int8, BaseType::Int64):			return true;
+		case Fuse(BaseType::Int16, BaseType::Int32):		return true;
+		case Fuse(BaseType::Int16, BaseType::Int64):		return true;
+		case Fuse(BaseType::Int32, BaseType::Int64):		return true;
 
 		// UInt to other UInt conversions
-		case Fuse(ValueType::UInt8, ValueType::UInt16):		return true;
-		case Fuse(ValueType::UInt8, ValueType::UInt32):		return true;
-		case Fuse(ValueType::UInt8, ValueType::UInt64):		return true;
-		case Fuse(ValueType::UInt16, ValueType::UInt32):	return true;
-		case Fuse(ValueType::UInt16, ValueType::UInt64):	return true;
-		case Fuse(ValueType::UInt32, ValueType::UInt64):	return true;
+		case Fuse(BaseType::UInt8, BaseType::UInt16):		return true;
+		case Fuse(BaseType::UInt8, BaseType::UInt32):		return true;
+		case Fuse(BaseType::UInt8, BaseType::UInt64):		return true;
+		case Fuse(BaseType::UInt16, BaseType::UInt32):		return true;
+		case Fuse(BaseType::UInt16, BaseType::UInt64):		return true;
+		case Fuse(BaseType::UInt32, BaseType::UInt64):		return true;
 
 		// UInt to Int conversions
-		case Fuse(ValueType::UInt8, ValueType::Int16):		return true;
-		case Fuse(ValueType::UInt8, ValueType::Int32):		return true;
-		case Fuse(ValueType::UInt8, ValueType::Int64):		return true;
-		case Fuse(ValueType::UInt16, ValueType::Int32):		return true;
-		case Fuse(ValueType::UInt16, ValueType::Int64):		return true;
-		case Fuse(ValueType::UInt32, ValueType::Int64):		return true;
+		case Fuse(BaseType::UInt8, BaseType::Int16):		return true;
+		case Fuse(BaseType::UInt8, BaseType::Int32):		return true;
+		case Fuse(BaseType::UInt8, BaseType::Int64):		return true;
+		case Fuse(BaseType::UInt16, BaseType::Int32):		return true;
+		case Fuse(BaseType::UInt16, BaseType::Int64):		return true;
+		case Fuse(BaseType::UInt32, BaseType::Int64):		return true;
 
 		// Int to UInt
 		// /*
-		case Fuse(ValueType::Int8, ValueType::UInt16):		return true;
-		case Fuse(ValueType::Int8, ValueType::UInt32):		return true;
-		case Fuse(ValueType::Int8, ValueType::UInt64):		return true;
-		case Fuse(ValueType::Int16, ValueType::UInt32):		return true;
-		case Fuse(ValueType::Int16, ValueType::UInt64):		return true;
-		case Fuse(ValueType::Int32, ValueType::UInt64):		return true;
+		case Fuse(BaseType::Int8, BaseType::UInt16):		return true;
+		case Fuse(BaseType::Int8, BaseType::UInt32):		return true;
+		case Fuse(BaseType::Int8, BaseType::UInt64):		return true;
+		case Fuse(BaseType::Int16, BaseType::UInt32):		return true;
+		case Fuse(BaseType::Int16, BaseType::UInt64):		return true;
+		case Fuse(BaseType::Int32, BaseType::UInt64):		return true;
 
 		// Same size UInt & Int conversions
-		case Fuse(ValueType::Int8, ValueType::UInt8):		return true;
-		case Fuse(ValueType::Int16, ValueType::UInt16):		return true;
-		case Fuse(ValueType::Int32, ValueType::UInt32):		return true;
-		case Fuse(ValueType::Int64, ValueType::UInt64):		return true;
+		case Fuse(BaseType::Int8, BaseType::UInt8):			return true;
+		case Fuse(BaseType::Int16, BaseType::UInt16):		return true;
+		case Fuse(BaseType::Int32, BaseType::UInt32):		return true;
+		case Fuse(BaseType::Int64, BaseType::UInt64):		return true;
 
-		case Fuse(ValueType::UInt8, ValueType::Int8):		return true;
-		case Fuse(ValueType::UInt16, ValueType::Int16):		return true;
-		case Fuse(ValueType::UInt32, ValueType::Int32):		return true;
-		case Fuse(ValueType::UInt64, ValueType::Int64):		return true;
+		case Fuse(BaseType::UInt8, BaseType::Int8):			return true;
+		case Fuse(BaseType::UInt16, BaseType::Int16):		return true;
+		case Fuse(BaseType::UInt32, BaseType::Int32):		return true;
+		case Fuse(BaseType::UInt64, BaseType::Int64):		return true;
 		// */
 
 		// Char conversions
-		case Fuse(ValueType::Char, ValueType::Int8):		return true;
-		case Fuse(ValueType::Char, ValueType::Int16):		return true;
-		case Fuse(ValueType::Char, ValueType::Int32):		return true;
-		case Fuse(ValueType::Char, ValueType::Int64):		return true;
-		case Fuse(ValueType::Char, ValueType::UInt8):		return true;
-		case Fuse(ValueType::Char, ValueType::UInt16):		return true;
-		case Fuse(ValueType::Char, ValueType::UInt32):		return true;
-		case Fuse(ValueType::Char, ValueType::UInt64):		return true;
+		case Fuse(BaseType::Char, BaseType::Int8):			return true;
+		case Fuse(BaseType::Char, BaseType::Int16):			return true;
+		case Fuse(BaseType::Char, BaseType::Int32):			return true;
+		case Fuse(BaseType::Char, BaseType::Int64):			return true;
+		case Fuse(BaseType::Char, BaseType::UInt8):			return true;
+		case Fuse(BaseType::Char, BaseType::UInt16):		return true;
+		case Fuse(BaseType::Char, BaseType::UInt32):		return true;
+		case Fuse(BaseType::Char, BaseType::UInt64):		return true;
 
 		// TODO: Add the rest
+
+		// TODO: Add pointers
 
 		default:
 			break;
@@ -162,23 +204,23 @@ namespace Dynamite
 		return false;
 	}
 
-	std::string ValueTypeCast(ValueType from, ValueType to, const std::string& value, bool* dataLostPtr)
+	std::string ValueTypeCast(const ValueType& from, const ValueType& to, const std::string& value, bool* dataLostPtr)
 	{
 		if (from == to)
 			return value;
 
 		using namespace Pulse::Enum;
-		switch (Fuse(from, to))
+		switch (Fuse(from.Base, to.Base))
 		{
 		// Bool conversions
-		case Fuse(ValueType::Int8, ValueType::Bool):		
-		case Fuse(ValueType::Int16, ValueType::Bool):		
-		case Fuse(ValueType::Int32, ValueType::Bool):		
-		case Fuse(ValueType::Int64, ValueType::Bool):		
-		case Fuse(ValueType::UInt8, ValueType::Bool):		
-		case Fuse(ValueType::UInt16, ValueType::Bool):		
-		case Fuse(ValueType::UInt32, ValueType::Bool):		
-		case Fuse(ValueType::UInt64, ValueType::Bool):		
+		case Fuse(BaseType::Int8, BaseType::Bool):
+		case Fuse(BaseType::Int16, BaseType::Bool):		
+		case Fuse(BaseType::Int32, BaseType::Bool):		
+		case Fuse(BaseType::Int64, BaseType::Bool):		
+		case Fuse(BaseType::UInt8, BaseType::Bool):		
+		case Fuse(BaseType::UInt16, BaseType::Bool):		
+		case Fuse(BaseType::UInt32, BaseType::Bool):		
+		case Fuse(BaseType::UInt64, BaseType::Bool):		
 		{
 			uint64_t uint = std::stoull(value);
 			bool b = static_cast<bool>(uint);
@@ -186,30 +228,30 @@ namespace Dynamite
 		}
 
 		// Smaller to larger Int & Uint conversions
-		case Fuse(ValueType::Int8, ValueType::Int16):	
-		case Fuse(ValueType::Int8, ValueType::Int32):	
-		case Fuse(ValueType::Int8, ValueType::Int64):	
-		case Fuse(ValueType::Int16, ValueType::Int32):	
-		case Fuse(ValueType::Int16, ValueType::Int64):	
-		case Fuse(ValueType::Int32, ValueType::Int64):	
+		case Fuse(BaseType::Int8, BaseType::Int16):	
+		case Fuse(BaseType::Int8, BaseType::Int32):	
+		case Fuse(BaseType::Int8, BaseType::Int64):	
+		case Fuse(BaseType::Int16, BaseType::Int32):	
+		case Fuse(BaseType::Int16, BaseType::Int64):	
+		case Fuse(BaseType::Int32, BaseType::Int64):	
 
-		case Fuse(ValueType::UInt8, ValueType::UInt16):	
-		case Fuse(ValueType::UInt8, ValueType::UInt32):	
-		case Fuse(ValueType::UInt8, ValueType::UInt64):	
-		case Fuse(ValueType::UInt16, ValueType::UInt32):
-		case Fuse(ValueType::UInt16, ValueType::UInt64):
-		case Fuse(ValueType::UInt32, ValueType::UInt64):
+		case Fuse(BaseType::UInt8, BaseType::UInt16):	
+		case Fuse(BaseType::UInt8, BaseType::UInt32):	
+		case Fuse(BaseType::UInt8, BaseType::UInt64):	
+		case Fuse(BaseType::UInt16, BaseType::UInt32):
+		case Fuse(BaseType::UInt16, BaseType::UInt64):
+		case Fuse(BaseType::UInt32, BaseType::UInt64):
 		{
 			return value;
 		}
 
 		// UInt to Int conversions
-		case Fuse(ValueType::UInt8, ValueType::Int16):
-		case Fuse(ValueType::UInt8, ValueType::Int32):
-		case Fuse(ValueType::UInt8, ValueType::Int64):
-		case Fuse(ValueType::UInt16, ValueType::Int32):
-		case Fuse(ValueType::UInt16, ValueType::Int64):
-		case Fuse(ValueType::UInt32, ValueType::Int64):
+		case Fuse(BaseType::UInt8, BaseType::Int16):
+		case Fuse(BaseType::UInt8, BaseType::Int32):
+		case Fuse(BaseType::UInt8, BaseType::Int64):
+		case Fuse(BaseType::UInt16, BaseType::Int32):
+		case Fuse(BaseType::UInt16, BaseType::Int64):
+		case Fuse(BaseType::UInt32, BaseType::Int64):
 		{
 			uint64_t uint = std::stoull(value);
 			int64_t intVal = static_cast<int64_t>(uint);
@@ -217,12 +259,12 @@ namespace Dynamite
 		}
 
 		// Int to UInt conversions
-		case Fuse(ValueType::Int8, ValueType::UInt16):
-		case Fuse(ValueType::Int8, ValueType::UInt32):
-		case Fuse(ValueType::Int8, ValueType::UInt64):
-		case Fuse(ValueType::Int16, ValueType::UInt32):
-		case Fuse(ValueType::Int16, ValueType::UInt64):
-		case Fuse(ValueType::Int32, ValueType::UInt64):
+		case Fuse(BaseType::Int8, BaseType::UInt16):
+		case Fuse(BaseType::Int8, BaseType::UInt32):
+		case Fuse(BaseType::Int8, BaseType::UInt64):
+		case Fuse(BaseType::Int16, BaseType::UInt32):
+		case Fuse(BaseType::Int16, BaseType::UInt64):
+		case Fuse(BaseType::Int32, BaseType::UInt64):
 		{
 			int64_t intVal = std::stoll(value);
 			if (intVal < 0)
@@ -235,10 +277,10 @@ namespace Dynamite
 		}
 
 		// Same size UInt & Int conversions (with boundary checks)
-		case Fuse(ValueType::Int8, ValueType::UInt8):
-		case Fuse(ValueType::Int16, ValueType::UInt16):
-		case Fuse(ValueType::Int32, ValueType::UInt32):
-		case Fuse(ValueType::Int64, ValueType::UInt64):
+		case Fuse(BaseType::Int8, BaseType::UInt8):
+		case Fuse(BaseType::Int16, BaseType::UInt16):
+		case Fuse(BaseType::Int32, BaseType::UInt32):
+		case Fuse(BaseType::Int64, BaseType::UInt64):
 		{
 			int64_t intVal = std::stoll(value);
 			if (intVal < 0)
@@ -250,10 +292,10 @@ namespace Dynamite
 			return std::to_string(static_cast<uint64_t>(intVal));
 		}
 
-		case Fuse(ValueType::UInt8, ValueType::Int8):
-		case Fuse(ValueType::UInt16, ValueType::Int16):
-		case Fuse(ValueType::UInt32, ValueType::Int32):
-		case Fuse(ValueType::UInt64, ValueType::Int64):
+		case Fuse(BaseType::UInt8, BaseType::Int8):
+		case Fuse(BaseType::UInt16, BaseType::Int16):
+		case Fuse(BaseType::UInt32, BaseType::Int32):
+		case Fuse(BaseType::UInt64, BaseType::Int64):
 		{
 			uint64_t uintVal = std::stoull(value);
 			if (uintVal > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()))
@@ -266,37 +308,39 @@ namespace Dynamite
 		}
 
 		// Char conversions
-		case Fuse(ValueType::Char, ValueType::Int8):
-		case Fuse(ValueType::Char, ValueType::Int16):	
-		case Fuse(ValueType::Char, ValueType::Int32):	
-		case Fuse(ValueType::Char, ValueType::Int64):	
-		case Fuse(ValueType::Char, ValueType::UInt8):	
-		case Fuse(ValueType::Char, ValueType::UInt16):	
-		case Fuse(ValueType::Char, ValueType::UInt32):	
-		case Fuse(ValueType::Char, ValueType::UInt64):	
+		case Fuse(BaseType::Char, BaseType::Int8):
+		case Fuse(BaseType::Char, BaseType::Int16):	
+		case Fuse(BaseType::Char, BaseType::Int32):	
+		case Fuse(BaseType::Char, BaseType::Int64):	
+		case Fuse(BaseType::Char, BaseType::UInt8):	
+		case Fuse(BaseType::Char, BaseType::UInt16):	
+		case Fuse(BaseType::Char, BaseType::UInt32):	
+		case Fuse(BaseType::Char, BaseType::UInt64):	
 		{
 			char c = value[0];
 			int val = static_cast<int>(c);
 			return std::to_string(val);
 		}
 
+		// TODO: Pointers
+
 		default:
 			break;
 		}
 
-		DY_LOG_ERROR("Undefined cast from: {0} to {1}", Pulse::Enum::Name(from), Pulse::Enum::Name(to));
+		DY_LOG_ERROR("Undefined cast from: {0} to {1}", Pulse::Enum::Name(from.Base), Pulse::Enum::Name(to.Base));
 		return {};
 	}
 
-	ValueType GetValueType(TokenType literalType, const std::string& value)
+	BaseType GetBaseType(TokenType literalType, const std::string& value)
 	{
-		ValueType type = ValueType::None;
+		BaseType type = BaseType::None;
 
 		switch (literalType)
 		{
 		case TokenType::BoolLiteral:
 		{
-			type = ValueType::Bool;
+			type = BaseType::Bool;
 			break;
 		}
 		case TokenType::IntegerLiteral:
@@ -308,13 +352,13 @@ namespace Dynamite
 				int64_t intVal = std::stoll(value);
 
 				if (intVal >= Pulse::Numeric::Min<int8_t>() && intVal <= Pulse::Numeric::Max<int8_t>())
-					type = ValueType::Int8;
+					type = BaseType::Int8;
 				else if (intVal >= Pulse::Numeric::Min<int16_t>() && intVal <= Pulse::Numeric::Max<int16_t>())
-					type = ValueType::Int16;
+					type = BaseType::Int16;
 				else if (intVal >= Pulse::Numeric::Min<int32_t>() && intVal <= Pulse::Numeric::Max<int32_t>())
-					type = ValueType::Int32;
+					type = BaseType::Int32;
 				else if (intVal >= Pulse::Numeric::Min<int64_t>() && intVal <= Pulse::Numeric::Max<int64_t>())
-					type = ValueType::Int64;
+					type = BaseType::Int64;
 				else
 					DY_LOG_ERROR("Integer {0} exceeds max integers' type (Int64) size.", value);
 			}
@@ -323,13 +367,13 @@ namespace Dynamite
 				uint64_t uintVal = std::stoull(value);
 
 				if (uintVal <= Pulse::Numeric::Max<uint8_t>())
-					type = ValueType::UInt8;
+					type = BaseType::UInt8;
 				else if (uintVal <= Pulse::Numeric::Max<uint16_t>())
-					type = ValueType::UInt16;
+					type = BaseType::UInt16;
 				else if (uintVal <= Pulse::Numeric::Max<uint32_t>())
-					type = ValueType::UInt32;
+					type = BaseType::UInt32;
 				else if (uintVal <= Pulse::Numeric::Max<uint64_t>())
-					type = ValueType::UInt64;
+					type = BaseType::UInt64;
 				else
 					DY_LOG_ERROR("Integer {0} exceeds max integers' type (UInt64) size.", value);
 			}
@@ -340,9 +384,9 @@ namespace Dynamite
 			double doubleVal = std::stod(value);
 
 			if (doubleVal >= Pulse::Numeric::Min<float>() && doubleVal <= Pulse::Numeric::Max<float>())
-				type = ValueType::Float32;
+				type = BaseType::Float32;
 			if (doubleVal >= Pulse::Numeric::Min<double>() && doubleVal <= Pulse::Numeric::Max<double>())
-				type = ValueType::Float32;
+				type = BaseType::Float32;
 			else
 				DY_LOG_ERROR("Float {0} exceeds max floats' type (Float64) size.", value);
 
@@ -350,12 +394,12 @@ namespace Dynamite
 		}
 		case TokenType::CharLiteral:
 		{
-			type = ValueType::Char;
+			type = BaseType::Char;
 			break;
 		}
 		case TokenType::StringLiteral:
 		{
-			type = ValueType::String;
+			type = BaseType::String;
 			break;
 		}
 

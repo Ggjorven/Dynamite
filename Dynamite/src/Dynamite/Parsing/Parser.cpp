@@ -81,7 +81,7 @@ namespace Dynamite
 			ValueType type = std::visit([this](auto&& obj) -> ValueType
 			{
 				if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::LiteralTerm>>)
-					return GetValueType(obj->TokenObj.Type, obj->TokenObj.Value.value());
+					return GetBaseType(obj->TokenObj.Type, obj->TokenObj.Value.value());
 				else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::IdentifierTerm>>)
 					return GetVar(obj->TokenObj.Value.value()).Type;
 				else if constexpr (Pulse::Types::Same<Pulse::Types::Clean<decltype(obj)>, Node::Reference<Node::ParenthesisTerm>>)
@@ -91,7 +91,7 @@ namespace Dynamite
 				return {};
 			}, termLHS.value()->TermObj);
 
-			if (type == ValueType::None)
+			if (type == BaseType::None)
 				return {};
 
 			/////////////////////////////////////////////////////////////////
@@ -213,60 +213,66 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		// Variable creation
 		/////////////////////////////////////////////////////////////////
-		if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Equals))
 		{
-			Token typeToken = Consume(); // Type token
-			ValueType variableType = static_cast<ValueType>(typeToken.Type);
-
-			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
-
-			std::string varName = variable->TokenObj.Value.value();
-
-			// Add type to current scope with name of variable
-			PushVar(varName, variableType);
-
-			Consume(); // '=' token
-
-			// Expression resolution
-			if (auto expr = ParseExpr())
+			size_t offset = 0;
+			if (PeekIsValueType(offset) && PeekIs(offset, TokenType::Identifier) && PeekIs(offset, TokenType::Equals))
 			{
-				if (!ValueTypeCastable(expr.value()->Type, variableType))
+				Token typeToken = Consume(); // Type token
+				ValueType variableType = GetFullType(static_cast<BaseType>(typeToken.Type));
+
+				Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
+
+				std::string varName = variable->TokenObj.Value.value();
+
+				// Add type to current scope with name of variable
+				PushVar(varName, variableType);
+
+				Consume(); // '=' token
+
+				// Expression resolution
+				if (auto expr = ParseExpr())
 				{
-					CompilerSuite::Error(GetLineNumber(), "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type));
+					if (!ValueTypeCastable(expr.value()->Type, variableType))
+					{
+						CompilerSuite::Error(GetLineNumber(), "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, ValueTypeToStr(variableType), ValueTypeToStr(expr.value()->Type));
 
-					// Semicolon `;` resolution
-					CheckConsume(TokenType::Semicolon, "Expected `;`.");
-					return variable;
+						// Semicolon `;` resolution
+						CheckConsume(TokenType::Semicolon, "Expected `;`.");
+						return variable;
+					}
+
+					// Note: Only casts if the internal type is a literalterm
+					CastInternalValue(expr.value()->Type, variableType, expr.value());
+					variable->ExprObj = expr.value();
 				}
+				else
+					CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
 
-				// Note: Only casts if the internal type is a literalterm
-				CastInternalValue(expr.value()->Type, variableType, expr.value());
-				variable->ExprObj = expr.value();
+				// Semicolon ';' resolution
+				CheckConsume(TokenType::Semicolon, "Expected `;`.");
+
+				return variable;
 			}
-			else
-				CompilerSuite::Error(GetLineNumber(), "Invalid expression.");
-
-			// Semicolon ';' resolution
-			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-
-			return variable;
 		}
-		// A variable with no initializer
-		else if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::Semicolon))
 		{
-			Token typeToken = Consume(); // Type token
-			ValueType variableType = static_cast<ValueType>(typeToken.Type);
+			size_t offset = 0;
+			// A variable with no initializer
+			if (PeekIsValueType(offset) && PeekIs(offset, TokenType::Identifier) && PeekIs(offset, TokenType::Semicolon))
+			{
+				Token typeToken = Consume(); // Type token
+				ValueType variableType = GetFullType(static_cast<BaseType>(typeToken.Type));
 
-			Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
+				Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
 
-			std::string varName = variable->TokenObj.Value.value();
+				std::string varName = variable->TokenObj.Value.value();
 
-			// Add type to current scope with name of variable
-			PushVar(varName, variableType);
+				// Add type to current scope with name of variable
+				PushVar(varName, variableType);
 
-			CheckConsume(TokenType::Semicolon, "Expected `;`.");
+				CheckConsume(TokenType::Semicolon, "Expected `;`.");
 
-			return variable;
+				return variable;
+			}
 		}
 
 		return {};
@@ -289,7 +295,7 @@ namespace Dynamite
 			if (auto expr = ParseExpr())
 			{
 				// Enforce Int32 type
-				if (!ValueTypeCastable(expr.value()->Type, ValueType::UInt8))
+				if (!ValueTypeCastable(expr.value()->Type, { BaseType::UInt8 }))
 				{
 					CompilerSuite::Error(GetLineNumber(), "exit() expects an u8 type, got {0}, {0} is not castable to u8", ValueTypeToStr(expr.value()->Type));
 
@@ -300,7 +306,7 @@ namespace Dynamite
 				}
 				
 				// Note: Only casts if the internal type is a literalterm
-				CastInternalValue(expr.value()->Type, ValueType::UInt8, expr.value());
+				CastInternalValue(expr.value()->Type, { BaseType::UInt8 }, expr.value());
 				exitStatement->ExprObj = expr.value();
 			}
 			else
@@ -385,69 +391,73 @@ namespace Dynamite
 		return {};
 	}
 
-	std::optional<Node::Reference<Node::Function>> Parser::ParseFunction()
+	std::optional<Node::Reference<Node::Function>> Parser::ParseFunction() // TODO: Fix
 	{
 		/////////////////////////////////////////////////////////////////
 		// Function
 		/////////////////////////////////////////////////////////////////
-		if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier) && PeekCheck(2, TokenType::OpenParenthesis))
 		{
-			Token typeToken = Consume(); // Type token
-			ValueType returnType = static_cast<ValueType>(typeToken.Type);
-
-			Node::Reference<Node::Function> func = Node::Function::New(returnType, Consume()); // Identifier token
-
-			std::string funcName = func->Name.Value.value();
-
-			CheckConsume(TokenType::OpenParenthesis, "Expected `(`.");
-
-			while (true)
+			size_t offset = 0;
+			if (PeekIsValueType(offset) && PeekIs(offset, TokenType::Identifier) && PeekIs(offset, TokenType::OpenParenthesis))
 			{
-				if (PeekIsValueType() && PeekCheck(1, TokenType::Identifier))
+				Token typeToken = Consume(); // Type token
+				ValueType returnType = GetFullType(static_cast<BaseType>(typeToken.Type));
+
+				Node::Reference<Node::Function> func = Node::Function::New(returnType, Consume()); // Identifier token
+
+				std::string funcName = func->Name.Value.value();
+
+				CheckConsume(TokenType::OpenParenthesis, "Expected `(`.");
+
+				while (true)
 				{
-					Token typeToken = Consume(); // Type token
-					ValueType variableType = static_cast<ValueType>(typeToken.Type);
-
-					Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
-
-					std::string varName = variable->TokenObj.Value.value();
-
-					// Push it as an offset variable so it is available
-					// in the next scope and will be deleted after the scope
-					PushOffsetVar(varName, variableType);
-
-					if (PeekCheck(0, TokenType::Equals))
+					size_t offset = 0;
+					if (PeekIsValueType(offset) && PeekIs(offset, TokenType::Identifier))
 					{
-						Consume(); // '=' token
+						Token typeToken = Consume(); // Type token
+						ValueType variableType = GetFullType(static_cast<BaseType>(typeToken.Type));;
 
-						if (auto expr = ParseExpr())
-							variable->ExprObj = expr.value();
-						else
-							CompilerSuite::Get().Error("Expected expression.");
+						Node::Reference<Node::VariableStatement> variable = Node::VariableStatement::New(variableType, Consume()); // Identifier token
+
+						std::string varName = variable->TokenObj.Value.value();
+
+						// Push it as an offset variable so it is available
+						// in the next scope and will be deleted after the scope
+						PushOffsetVar(varName, variableType);
+
+						if (PeekCheck(0, TokenType::Equals))
+						{
+							Consume(); // '=' token
+
+							if (auto expr = ParseExpr())
+								variable->ExprObj = expr.value();
+							else
+								CompilerSuite::Get().Error("Expected expression.");
+						}
+
+						func->Parameters.push_back(variable);
+
+						if (PeekCheck(0, TokenType::Comma))
+						{
+							Consume(); // ',' token
+							continue;
+						}
 					}
+					else
+						break;
+				}
 
-					func->Parameters.push_back(variable);
+				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
-					if (PeekCheck(0, TokenType::Comma))
-					{
-						Consume(); // ',' token
-						continue;
-					}
+				if (auto body = ParseScope())
+				{
+					func->Body = body.value();
 				}
 				else
-					break;
+					CompilerSuite::Error(GetLineNumber(), "Expected scope.");
+
+				return func;
 			}
-
-			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
-
-			if (auto body = ParseScope())
-			{
-				func->Body = body.value();
-			}
-			else
-				CompilerSuite::Error(GetLineNumber(), "Expected scope.");
-
-			return func;
 		}
 
 		return {};
@@ -481,7 +491,7 @@ namespace Dynamite
 
 	std::optional<Token> Parser::TryConsume(TokenType type)
 	{
-		if (Peek(0).has_value() && Peek(0).value().Type == type)
+		if (PeekCheck(0, type))
 			return Consume();
 			
 		return {};
@@ -489,7 +499,8 @@ namespace Dynamite
 
 	std::optional<Token> Parser::TryConsumeLiteral()
 	{
-		if (PeekIs({
+		size_t offset = 0;
+		if (PeekIs(offset, {
 				TokenType::BoolLiteral,
 				TokenType::IntegerLiteral,
 				TokenType::FloatLiteral,
@@ -503,9 +514,9 @@ namespace Dynamite
 		return {};
 	}
 
-	bool Parser::PeekIs(const std::vector<TokenType>& allowedValues) const
+	bool Parser::PeekIs(size_t& offset, const std::vector<TokenType>& allowedValues) const
 	{
-		std::optional<Token> peek = Peek(0);
+		std::optional<Token> peek = Peek(offset);
 		if (!peek.has_value())
 			return false;
 
@@ -514,16 +525,20 @@ namespace Dynamite
 		for (const auto& allowed : allowedValues)
 		{
 			if (type == allowed)
+			{
+				offset++;
 				return true;
+			}
 		}
 
 		return false;
 	}
 
 	// Note: Has to be manually updated
-	bool Parser::PeekIsValueType() const
+	bool Parser::PeekIsValueType(size_t& offset) const
 	{
-		return PeekIs({
+		// Note: Also updates the offset
+		bool result = PeekIs(offset, {
 			TokenType::Void,
 
 			TokenType::Bool, 
@@ -542,14 +557,20 @@ namespace Dynamite
 			TokenType::Float64,
 
 			TokenType::Char,
-			TokenType::String
+			TokenType::String,
 		});
+
+		// Update the offset while it is still a pointer
+		while (PeekIs(offset, { TokenType::Pointer }))
+			offset++;
+
+		return result;
 	}
 
 	// Note: Has to be manually updated
-	bool Parser::PeekIsBinaryOperator() const
+	bool Parser::PeekIsBinaryOperator(size_t& offset) const
 	{
-		return PeekIs({
+		return PeekIs(offset, {
 			TokenType::Add,
 			TokenType::Subtract,
 			TokenType::Multiply,
@@ -621,6 +642,25 @@ namespace Dynamite
 		}
 	
 		return *it;
+	}
+
+	ValueType Parser::GetFullType(BaseType base)
+	{
+		ValueType result(base);
+
+		size_t pointerCount = 0;
+		while (auto ptr = TryConsume(TokenType::Pointer))
+			pointerCount++;
+
+		// If we have pointer types, we need to wrap the result in layers of ValueType
+		for (size_t i = 0; i < pointerCount; i++)
+		{
+			// Create a new ValueType where the base is a pointer, and its Next points to the previous result
+			// TODO: Add a better way of storing the types than new?
+			result = ValueType(BaseType::Pointer, new ValueType(result));
+		}
+
+		return result;
 	}
 
 }
