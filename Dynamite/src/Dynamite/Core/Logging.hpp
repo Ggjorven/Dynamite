@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Dynamite/Core/Core.hpp"
+
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -14,10 +16,7 @@
 namespace Dynamite
 {
 
-	enum class LogLevel : uint8_t
-	{
-		None = 0, Trace, Info, Warn, Error, Fatal
-	};
+	enum class LogLevel : uint8_t	{ None = 0, Trace, Info, Warn, Error, Fatal };
 
 	class Logger
 	{
@@ -90,7 +89,7 @@ namespace Dynamite
 				DY_LOG_FATAL(__VA_ARGS__); \
 				PULSE_DEBUG_BREAK(); \
 			}
-	#elif defined(HZ_CONFIG_RELEASE)
+	#elif defined(DY_CONFIG_RELEASE)
 		// Note: Don't put function calls in DY_ASSERT! They don't run in DIST
 		#define DY_ASSERT(value, ...) \
 			if (!(value)) \

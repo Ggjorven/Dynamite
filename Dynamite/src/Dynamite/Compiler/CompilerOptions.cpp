@@ -15,13 +15,6 @@ namespace Dynamite
 
 	namespace
 	{
-		template<typename TFunc>
-		std::string StrManip(std::string& val, TFunc&& func)
-		{
-			for (char& c : val)
-				c = func(c);
-		}
-
 		std::string& StrLower(std::string& val)
 		{
 			for (char& c : val)
@@ -34,7 +27,7 @@ namespace Dynamite
 
 
 	CompilerOptions::CompilerOptions(int argc, char** argv)
-		: Argc(argc), Argv(argv), WorkingDir(std::filesystem::current_path()), OutputDir("bin")
+		: Argc(argc), Argv(argv), WorkingDir(std::filesystem::current_path()), OutputDir(OutputDirectory)
 	{
 		ParseArgs(argc, argv);
 	}
@@ -49,7 +42,7 @@ namespace Dynamite
 		for (int i = 1; i < argc; i++)
 		{
 			std::string flag = argv[i];
-			
+
 			// After '--' value
 			std::string flagName = {};
 			if (flag.size() > 2)
@@ -59,7 +52,7 @@ namespace Dynamite
 			std::string value = {};
 			if (flag.size() > 4)
 				value = flag.substr(4, flag.size() - 4);
-			
+
 			///////////////////////////////////
 			// Files/Directories
 			///////////////////////////////////

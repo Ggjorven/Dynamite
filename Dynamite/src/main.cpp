@@ -2,10 +2,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
-#include "Dynamite/Compiler/CompilerSuite.hpp"
-
-#include <fstream>
-#include <sstream>
+#include "Dynamite/Compiler/Compiler.hpp"
+#include "Dynamite/Compiler/CompilerOptions.hpp"
 
 using namespace Dynamite;
 
@@ -13,8 +11,8 @@ int main(int argc, char* argv[])
 {
 	Logger::Init();
 
-	CompilerSuite compilerSuite(CompilerOptions(argc, argv));
-	compilerSuite.Compile();
+	Compiler compiler(CompilerOptions(argc, argv));
+	compiler.Compile();
 
 	return 0;
 }
