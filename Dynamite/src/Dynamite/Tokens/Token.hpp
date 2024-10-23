@@ -59,7 +59,7 @@ namespace Dynamite
 		IntegerLiteral,
 		FloatLiteral,
 		CharLiteral,
-		StringLiteral,
+		CharArrayLiteral,
 
 		/////////////////////////////////////////////////////////////////
 		// Keywords

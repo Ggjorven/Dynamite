@@ -25,7 +25,7 @@ namespace Dynamite
 		std::vector<Token> Tokenize();
 
 	public:
-		// Private methodss
+		// Private methods
 		Optional<char> Peek(size_t offset = 0) const;
 		char Consume();
 

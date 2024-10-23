@@ -12,7 +12,7 @@ namespace Dynamite
 	}
 
 	Compiler::Compiler(const CompilerOptions& options)
-		: m_Options(options)
+		: m_Options(options), m_State(State::Tokenizing)
 	{
 		s_Instance = this;
 	}
@@ -32,6 +32,7 @@ namespace Dynamite
 		}
 
 		Tokenizer tokenizer(m_FileContent);
+		Parser parser(m_Tokens);
 		// ...
 		
 		for (const auto& file : m_Options.Files)
@@ -49,6 +50,8 @@ namespace Dynamite
 			// Use contents
 			m_State = State::Tokenizing;
 			m_Tokens = tokenizer.Tokenize();
+
+
 
 			// Log extra info when verbosity is enabled
 			if (m_Options.Contains(CompilerFlag::Verbose))
@@ -92,7 +95,7 @@ namespace Dynamite
 		if (end == std::string::npos)
 			end = m_FileContent.size();
 
-		return m_FileContent.substr(start, end - start);
+		return m_FileContent.substr(start - 1, end - start);
 	}
 
 }

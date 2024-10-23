@@ -69,7 +69,7 @@ namespace Dynamite
 		case TokenType::IntegerLiteral:			return "<unnameable token>";
 		case TokenType::FloatLiteral:			return "<unnameable token>";
 		case TokenType::CharLiteral:			return "<unnameable token>";
-		case TokenType::StringLiteral:			return "<unnameable token>";
+		case TokenType::CharArrayLiteral:		return "<unnameable token>";
 
 		/////////////////////////////////////////////////////////////////
 		// Keywords
@@ -106,7 +106,6 @@ namespace Dynamite
 		case TokenType::Float64:				return "f64";
 
 		case TokenType::Char:					return "char";
-		case TokenType::String:					return "str";	// TODO: Maybe remove, and replace with string class with char[]
 
 		// Note: An identifier can be a class name, a type name
 		// a variable name or a function name.
@@ -126,7 +125,7 @@ namespace Dynamite
 		str += Pulse::Text::Format("([TokenType::{0}]", Pulse::Enum::Name(token.Type));
 
 		if (!token.Value.empty())
-			str += Pulse::Text::Format(" - Value = {0}", token.Value);
+			str += Pulse::Text::Format(" = '{0}'", token.Value);
 		
 		str += ')';
 

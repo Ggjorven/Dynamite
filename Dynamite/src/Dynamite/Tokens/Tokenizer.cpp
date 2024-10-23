@@ -86,10 +86,10 @@ namespace Dynamite
                 continue;
             }
 
-            // String // Note: String buffer keeps \ 
+            // Character array // Note: Buffer keeps \ and adds \0 character
             else if (PeekIs(0, '"'))
             {
-                Consume(); // '"' Start string character
+                Consume(); // '"' Start array
 
                 bool contin = Peek(0).HasValue() && Peek(0).Value() != '"';
                 while (contin)
@@ -100,9 +100,11 @@ namespace Dynamite
                         contin = false;
                 }
 
-                Consume(); // '"' End string character
+                Consume(); // '"' End array
+                
+                buffer.push_back('\0');
 
-                tokens.emplace_back(TokenType::StringLiteral, buffer, lineNumber);
+                tokens.emplace_back(TokenType::CharArrayLiteral, buffer, lineNumber);
                 buffer.clear();
 
                 continue;

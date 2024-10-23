@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Utils.hpp"
+
 #include <Pulse/Text/Format.hpp>
 
 #undef FMT_VERSION
@@ -12,19 +14,6 @@ using namespace Pulse::Enum::Bitwise;
 
 namespace Dynamite
 {
-
-	namespace
-	{
-		std::string& StrLower(std::string& val)
-		{
-			for (char& c : val)
-				c = std::tolower(c);
-
-			return val;
-		}
-	}
-
-
 
 	CompilerOptions::CompilerOptions(int argc, char** argv)
 		: Argc(argc), Argv(argv), WorkingDir(std::filesystem::current_path()), OutputDir(OutputDirectory)
@@ -71,7 +60,7 @@ namespace Dynamite
 			///////////////////////////////////
 			// Flags
 			///////////////////////////////////
-			else if (StrLower(flagName) == "verbose")
+			else if (Utils::StrLower(flagName) == "verbose")
 				Flags |= CompilerFlag::Verbose;
 		}
 	}
