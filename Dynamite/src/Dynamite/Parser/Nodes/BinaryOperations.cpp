@@ -4,6 +4,7 @@
 #include "Dynamite/Core/Logging.hpp"
 
 #include "Dynamite/Utils/Utils.hpp"
+#include "Dynamite/Utils/Checks.hpp"
 
 #include "Dynamite/Parser/Nodes/Expressions.hpp"
 
@@ -65,8 +66,8 @@ namespace Dynamite::Node
 	{
 		std::string str(indentLevel, '\t');
 
-		std::string lhsExpr = ExpressionToString(obj->LHS);
-		std::string rhsExpr = ExpressionToString(obj->RHS);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
@@ -79,8 +80,8 @@ namespace Dynamite::Node
 	{
 		std::string str(indentLevel, '\t');
 
-		std::string lhsExpr = ExpressionToString(obj->LHS);
-		std::string rhsExpr = ExpressionToString(obj->RHS);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
@@ -93,8 +94,8 @@ namespace Dynamite::Node
 	{
 		std::string str(indentLevel, '\t');
 
-		std::string lhsExpr = ExpressionToString(obj->LHS);
-		std::string rhsExpr = ExpressionToString(obj->RHS);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
@@ -107,14 +108,35 @@ namespace Dynamite::Node
 	{
 		std::string str(indentLevel, '\t');
 
-		std::string lhsExpr = ExpressionToString(obj->LHS);
-		std::string rhsExpr = ExpressionToString(obj->RHS);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
 		str += Pulse::Text::Format("([BinaryDivision({0})] = '(\n{1}\n{2}'/'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
 
 		return str;
+	}
+
+	Optional<size_t> GetBinaryPrecendence(TokenType operation)
+	{
+		switch (operation)
+		{
+		case TokenType::Add:
+		case TokenType::Subtract:
+			return 0;
+
+		case TokenType::Multiply:
+		case TokenType::Divide:
+			return 1;
+
+		// TODO: Additional binary operators
+
+		default:
+			break;
+		}
+
+		return {};
 	}
 
 }

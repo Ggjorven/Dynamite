@@ -3,6 +3,12 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Utils.hpp"
+#include "Dynamite/Utils/Checks.hpp"
+
+#undef FMT_VERSION
+#include <Pulse/Enum/Enum.hpp>
+
 namespace Dynamite::Node
 {
 
@@ -17,6 +23,45 @@ namespace Dynamite::Node
 	BinaryExpr::BinaryExpr(VariantType operation)
 		: Operation(operation)
 	{
+	}
+
+	BinaryExpr::BinaryExpr(TokenType operation, const Type& resultType, Reference<Expression> lhs, Reference<Expression> rhs)
+	{
+		if (!Utils::IsEqual(operation, GetAllTokenTypeOperators()))
+		{
+			DY_LOG_FATAL("Tried to construct BinaryExpr from TokenType::{0}, but TokenType::{0} is not a binary operation.", Pulse::Enum::Name(operation));
+			return;
+		}
+
+		// Switch on operation
+		switch (operation)
+		{
+		case TokenType::Add:
+		{
+			Operation = Node::New<BinaryAddition>(resultType, lhs, rhs);
+			break;
+		}
+		case TokenType::Subtract:
+		{
+			Operation = Node::New<BinarySubtraction>(resultType, lhs, rhs);
+			break;
+		}
+		case TokenType::Multiply:
+		{
+			Operation = Node::New<BinaryMultiplication>(resultType, lhs, rhs);
+			break;
+		}
+		case TokenType::Divide:
+		{
+			Operation = Node::New<BinaryDivision>(resultType, lhs, rhs);
+			break;
+		}
+
+		// TODO: Other operations
+
+		default:
+			break;
+		}
 	}
 
 	Expression::Expression(VariantType expr)
@@ -151,11 +196,23 @@ namespace Dynamite::Node
 
 			std::string operator () (const Reference<TermExpr> obj) const
 			{
-				return TermExprToString(obj, Indent);
+				std::string str(Indent, '\t');
+
+				std::string termStr = TermExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] - '{0}')", Utils::RemoveFrontIndentation(termStr));
+
+				return str;
 			}
 			std::string operator () (const Reference<BinaryExpr> obj) const
 			{
-				return BinaryExprToString(obj, Indent);
+				std::string str(Indent, '\t');
+				
+				std::string binaryStr = BinaryExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] - '{0}')", Utils::RemoveFrontIndentation(binaryStr));
+				
+				return str;
 			}
 		};
 

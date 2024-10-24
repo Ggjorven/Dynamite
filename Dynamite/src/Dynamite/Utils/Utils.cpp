@@ -28,24 +28,15 @@ namespace Dynamite::Utils
 		return val;
 	}
 
-    std::string& RemoveFrontIndentation(std::string& val, const std::string& place)
+    std::string& RemoveFrontIndentation(std::string& val)
     {
-        std::size_t pos = val.find_first_not_of(" \t");
+		// Use std::find_if to find the first non-whitespace character
+		val.erase(val.begin(), std::find_if(val.begin(), val.end(), [](unsigned char ch) 
+		{
+			return !std::isspace(ch);
+		}));
 
-        // If all characters are whitespace, clear the string
-        if (pos == std::string::npos)
-        {
-            val.clear();
-            return val;
-        }
-
-        if (val.compare(pos, place.size(), place) == 0)
-            val.erase(0, pos + place.size());
-        else
-            val.erase(0, pos);
-
-        return val;
+		return val;
     }
-
 
 }

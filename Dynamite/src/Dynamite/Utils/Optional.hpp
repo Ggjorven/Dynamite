@@ -28,6 +28,21 @@ namespace Dynamite::Utils
 	}
 
 	template<typename T, typename TMember>
+	inline bool OptMemberIs(const Optional<T>& opt, TMember T::* member, const std::vector<TMember>& allowedValues)
+	{
+		if (!opt.HasValue())
+			return false;
+
+		for (const auto& value : allowedValues)
+		{
+			if (opt.Value().*member == value)
+				return true;
+		}
+
+		return false;
+	}
+
+	template<typename T, typename TMember>
 	inline Optional<T> OptReturnIfMemberIs(const Optional<T>& opt, TMember T::* member, TMember value)
 	{
 		if (OptMemberIs(opt, member, value))
@@ -41,12 +56,9 @@ namespace Dynamite::Utils
 	template<typename T, typename TMember>
 	inline Optional<T> OptReturnIfMemberIs(const Optional<T>& opt, TMember T::* member, const std::vector<TMember>& allowedValues)
 	{
-		for (const auto& value : allowedValues)
+		if (OptMemberIs(opt, member, allowedValues))
 		{
-			if (OptMemberIs(opt, member, value))
-			{
-				return opt;
-			}
+			return opt;
 		}
 
 		return {};

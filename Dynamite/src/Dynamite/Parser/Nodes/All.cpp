@@ -27,6 +27,9 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	std::string FunctionToString(const Reference<Function> obj, size_t indentLevel)
 	{
+		std::string str(indentLevel, '\t');
+
+		str += Pulse::Text::Format("([Function] )");
 		/*
 		Type ReturnType;
 		Token Name;
@@ -36,7 +39,26 @@ namespace Dynamite::Node
 		Reference<ScopeStatement> Body;
 		*/
 
-		return std::string();
+		return str;
+	}
+
+	std::string DefineToString(const Program::VariantType& obj, size_t indentLevel)
+	{
+		struct DefineVisitor
+		{
+			size_t Indent;
+
+			std::string operator () (const Reference<Function> obj) const
+			{
+				return FunctionToString(obj, Indent);
+			}
+			std::string operator () (const Reference<VariableStatement> obj) const
+			{
+				return VariableStatementToString(obj, Indent);
+			}
+		};
+
+		return std::visit(DefineVisitor(indentLevel), obj);
 	}
 
 }

@@ -19,7 +19,7 @@ namespace Dynamite::Node
     struct IfStatement
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         IfStatement(Reference<Expression> expr = (Reference<Expression>)NullRef, Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef, Optional<Reference<ConditionBranch>> next = {});
 
@@ -35,7 +35,7 @@ namespace Dynamite::Node
     struct VariableStatement
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         VariableStatement(const Type& type = {}, const Token& variable = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
 
@@ -52,7 +52,7 @@ namespace Dynamite::Node
     struct ScopeStatement
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         ScopeStatement(const std::vector<Reference<Statement>>& statements = { });
 
@@ -63,7 +63,7 @@ namespace Dynamite::Node
     struct AssignmentStatement
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         AssignmentStatement(const Token& variable = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
 
@@ -76,7 +76,7 @@ namespace Dynamite::Node
     {
     private:
         using VariantType = Variant<Reference<VariableStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>>;
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         Statement(VariantType statement = {});
 

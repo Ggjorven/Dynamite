@@ -1,3 +1,5 @@
+i32 globalValue = (123 - 67);
+
 i32 main(i32 argc, char** argv)
 {
 	i8 x = 10;

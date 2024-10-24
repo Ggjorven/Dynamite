@@ -15,7 +15,7 @@ namespace Dynamite::Node
     struct BinaryAddition 
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         BinaryAddition(const Type& type = {}, Reference<Expression> lhs = (Reference<Expression>)NullRef, Reference<Expression> rhs = (Reference<Expression>)NullRef);
 
@@ -31,7 +31,7 @@ namespace Dynamite::Node
     struct BinarySubtraction
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         BinarySubtraction(const Type& type = {}, Reference<Expression> lhs = (Reference<Expression>)NullRef, Reference<Expression> rhs = (Reference<Expression>)NullRef);
 
@@ -47,7 +47,7 @@ namespace Dynamite::Node
     struct BinaryMultiplication
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         BinaryMultiplication(const Type& type = {}, Reference<Expression> lhs = (Reference<Expression>)NullRef, Reference<Expression> rhs = (Reference<Expression>)NullRef);
 
@@ -63,7 +63,7 @@ namespace Dynamite::Node
     struct BinaryDivision
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         BinaryDivision(const Type& type = {}, Reference<Expression> lhs = (Reference<Expression>)NullRef, Reference<Expression> rhs = (Reference<Expression>)NullRef);
 
@@ -85,5 +85,7 @@ namespace Dynamite::Node
     std::string BinarySubtractionToString(const Reference<BinarySubtraction> obj, size_t indentLevel = 0);
     std::string BinaryMultiplicationToString(const Reference<BinaryMultiplication> obj, size_t indentLevel = 0);
     std::string BinaryDivisionToString(const Reference<BinaryDivision> obj, size_t indentLevel = 0);
+
+    Optional<size_t> GetBinaryPrecendence(TokenType operation);
 
 }

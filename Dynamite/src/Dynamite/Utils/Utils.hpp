@@ -9,6 +9,6 @@ namespace Dynamite::Utils
 
 	std::string& StrLower(std::string& val);
 	std::string& EmplaceAfterIndentation(std::string& val, const std::string& place);
-	std::string& RemoveFrontIndentation(std::string& val, const std::string& place);
+	std::string& RemoveFrontIndentation(std::string& val);
 
 }

@@ -2,6 +2,7 @@
 
 #include "Dynamite/Core/Core.hpp"
 
+#include "Dynamite/Parser/ScopeSystem.hpp"
 #include "Dynamite/Parser/Nodes/All.hpp"
 
 namespace Dynamite
@@ -25,7 +26,7 @@ namespace Dynamite
 		Optional<Node::Reference<Node::ConditionBranch>>	ParseConditionBrach();
 		
 		Optional<Node::Reference<Node::IfStatement>>		ParseIfStatement();
-		Optional<Node::Reference<Node::ScopeStatement>>		ParseScopeStatement();
+		Optional<Node::Reference<Node::ScopeStatement>>		ParseScopeStatement(bool startScope = true);
 		Optional<Node::Reference<Node::VariableStatement>>	ParseVariableStatement();
 
 		Optional<Node::Reference<Node::Statement>>			ParseStatement();
@@ -36,9 +37,16 @@ namespace Dynamite
 		Optional<Token> Peek(size_t offset = 0) const;
 		Token Consume();
 
+		void CheckConsume(TokenType expect, const std::string& msg = {});
+
+		bool PeekIsType(size_t& offset);
+		Type GetType();
+
 	private:
 		std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
+
+		ScopeSystem m_Scopes;
 	};
 
 }

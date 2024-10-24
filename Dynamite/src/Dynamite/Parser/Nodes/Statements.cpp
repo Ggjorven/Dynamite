@@ -3,6 +3,10 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Utils.hpp"
+
+#include "Dynamite/Types/TypeSystem.hpp"
+
 namespace Dynamite::Node
 {
 
@@ -52,7 +56,13 @@ namespace Dynamite::Node
 
 	std::string VariableStatementToString(const Reference<VariableStatement> obj, size_t indentLevel)
 	{
-		return std::string();
+		std::string str(indentLevel, '\t');
+
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+
+		str += Pulse::Text::Format("([VariableStatement] = '{0} {1} = {2}')", TypeSystem::ToString(obj->GetType()), obj->Variable.Value, Utils::RemoveFrontIndentation(exprStr));
+
+		return str;
 	}
 
 	std::string ScopeStatementToString(const Reference<ScopeStatement> obj, size_t indentLevel)

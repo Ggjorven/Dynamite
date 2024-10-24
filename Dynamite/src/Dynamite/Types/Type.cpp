@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Checks.hpp"
+
 #include <Pulse/Core/Defines.hpp>
 
 #undef FMT_VERSION
@@ -211,6 +213,65 @@ namespace Dynamite
 		}
 
 		return "<undefined qualifier name>";
+	}
+
+	TypeSpecifier TokenTypeToTypeSpecifier(TokenType tokenType)
+	{
+		if (!Utils::IsEqual(tokenType, GetAllTokenTypeTypes()))
+		{
+			DY_LOG_WARN("Tried to get TypeSpecifier from TokenType, but TokenType::{0} is not a specifier.", Pulse::Enum::Name(tokenType));
+			return {};
+		}
+
+		switch (tokenType)
+		{
+		case TokenType::Void:				return TypeSpecifier::Void;
+
+		case TokenType::Int8:				return TypeSpecifier::Int8;
+		case TokenType::Int16:				return TypeSpecifier::Int16;
+		case TokenType::Int32:				return TypeSpecifier::Int32;
+		case TokenType::Int64:				return TypeSpecifier::Int64;
+
+		case TokenType::UInt8:				return TypeSpecifier::UInt8;
+		case TokenType::UInt16:				return TypeSpecifier::UInt16;
+		case TokenType::UInt32:				return TypeSpecifier::UInt32;
+		case TokenType::UInt64:				return TypeSpecifier::UInt64;
+
+		case TokenType::Float32:			return TypeSpecifier::Float32;
+		case TokenType::Float64:			return TypeSpecifier::Float64;
+
+		case TokenType::Char:				return TypeSpecifier::Char;
+
+		case TokenType::Identifier:			return TypeSpecifier::Identifier;
+
+		default:
+			break;
+		}
+
+		return TypeSpecifier::None;
+	}
+
+	TypeQualifier TokenTypeToTypeQualifier(TokenType tokenType)
+	{
+		if (!Utils::IsEqual(tokenType, GetAllTokenTypeQualifiers()))
+		{
+			DY_LOG_WARN("Tried to get TypeQualifier from TokenType, but TokenType::{0} is not a qualifier.", Pulse::Enum::Name(tokenType));
+			return {};
+		}
+
+		switch (tokenType)
+		{
+		case TokenType::Const:				return TypeQualifier::Const;
+		case TokenType::Volatile:			return TypeQualifier::Volatile;
+
+		case TokenType::Pointer:			return TypeQualifier::Pointer;
+		case TokenType::Reference:			return TypeQualifier::Reference;
+
+		default:
+			break;
+		}
+
+		return TypeQualifier::None;
 	}
 
 }

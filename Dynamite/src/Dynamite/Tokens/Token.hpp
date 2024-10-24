@@ -126,6 +126,8 @@ namespace Dynamite
 		Token(TokenType type, uint32_t line = 0);
 		Token(TokenType type, const std::string& value, uint32_t line = 0);
 		~Token() = default;
+
+		Token(const Token& token);
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -162,7 +164,7 @@ namespace Dynamite
 		};
 	}
 
-	inline constexpr const std::vector<TokenType> GetAllTokenTypeSpecifiers()
+	inline constexpr const std::vector<TokenType> GetAllTokenTypeQualifiers()
 	{
 		return {
 			TokenType::Pointer,

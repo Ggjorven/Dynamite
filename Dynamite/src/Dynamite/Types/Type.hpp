@@ -124,4 +124,7 @@ namespace Dynamite
 	std::string TypeSpecifierToString(TypeSpecifier specifier);
 	std::string TypeQualifierToString(TypeQualifier qualifier);
 
+	TypeSpecifier TokenTypeToTypeSpecifier(TokenType tokenType);
+	TypeQualifier TokenTypeToTypeQualifier(TokenType tokenType);
+
 }

@@ -20,7 +20,7 @@ namespace Dynamite::Node
     {
     private:
         using VariantType = Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>>;
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         TermExpr(VariantType term = {});
 
@@ -34,9 +34,10 @@ namespace Dynamite::Node
     {
     private:
         using VariantType = Variant<Reference<BinaryAddition>, Reference<BinarySubtraction>, Reference<BinaryMultiplication>, Reference<BinaryDivision>>;
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         BinaryExpr(VariantType operation = {});
+        BinaryExpr(TokenType operation, const Type& resultType, Reference<Expression> lhs, Reference<Expression> rhs);
 
     public:
         VariantType Operation;
@@ -48,7 +49,7 @@ namespace Dynamite::Node
     {
     private:
         using VariantType = Variant<Reference<TermExpr>, Reference<BinaryExpr>>;
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         Expression(VariantType expr = {});
 

@@ -32,9 +32,9 @@ namespace Dynamite
 
 	namespace Memory
 	{
-		using Control = Pulse::Memory::Control;
+		// using Control = Pulse::Memory::Control;
 
-		using ArenaAllocator = Pulse::Memory::DynamicArenaAllocator;
+		// using ArenaAllocator = Pulse::Memory::DynamicArenaAllocator;
 	}
 
 	// Note: We use them as to not have to use <prefix>::

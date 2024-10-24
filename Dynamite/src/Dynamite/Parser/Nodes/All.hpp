@@ -17,7 +17,7 @@ namespace Dynamite::Node
     struct Function
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         Function(const Type& returnType = {}, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = { }, Reference<ScopeStatement> body = (Reference<ScopeStatement>)NullRef);
 
@@ -46,5 +46,6 @@ namespace Dynamite::Node
     // Helper functions
     /////////////////////////////////////////////////////////////////
     std::string FunctionToString(const Reference<Function> obj, size_t indentLevel = 0);
+    std::string DefineToString(const Program::VariantType& obj, size_t indentLevel = 0);
 
 }

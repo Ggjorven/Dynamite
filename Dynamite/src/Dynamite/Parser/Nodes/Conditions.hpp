@@ -15,7 +15,7 @@ namespace Dynamite::Node
     struct ElseIfBranch
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         ElseIfBranch(Reference<Expression> expr = (Reference<Expression>)NullRef, Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef, Optional<Reference<ConditionBranch>> next = {});
 
@@ -31,7 +31,7 @@ namespace Dynamite::Node
     struct ElseBranch
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         ElseBranch(Reference<ScopeStatement> scope = (Reference<ScopeStatement>)NullRef);
 
@@ -43,7 +43,7 @@ namespace Dynamite::Node
     {
     private:
         using VariantType = Variant<Reference<ElseIfBranch>, Reference<ElseBranch>>;
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         ConditionBranch(VariantType branch = {});
 

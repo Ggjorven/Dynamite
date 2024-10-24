@@ -51,7 +51,8 @@ namespace Dynamite
 			m_State = State::Tokenizing;
 			m_Tokens = tokenizer.Tokenize();
 
-
+			m_State = State::Parsing;
+			m_Program = parser.GetProgram();
 
 			// Log extra info when verbosity is enabled
 			if (m_Options.Contains(CompilerFlag::Verbose))
@@ -62,6 +63,18 @@ namespace Dynamite
 
 				for (const auto& token : m_Tokens)
 					DY_LOG_TRACE(TokenToString(token));
+				
+				DY_LOG_TRACE("");
+
+				DY_LOG_TRACE("---------------------------------------");
+				DY_LOG_TRACE("-- Tree generated.");
+				DY_LOG_TRACE("---------------------------------------");
+
+				for (const auto& definition : m_Program.Definitions)
+				{
+					DY_LOG_TRACE(DefineToString(definition));
+					DY_LOG_TRACE("");
+				}
 			}
 		}
 	}

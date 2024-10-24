@@ -15,7 +15,7 @@ namespace Dynamite::Node
     struct LiteralTerm
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         LiteralTerm(const Type& type = {}, const Token& lit = {});
 
@@ -29,7 +29,7 @@ namespace Dynamite::Node
     struct IdentifierTerm
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         IdentifierTerm(const Type& type = {}, const Token& identifier = {});
 
@@ -44,7 +44,7 @@ namespace Dynamite::Node
     struct ParenthesisTerm 
     {
     private:
-        friend class Control;
+        friend class Pulse::Memory::Control;
     private:
         ParenthesisTerm(Reference<Expression> expr = (Reference<Expression>)NullRef);
 

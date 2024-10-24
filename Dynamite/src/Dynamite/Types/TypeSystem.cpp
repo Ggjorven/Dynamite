@@ -5,8 +5,6 @@
 
 #include "Dynamite/Utils/Checks.hpp"
 
-#include "Dynamite/Types/TypeSystem.hpp"
-
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
 
@@ -331,6 +329,12 @@ namespace Dynamite
 		}
 
 		return {};
+	}
+
+	Type TypeSystem::GetResultType(const Type& lhs, const Type& rhs)
+	{
+		// TODO: Actually compute result type
+		return lhs;
 	}
 
 	std::string TypeSystem::ToString(const Type& type)

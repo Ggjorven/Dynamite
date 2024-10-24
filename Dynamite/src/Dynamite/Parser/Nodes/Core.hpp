@@ -73,4 +73,11 @@ namespace Dynamite::Node
 		return Allocator.Construct<T>(std::forward<TArgs>(args)...);
 	}
 
+	// Only use after a New. Otherwise it will mess with another object.
+	template<typename T>
+	inline void Destroy(Reference<T> object) 
+	{
+		Allocator.Destroy<T>(object, true);
+	}
+
 }
