@@ -3,7 +3,6 @@
 #include "Dynamite/Core/Core.hpp"
 
 #include <cstdint>
-#include <string>
 
 namespace Dynamite::Utils
 {

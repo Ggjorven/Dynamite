@@ -71,8 +71,8 @@ namespace Dynamite
 		TypeInfo(TypeSpecifier specifier = TypeSpecifier::None, const std::string& value = {});
 
 		// Operators
-		bool operator == (const TypeInfo& other);
-		bool operator != (const TypeInfo& other);
+		bool operator == (const TypeInfo& other) const;
+		bool operator != (const TypeInfo& other) const;
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -97,23 +97,25 @@ namespace Dynamite
 		~Type() = default;
 
 		// Operators
-		bool operator == (const Type& other);
-		bool operator != (const Type& other);
+		bool operator == (const Type& other) const;
+		bool operator != (const Type& other) const;
 
-		bool operator == (const TypeInfo& info);
-		bool operator != (const TypeInfo& info);
+		bool operator == (const TypeInfo& info) const;
+		bool operator != (const TypeInfo& info) const;
 
 		// Methods
-		bool IsConst();
-		bool IsVolatile();
+		TypeQualifier CleanBackQualifier() const; // Returns the most back qualifier (removes first reference if found)
 
-		bool IsPointer();
-		bool IsReference();
+		bool IsConst() const;
+		bool IsVolatile() const;
 
-		bool IsArray();
+		bool IsPointer() const;
+		bool IsReference() const;
+
+		bool IsArray() const;
 
 		// Note: Removes const, volatile & references, but not pointers.
-		Type Clean();
+		Type Clean() const;
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -121,6 +123,5 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	std::string TypeSpecifierToString(TypeSpecifier specifier);
 	std::string TypeQualifierToString(TypeQualifier qualifier);
-	std::string TypeToString(const Type& type);
 
 }

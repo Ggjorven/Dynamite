@@ -3,9 +3,11 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
-#include "Dynamite/Utils/Checks.hpp"
-
 #include "Dynamite/Compiler/Compiler.hpp"
+
+#include "Dynamite/Utils/Utils.hpp"
+#include "Dynamite/Utils/Checks.hpp"
+#include "Dynamite/Utils/Optional.hpp"
 
 namespace Dynamite
 {
@@ -27,12 +29,12 @@ namespace Dynamite
         while (Peek().HasValue())
         {
             // Is alphabetic
-            if (PeekCheck(Utils::IsAlpha, std::initializer_list({ '_' }))) // Note: Also handles boolean values
+            if (Utils::OptCheck(Peek(0), Utils::IsAlpha, std::vector({ '_' }))) // Note: Also handles boolean values
             {
                 buffer.push_back(Consume());
 
                 // While is alphabetic or a number, keep reading
-                while (PeekCheck(Utils::IsAlphaNumeric, std::initializer_list({ '_' })))
+                while (Utils::OptCheck(Peek(0), Utils::IsAlphaNumeric, std::vector({ '_' })))
                     buffer.push_back(Consume());
 
                 // If no type is found, try keywords.
@@ -43,12 +45,12 @@ namespace Dynamite
             }
 
             // Is number
-            else if (PeekCheck(Utils::IsNumeric, std::initializer_list({ '-' })))
+            else if (Utils::OptCheck(Peek(0), Utils::IsNumeric, std::vector({ '-' })))
             {
                 buffer.push_back(Consume());
 
                 // While still a numeric value, keep reading (also allows .'s for floats)
-                while (PeekCheck(Utils::IsNumeric, std::initializer_list({ '.' })))
+                while (Utils::OptCheck(Peek(0), Utils::IsNumeric, std::vector({ '.' })))
                     buffer.push_back(Consume());
 
                 // If buffer is just a minus, make it a minus
@@ -74,7 +76,7 @@ namespace Dynamite
             }
 
             // Character
-            else if (PeekIs(0, '\'') && PeekIs(2, '\''))
+            else if (Utils::OptCheck(Peek(0), '\'') && Utils::OptCheck(Peek(2), '\''))
             {
                 Consume();                      // ''' Start char character
                 buffer.push_back(Consume());    // Char character
@@ -87,7 +89,7 @@ namespace Dynamite
             }
 
             // Character array // Note: Buffer keeps \ and adds \0 character
-            else if (PeekIs(0, '"'))
+            else if (Utils::OptCheck(Peek(0), '"'))
             {
                 Consume(); // '"' Start array
 
@@ -96,7 +98,7 @@ namespace Dynamite
                 {
                     buffer.push_back(Consume());
 
-                    if (PeekIs(0, '"') && !PeekIs(-1, '\\'))
+                    if (Utils::OptCheck(Peek(0), '"') && !Utils::OptCheck(Peek(-1), '\\'))
                         contin = false;
                 }
 
@@ -111,7 +113,7 @@ namespace Dynamite
             }
 
             // Single line comment
-            else if (PeekIs(0, '/') && PeekIs(1, '/'))
+            else if (Utils::OptCheck(Peek(0), '/') && Utils::OptCheck(Peek(1), '/'))
             {
                 Consume(); // '/' char
                 Consume(); // '/' char
@@ -125,14 +127,14 @@ namespace Dynamite
                 continue;
             }
             // Multiline comment
-            else if (PeekIs(0, '/') && PeekIs(1, '*'))
+            else if (Utils::OptCheck(Peek(0), '/') && Utils::OptCheck(Peek(1), '*'))
             {
                 Consume(); // '/' char
                 Consume(); // '*' char
 
                 while (Peek(0).HasValue())
                 {
-                    if (PeekIs(0, '*') && PeekIs(1, '/'))
+                    if (Utils::OptCheck(Peek(0), '*') && Utils::OptCheck(Peek(1), '/'))
                     {
                         Consume(); // '*' char
                         Consume(); // '/' char
@@ -182,12 +184,6 @@ namespace Dynamite
         return m_FileContent.at(m_Index++);
     }
 
-    bool Tokenizer::PeekIs(size_t offset, char c) const
-    {
-        auto value = Peek(offset);
-        return (value.HasValue() && (value.Value() == c));
-    }
-
     /////////////////////////////////////////////////////////////////
     // Handling functions
     /////////////////////////////////////////////////////////////////
@@ -223,7 +219,6 @@ namespace Dynamite
         else if (handleType(TokenType::Float64))    return true;
 
         else if (handleType(TokenType::Char))       return true;
-        else if (handleType(TokenType::String))     return true;
 
         return false;
     }
@@ -311,14 +306,14 @@ namespace Dynamite
         else if (handleOperator(TokenType::Xor))                return true;
 
         // Newline (for incrementing)
-        else if (PeekIs(0, '\n') || PeekIs(0, '\r'))
+        else if (Utils::OptCheck(Peek(0), '\n') || Utils::OptCheck(Peek(0), '\r'))
         {
             Consume();
             line++;
             return true;
         }
         // Space
-        else if (PeekCheck(Utils::IsSpace, std::initializer_list<char>()))
+        else if (Utils::OptCheck(Peek(0), Utils::IsSpace, std::vector<char>()))
         {
             Consume();
             return true;

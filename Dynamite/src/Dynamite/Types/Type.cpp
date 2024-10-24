@@ -19,7 +19,7 @@ namespace Dynamite
 	{
 	}
 
-	bool TypeInfo::operator == (const TypeInfo& other)
+	bool TypeInfo::operator == (const TypeInfo& other) const
 	{
 		bool result = this->Specifier == other.Specifier;
 		result |= this->Value == other.Value;
@@ -27,7 +27,7 @@ namespace Dynamite
 		return result;
 	}
 
-	bool TypeInfo::operator != (const TypeInfo& other)
+	bool TypeInfo::operator != (const TypeInfo& other) const
 	{
 		return !(*this == other);
 	}
@@ -47,7 +47,7 @@ namespace Dynamite
 	}
 
 	// Operators
-	bool Type::operator == (const Type& other)
+	bool Type::operator == (const Type& other) const
 	{
 		// Check if the qualifier counts are the same.
 		if ((this->FrontQualifiers.size() != other.FrontQualifiers.size()) 
@@ -75,23 +75,37 @@ namespace Dynamite
 		return false;
 	}
 
-	bool Type::operator != (const Type& other)
+	bool Type::operator != (const Type& other) const
 	{
 		return !(*this == other);
 	}
 
-	bool Type::operator == (const TypeInfo& info)
+	bool Type::operator == (const TypeInfo& info) const
 	{
 		return (this->Information == info);
 	}
 
-	bool Type::operator != (const TypeInfo& info)
+	bool Type::operator != (const TypeInfo& info) const
 	{
 		return !(*this == info);
 	}
 
 	// Methods
-	bool Type::IsConst()
+	TypeQualifier Type::CleanBackQualifier() const
+	{
+		if (BackQualifiers.empty())
+			return TypeQualifier::None;
+
+		if (BackQualifiers.size() >= 2)
+		{
+			if (BackQualifiers.back() == TypeQualifier::Reference)
+				return BackQualifiers.at(BackQualifiers.size() - 2);
+		}
+
+		return BackQualifiers.back();
+	}
+
+	bool Type::IsConst() const
 	{
 		for (const auto& qualifier : FrontQualifiers)
 		{
@@ -102,7 +116,7 @@ namespace Dynamite
 		return false;
 	}
 
-	bool Type::IsVolatile()
+	bool Type::IsVolatile() const
 	{
 		for (const auto& qualifier : FrontQualifiers)
 		{
@@ -113,28 +127,31 @@ namespace Dynamite
 		return false;
 	}
 
-	bool Type::IsPointer()
+	bool Type::IsPointer() const
 	{
-		return (BackQualifiers.back() == TypeQualifier::Pointer);
+		return (CleanBackQualifier() == TypeQualifier::Pointer);
 	}
 
-	bool Type::IsReference()
+	bool Type::IsReference() const
 	{
-		return (BackQualifiers.back() == TypeQualifier::Reference);
+		if (!BackQualifiers.empty() && BackQualifiers.back() == TypeQualifier::Reference)
+			return true;
+
+		return false;
 	}
 
-	bool Type::IsArray()
+	bool Type::IsArray() const
 	{
-		return (BackQualifiers.back() == TypeQualifier::Array);
+		return (CleanBackQualifier() == TypeQualifier::Array);
 	}
 
-	Type Type::Clean()
+	Type Type::Clean() const
 	{
 		// No front qualifiers (const, volatile)
 		Type clean = Type({}, this->Information, this->BackQualifiers);
 
 		// Remove reference if it is the last qualifier
-		if (clean.BackQualifiers.back() == TypeQualifier::Reference)
+		if (!clean.BackQualifiers.empty() && clean.BackQualifiers.back() == TypeQualifier::Reference)
 			clean.BackQualifiers.pop_back();
 
 		return clean;
@@ -194,24 +211,6 @@ namespace Dynamite
 		}
 
 		return "<undefined qualifier name>";
-	}
-
-	std::string TypeToString(const Type& type)
-	{
-		std::string str = {};
-
-		for (const auto& qualifier : type.FrontQualifiers)
-			str += TypeQualifierToString(qualifier) + ' ';
-
-		if (type.Information.Specifier == TypeSpecifier::Identifier)
-			str += type.Information.Value;
-		else
-			str += TypeSpecifierToString(type.Information.Specifier);
-
-		for (const auto& qualifier : type.BackQualifiers)
-			str += TypeQualifierToString(qualifier);
-
-		return str;
 	}
 
 }

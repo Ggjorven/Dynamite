@@ -2,7 +2,9 @@
 
 #include <cstdint>
 
+#include <cstdint>
 #include <string>
+#include <vector>
 #include <optional>
 
 namespace Dynamite
@@ -99,7 +101,6 @@ namespace Dynamite
 		Float64,
 
 		Char,
-		String,
 
 		// Note: An identifier can be a class name, a type name
 		// a variable name or a function name.
@@ -132,5 +133,68 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	std::string TokenTypeToString(TokenType type);
 	std::string TokenToString(const Token& token);
+
+	/////////////////////////////////////////////////////////////////
+	// Type groups
+	/////////////////////////////////////////////////////////////////
+	inline constexpr const std::vector<TokenType> GetAllTokenTypeOperators()
+	{
+		return {
+			TokenType::Add,
+			TokenType::Subtract,
+			TokenType::Multiply,
+			TokenType::Divide,
+
+			TokenType::Or,
+			TokenType::And,
+			TokenType::Xor,
+		};
+	}
+
+	inline constexpr const std::vector<TokenType> GetAllTokenTypeLiterals()
+	{
+		return {
+			TokenType::BoolLiteral,
+			TokenType::IntegerLiteral,
+			TokenType::FloatLiteral,
+			TokenType::CharLiteral,
+			TokenType::CharArrayLiteral,
+		};
+	}
+
+	inline constexpr const std::vector<TokenType> GetAllTokenTypeSpecifiers()
+	{
+		return {
+			TokenType::Pointer,
+			TokenType::Reference,
+
+			TokenType::Const,
+			TokenType::Volatile
+		};
+	}
+
+	inline constexpr const std::vector<TokenType> GetAllTokenTypeTypes()
+	{
+		return {
+			TokenType::Void,
+
+			TokenType::Int8,
+			TokenType::Int16,
+			TokenType::Int32,
+			TokenType::Int64,
+
+			TokenType::UInt8,
+			TokenType::UInt16,
+			TokenType::UInt32,
+			TokenType::UInt64,
+
+			TokenType::Float32,
+			TokenType::Float64,
+
+			TokenType::Char,
+
+			TokenType::Identifier,
+		};
+	}
 
 }

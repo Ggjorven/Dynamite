@@ -6,6 +6,8 @@ project "Dynamite"
 	cppdialect "C++20"
 	staticruntime "Off" -- Needs to be Off for LLVM
 
+	-- warnings "Extra"
+
 	architecture "x86_64"
 
 	debugdir ("%{wks.location}")

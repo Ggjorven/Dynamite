@@ -5,6 +5,8 @@
 
 #include "Dynamite/Parser/Nodes/Expressions.hpp"
 
+#include "Dynamite/Types/TypeSystem.hpp"
+
 namespace Dynamite::Node
 {
 
@@ -74,7 +76,7 @@ namespace Dynamite::Node
 			break;
 		}
 
-		str += Pulse::Text::Format("([LiteralTerm::{0}({1})] = '{2}')", type, TypeToString(obj->GetType()), obj->Literal.Value);
+		str += Pulse::Text::Format("([LiteralTerm::{0}({1})] = '{2}')", type, TypeSystem::ToString(obj->GetType()), obj->Literal.Value);
 
 		return str;
 	}
@@ -83,7 +85,7 @@ namespace Dynamite::Node
 	{
 		std::string str(indentLevel, '\t');
 
-		str += Pulse::Text::Format("([IdentifierTerm({0})] = '{1}')", TypeToString(obj->GetType()), obj->Identifier.Value);
+		str += Pulse::Text::Format("([IdentifierTerm({0})] = '{1}')", TypeSystem::ToString(obj->GetType()), obj->Identifier.Value);
 
 		return str;
 	}
@@ -92,7 +94,7 @@ namespace Dynamite::Node
 	{
 		std::string str(indentLevel, '\t');
 
-		str += Pulse::Text::Format("([ParenthesisTerm({0})] = '(\n{1}\n{2})')", TypeToString(obj->GetType()), ExpressionToString(obj->Expr, indentLevel + 1), std::string(indentLevel, '\t'));
+		str += Pulse::Text::Format("([ParenthesisTerm({0})] = '(\n{1}\n{2})')", TypeSystem::ToString(obj->GetType()), ExpressionToString(obj->Expr, indentLevel + 1), std::string(indentLevel, '\t'));
 
 		return str;
 	}

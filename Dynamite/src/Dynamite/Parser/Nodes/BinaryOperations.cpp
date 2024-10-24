@@ -7,6 +7,8 @@
 
 #include "Dynamite/Parser/Nodes/Expressions.hpp"
 
+#include "Dynamite/Types/TypeSystem.hpp"
+
 namespace Dynamite::Node
 {
 
@@ -68,7 +70,7 @@ namespace Dynamite::Node
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinaryAddition({0})] = '(\n{1}\n{2}'+'\n{3}\n{2})'", TypeToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinaryAddition({0})] = '(\n{1}\n{2}'+'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
 
 		return str;
 	}
@@ -82,7 +84,7 @@ namespace Dynamite::Node
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinarySubtraction({0})] = '(\n{1}\n{2}'-'\n{3}\n{2})'", TypeToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinarySubtraction({0})] = '(\n{1}\n{2}'-'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
 
 		return str;
 	}
@@ -96,7 +98,7 @@ namespace Dynamite::Node
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinaryMultiplication({0})] = '(\n{1}\n{2}'*'\n{3}\n{2})'", TypeToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinaryMultiplication({0})] = '(\n{1}\n{2}'*'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
 
 		return str;
 	}
@@ -110,7 +112,7 @@ namespace Dynamite::Node
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinaryDivision({0})] = '(\n{1}\n{2}'/'\n{3}\n{2})'", TypeToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinaryDivision({0})] = '(\n{1}\n{2}'/'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
 
 		return str;
 	}

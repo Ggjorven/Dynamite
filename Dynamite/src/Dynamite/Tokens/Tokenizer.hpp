@@ -21,18 +21,13 @@ namespace Dynamite
 		Tokenizer(std::string& fileContent);
 		~Tokenizer() = default;
 
-		// Methods
+		// Public methods
 		std::vector<Token> Tokenize();
 
 	public:
-		// Private methods
+		// Peeking & consuming
 		Optional<char> Peek(size_t offset = 0) const;
 		char Consume();
-
-		bool PeekIs(size_t offset, char c) const;
-
-		template<typename Func, typename ...Args>
-		bool PeekCheck(Func&& func, Args&& ...args);
 
 		// Handling functions
 		bool HandleTypes(std::vector<Token>& tokens, std::string& buffer, uint32_t& line);
@@ -43,15 +38,5 @@ namespace Dynamite
 		std::string& m_FileContent;
 		size_t m_Index = 0;
 	};
-
-	/////////////////////////////////////////////////////////////////
-	// Templated functions
-	/////////////////////////////////////////////////////////////////
-	template<typename Func, typename ...Args>
-	inline bool Tokenizer::PeekCheck(Func&& func, Args && ...args)
-	{
-		Optional<char> value = Peek();
-		return value.HasValue() && func(value.Value(), std::forward<Args>(args)...);
-	}
 
 }

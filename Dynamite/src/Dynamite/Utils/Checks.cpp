@@ -6,51 +6,24 @@
 namespace Dynamite::Utils
 {
 
-	bool IsAlpha(char c, const std::initializer_list<char>& allowed)
+	bool IsAlpha(char c, const std::vector<char>& allowed)
 	{
-		if (std::isalpha(c))
-			return true;
-
-		for (const auto& val : allowed)
-		{
-			if (c == val)
-				return true;
-		}
-
-		return false;
+		return (std::isalpha(c) || IsEqual(c, allowed));
 	}
 
-	bool IsNumeric(char c, const std::initializer_list<char>& allowed)
+	bool IsNumeric(char c, const std::vector<char>& allowed)
 	{
-		if (std::isdigit(c))
-			return true;
-
-		for (const auto& val : allowed)
-		{
-			if (c == val)
-				return true;
-		}
-
-		return false;
+		return (std::isdigit(c) || IsEqual(c, allowed));
 	}
 
-	bool IsAlphaNumeric(char c, const std::initializer_list<char>& allowed)
+	bool IsAlphaNumeric(char c, const std::vector<char>& allowed)
 	{
 		return (IsAlpha(c, allowed) || IsNumeric(c, allowed));
 	}
 
-	bool IsSpace(char c, const std::initializer_list<char>& allowed)
+	bool IsSpace(char c, const std::vector<char>& allowed)
 	{
-		if (std::isspace(c))
-			return true;
-
-		for (const auto& val : allowed)
-		{
-			if (c == val)
-				return true;
-		}
-
-		return false;
+		return (std::isspace(c) || IsEqual(c, allowed));
 	}
 
 }
