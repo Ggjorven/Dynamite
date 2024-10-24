@@ -146,15 +146,33 @@ namespace Dynamite::Node
 
 			std::string operator () (const Reference<LiteralTerm> obj) const
 			{
-				return LiteralTermToString(obj, Indent);
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string literalStr = LiteralTermToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([TermExpr] = \n{0}\n{1})", literalStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
 			}
 			std::string operator () (const Reference<IdentifierTerm> obj) const
 			{
-				return IdentifierTermToString(obj, Indent);
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string identifierStr = IdentifierTermToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([TermExpr] = \n{0}\n{1})", identifierStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
 			}
 			std::string operator () (const Reference<ParenthesisTerm> obj) const
 			{
-				return ParenthesisTermToString(obj, Indent);
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string parenthesisStr = ParenthesisTermToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([TermExpr] = \n{0}\n{1})", parenthesisStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
 			}
 		};
 
@@ -169,19 +187,43 @@ namespace Dynamite::Node
 
 			std::string operator () (const Reference<BinaryAddition> obj) const
 			{
-				return BinaryAdditionToString(obj, Indent);
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string binaryStr = BinaryAdditionToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BinaryExpr] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
 			}
 			std::string operator () (const Reference<BinarySubtraction> obj) const
 			{
-				return BinarySubtractionToString(obj, Indent);
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string binaryStr = BinarySubtractionToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BinaryExpr] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
 			}
 			std::string operator () (const Reference<BinaryMultiplication> obj) const
 			{
-				return BinaryMultiplicationToString(obj, Indent);
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string binaryStr = BinaryMultiplicationToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BinaryExpr] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
 			}
 			std::string operator () (const Reference<BinaryDivision> obj) const
 			{
-				return BinaryDivisionToString(obj, Indent);
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string binaryStr = BinaryDivisionToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BinaryExpr] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
 			}
 		};
 
@@ -196,21 +238,21 @@ namespace Dynamite::Node
 
 			std::string operator () (const Reference<TermExpr> obj) const
 			{
-				std::string str(Indent, '\t');
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
 				std::string termStr = TermExprToString(obj, Indent + 1);
 
-				str += Pulse::Text::Format("([Expression] - '{0}')", Utils::RemoveFrontIndentation(termStr));
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", termStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}
 			std::string operator () (const Reference<BinaryExpr> obj) const
 			{
-				std::string str(Indent, '\t');
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
 				
 				std::string binaryStr = BinaryExprToString(obj, Indent + 1);
 
-				str += Pulse::Text::Format("([Expression] - '{0}')", Utils::RemoveFrontIndentation(binaryStr));
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
 				
 				return str;
 			}

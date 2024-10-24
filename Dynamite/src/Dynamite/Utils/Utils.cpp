@@ -5,7 +5,17 @@
 
 namespace Dynamite::Utils
 {
-	
+
+	std::string StrTimes(const std::string& str, size_t times)
+	{
+		std::string result = {};
+
+		for (size_t i = 0; i < times; i++)
+			result += str;
+
+		return result;
+	}
+
 	std::string& StrLower(std::string& val)
 	{
 		for (char& c : val)

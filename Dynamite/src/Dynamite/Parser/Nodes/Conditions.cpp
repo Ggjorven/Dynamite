@@ -38,7 +38,7 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	std::string ElseIfBranchToString(const Reference<ElseIfBranch> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string condition = ExpressionToString(obj->Expr, indentLevel + 2);
 		std::string scope = ScopeStatementToString(obj->Scope, indentLevel + 1);
@@ -50,7 +50,7 @@ namespace Dynamite::Node
 
 	std::string ElseBranchToString(const Reference<ElseBranch> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string scope = ScopeStatementToString(obj->Scope, indentLevel + 1);
 

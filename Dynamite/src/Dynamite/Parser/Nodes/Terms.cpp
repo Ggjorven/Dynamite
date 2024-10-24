@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Utils.hpp"
+
 #include "Dynamite/Parser/Nodes/Expressions.hpp"
 
 #include "Dynamite/Types/TypeSystem.hpp"
@@ -51,7 +53,7 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	std::string LiteralTermToString(const Reference<LiteralTerm> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 		
 		std::string type = "<undefined literal name>";
 		switch (obj->Literal.Type)
@@ -83,7 +85,7 @@ namespace Dynamite::Node
 
 	std::string IdentifierTermToString(const Reference<IdentifierTerm> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		str += Pulse::Text::Format("([IdentifierTerm({0})] = '{1}')", TypeSystem::ToString(obj->GetType()), obj->Identifier.Value);
 
@@ -92,9 +94,11 @@ namespace Dynamite::Node
 
 	std::string ParenthesisTermToString(const Reference<ParenthesisTerm> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		str += Pulse::Text::Format("([ParenthesisTerm({0})] = '(\n{1}\n{2})')", TypeSystem::ToString(obj->GetType()), ExpressionToString(obj->Expr, indentLevel + 1), std::string(indentLevel, '\t'));
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+
+		str += Pulse::Text::Format("([ParenthesisTerm({0})] = '\n{1}'\n{2})", TypeSystem::ToString(obj->GetType()), exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}

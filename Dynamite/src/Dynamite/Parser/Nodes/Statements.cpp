@@ -56,11 +56,11 @@ namespace Dynamite::Node
 
 	std::string VariableStatementToString(const Reference<VariableStatement> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
 
-		str += Pulse::Text::Format("([VariableStatement] = '{0} {1} = {2}')", TypeSystem::ToString(obj->GetType()), obj->Variable.Value, Utils::RemoveFrontIndentation(exprStr));
+		str += Pulse::Text::Format("([VariableStatement] = '{0} {1} = \n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), obj->Variable.Value, exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}

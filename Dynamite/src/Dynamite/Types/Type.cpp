@@ -74,7 +74,7 @@ namespace Dynamite
 				return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	bool Type::operator != (const Type& other) const

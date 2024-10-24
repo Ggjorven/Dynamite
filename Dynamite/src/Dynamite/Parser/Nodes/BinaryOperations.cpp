@@ -64,56 +64,56 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	std::string BinaryAdditionToString(const Reference<BinaryAddition> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
 		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinaryAddition({0})] = '(\n{1}\n{2}'+'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinaryAddition({0})] = '\n{1}\n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
 
 	std::string BinarySubtractionToString(const Reference<BinarySubtraction> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
 		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinarySubtraction({0})] = '(\n{1}\n{2}'-'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinarySubtraction({0})] = '\n{1}\n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
 
 	std::string BinaryMultiplicationToString(const Reference<BinaryMultiplication> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
 		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinaryMultiplication({0})] = '(\n{1}\n{2}'*'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinaryMultiplication({0})] = '\n{1}\n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
 
 	std::string BinaryDivisionToString(const Reference<BinaryDivision> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
 		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
 		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
 		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([BinaryDivision({0})] = '(\n{1}\n{2}'/'\n{3}\n{2})'", TypeSystem::ToString(obj->GetType()), lhs, std::string(indentLevel + 2, '\t'), rhs);
+		str += Pulse::Text::Format("([BinaryDivision({0})] = '\n{1}\n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
