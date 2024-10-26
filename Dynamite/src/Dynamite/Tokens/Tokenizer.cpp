@@ -173,7 +173,7 @@ namespace Dynamite
     /////////////////////////////////////////////////////////////////
     // Peeking & consuming
     /////////////////////////////////////////////////////////////////
-    Optional<char> Tokenizer::Peek(size_t offset) const
+    Optional<char> Tokenizer::Peek(int64_t offset) const
     {
         if (m_Index + offset >= m_FileContent.size())
             return {};

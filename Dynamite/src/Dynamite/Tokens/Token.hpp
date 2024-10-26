@@ -7,6 +7,8 @@
 #include <vector>
 #include <optional>
 
+#include <Pulse/Core/Defines.hpp>
+
 namespace Dynamite
 {
 
@@ -119,7 +121,7 @@ namespace Dynamite
 		std::string Value = {};
 
 		// Note: This is for debugging and error messages.
-		uint32_t LineNumber = -1;
+		uint32_t LineNumber = Pulse::Numeric::Max<uint32_t>();
 
 	public:
 		Token() = default;

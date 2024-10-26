@@ -15,30 +15,33 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Forward declaration of all node types
 	/////////////////////////////////////////////////////////////////
-	struct Expression;				
+	struct Expression;
 									
-	struct TermExpr;				
-	struct BinaryExpr;				
+	struct TermExpr;
+	struct BinaryExpr;
+
+	// Note: Can be an expression or statement
+	struct FunctionCall; 
 									
-	struct IdentifierTerm;			
-	struct LiteralTerm;				
-	struct ParenthesisTerm;		
+	struct IdentifierTerm;
+	struct LiteralTerm;
+	struct ParenthesisTerm;
 
 	struct BinaryAddition;
 	struct BinarySubtraction;
 	struct BinaryMultiplication;
 	struct BinaryDivision;
 									
-	struct Statement;				
+	struct Statement;
 									
 	struct IfStatement;
 	struct VariableStatement;
 	struct AssignmentStatement;
 
-	struct ElseIfBranch;			
-	struct ElseBranch;				
-	struct ScopeStatement;			
-	struct ConditionBranch;			
+	struct ElseIfBranch;
+	struct ElseBranch;
+	struct ScopeStatement;
+	struct ConditionBranch;	
 
 	struct Function;
 	struct Program;

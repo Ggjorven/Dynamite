@@ -7,6 +7,8 @@
 
 #include "Dynamite/Types/TypeSystem.hpp"
 
+#include "Dynamite/Parser/Nodes/Functions.hpp"
+
 namespace Dynamite::Node
 {
 
@@ -126,21 +128,25 @@ namespace Dynamite::Node
 		{
 			size_t Ident;
 
-			std::string operator () (const Reference<IfStatement> obj)
+			std::string operator () (const Reference<IfStatement> obj) const
 			{
 				return IfStatementToString(obj, Ident);
 			}
-			std::string operator () (const Reference<VariableStatement> obj)
+			std::string operator () (const Reference<VariableStatement> obj) const
 			{
 				return VariableStatementToString(obj, Ident);
 			}
-			std::string operator () (const Reference<ScopeStatement> obj)
+			std::string operator () (const Reference<ScopeStatement> obj) const
 			{
 				return ScopeStatementToString(obj, Ident);
 			}
-			std::string operator () (const Reference<AssignmentStatement> obj)
+			std::string operator () (const Reference<AssignmentStatement> obj) const
 			{
 				return AssignmentStatementToString(obj, Ident);
+			}
+			std::string operator () (const Reference<FunctionCall> obj) const
+			{
+				return FunctionCallToString(obj, Ident);
 			}
 		};
 

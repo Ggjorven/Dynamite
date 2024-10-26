@@ -6,6 +6,8 @@
 #include "Dynamite/Utils/Utils.hpp"
 #include "Dynamite/Utils/Checks.hpp"
 
+#include "Dynamite/Parser/Nodes/Functions.hpp"
+
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
 
@@ -85,6 +87,10 @@ namespace Dynamite::Node
 				return obj->GetType();
 			}
 			Type& operator () (const Reference<ParenthesisTerm> obj) const
+			{
+				return obj->GetType();
+			}
+			Type& operator () (const Reference<FunctionCall> obj) const
 			{
 				return obj->GetType();
 			}
@@ -171,6 +177,16 @@ namespace Dynamite::Node
 				std::string parenthesisStr = ParenthesisTermToString(obj, Indent + 1);
 
 				str += Pulse::Text::Format("([TermExpr] = '\n{0}'\n{1})", parenthesisStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Reference<FunctionCall> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string functionCall = FunctionCallToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([TermExpr] = '\n{0}'\n{1})", functionCall, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}

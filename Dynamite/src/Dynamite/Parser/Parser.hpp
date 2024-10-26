@@ -3,6 +3,8 @@
 #include "Dynamite/Core/Core.hpp"
 
 #include "Dynamite/Parser/ScopeSystem.hpp"
+#include "Dynamite/Parser/FunctionSystem.hpp"
+
 #include "Dynamite/Parser/Nodes/All.hpp"
 
 namespace Dynamite
@@ -20,6 +22,7 @@ namespace Dynamite
 
 	public:
 		// Parsing methods
+		Optional<Node::Reference<Node::FunctionCall>>		ParseFunctionCall();
 		Optional<Node::Reference<Node::TermExpr>>			ParseTermExpr();
 		Optional<Node::Reference<Node::Expression>>			ParseExpression(size_t minimumPrecedence = 0);
 		
@@ -34,7 +37,7 @@ namespace Dynamite
 
 	private:
 		// Peeking & Consuming
-		Optional<Token> Peek(size_t offset = 0) const;
+		Optional<Token> Peek(int64_t offset = 0) const;
 		Token Consume();
 
 		void CheckConsume(TokenType expect, const std::string& msg = {});
@@ -49,6 +52,7 @@ namespace Dynamite
 		size_t m_Index = 0;
 
 		ScopeSystem m_Scopes;
+		FunctionSystem m_Functions;
 	};
 
 }

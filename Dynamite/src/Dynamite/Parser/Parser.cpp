@@ -11,6 +11,8 @@
 
 #include "Dynamite/Types/TypeSystem.hpp"
 
+#include <Pulse/Core/Defines.hpp>
+
 namespace Dynamite
 {
 
@@ -27,7 +29,9 @@ namespace Dynamite
 		Node::Program program = {};
 
 		m_Index = 0;
+
 		m_Scopes.Reset();
+		m_Functions.Reset();
 
 		// Parse statements
 		while (Peek(0).HasValue())
@@ -46,6 +50,69 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Parsing functions
 	/////////////////////////////////////////////////////////////////
+	Optional<Node::Reference<Node::FunctionCall>> Parser::ParseFunctionCall()
+	{
+		/////////////////////////////////////////////////////////////////
+		// FunctionCall
+		/////////////////////////////////////////////////////////////////
+		if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier) &&
+			Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::OpenParenthesis))
+		{
+			auto consumed = Consume(); // Name
+
+			Consume(); // '(' token
+
+			Optional<Type> returnType = m_Functions.GetReturnType(consumed.Value);
+			if (!returnType.HasValue())
+			{
+				Compiler::Error(Peek(-2).Value().LineNumber, "Undefined symbol: {0}", consumed.Value);
+				return {};
+			}
+
+			Node::Reference<Node::FunctionCall> function = Node::New<Node::FunctionCall>(returnType.Value(), consumed);
+
+			// Parse arguments
+			while (true)
+			{
+				size_t index = 0;
+
+				if (auto argument = ParseExpression())
+				{
+					Optional<Type> symbolArgType = m_Functions.GetArgumentType(function->Function.Value, index);
+					if (!symbolArgType.HasValue())
+					{
+						Compiler::Error(Peek(0).Value().LineNumber, "Passed in {0} arguments, when the symbol for '{1}' doesn't match.", index + 1, function->Function.Value);
+						return {};
+					}
+
+					if (!TypeSystem::Castable(argument.Value()->GetType(), symbolArgType.Value()))
+					{
+						Compiler::Error(Peek(0).Value().LineNumber, "Argument {0} expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", index, TypeSystem::ToString(symbolArgType.Value()), TypeSystem::ToString(argument.Value()->GetType()));
+
+						// Parenthesis `)` resolution
+						CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+						return function;
+					}
+
+					// Note: Only casts if the internal type is a literalterm
+					Cast(argument.Value()->GetType(), symbolArgType.Value(), argument.Value());
+					function->Arguments.push_back(argument.Value());
+					index++;
+				}
+				else
+					break;
+			}
+
+			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+
+			return function;
+		}
+
+		return {};
+	}
+
+
+
 	Optional<Node::Reference<Node::TermExpr>> Parser::ParseTermExpr()
 	{
 		/////////////////////////////////////////////////////////////////
@@ -63,6 +130,14 @@ namespace Dynamite
 			termExpr->Term = Node::New<Node::LiteralTerm>(literalType, literalToken);
 
 			return termExpr;
+		}
+
+		/////////////////////////////////////////////////////////////////
+		// FunctionCall
+		/////////////////////////////////////////////////////////////////
+		else if (auto funcCall = ParseFunctionCall())
+		{
+			return Node::New<Node::TermExpr>(funcCall.Value());
 		}
 
 		/////////////////////////////////////////////////////////////////
@@ -120,11 +195,6 @@ namespace Dynamite
 		if (auto term = ParseTermExpr())
 		{
 			/////////////////////////////////////////////////////////////////
-			// Type retrieval
-			/////////////////////////////////////////////////////////////////
-			const Type& type = term.Value()->GetType();
-
-			/////////////////////////////////////////////////////////////////
 			// Expression retrieval/creation
 			/////////////////////////////////////////////////////////////////
 			Node::Reference<Node::Expression> expr = Node::New<Node::Expression>(term.Value());
@@ -133,7 +203,7 @@ namespace Dynamite
 			{
 				Optional<Token> current = Peek(0);
 				Optional<size_t> precedence = {};
-				size_t nextMinimumPrecedence = -1;
+				size_t nextMinimumPrecedence = Pulse::Numeric::Max<size_t>();
 
 				// Note: It breaks out and just returns the normal expression if
 				// it's not a binary expression.
@@ -394,6 +464,15 @@ namespace Dynamite
 		}
 
 		/////////////////////////////////////////////////////////////////
+		// Function call
+		/////////////////////////////////////////////////////////////////
+		else if (auto funcCall = ParseFunctionCall())
+		{
+			CheckConsume(TokenType::Semicolon, "Expected `;`.");
+			return Node::New<Node::Statement>(funcCall.Value());
+		}
+
+		/////////////////////////////////////////////////////////////////
 		// Variable assignment
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier) && 
@@ -457,14 +536,14 @@ namespace Dynamite
 
 			std::string funcName = func->Name.Value;
 
-			CheckConsume(TokenType::OpenParenthesis, "Expected `(`.");
+			Consume(); // '(' token
 
 			while (true)
 			{
-				size_t offset = 0;
+				size_t parameterOffset = 0;
 
-				if (PeekIsType(offset) && 
-					Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier))
+				if (PeekIsType(parameterOffset) &&
+					Utils::OptMemberIs(Peek(parameterOffset++), &Token::Type, TokenType::Identifier))
 				{
 					Type variableType = GetType();
 
@@ -502,6 +581,13 @@ namespace Dynamite
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
+			// TODO: Add function to symbols
+			std::vector<Type> parameterTypes = { };
+			for (const auto& parameter : func->Parameters)
+				parameterTypes.push_back(parameter->GetType());
+
+			m_Functions.Add(func->Name.Value, func->GetType(), parameterTypes);
+
 			if (auto body = ParseScopeStatement(false))
 				func->Body = body.Value();
 			else
@@ -516,7 +602,7 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Peeking & consuming
 	/////////////////////////////////////////////////////////////////
-	Optional<Token> Parser::Peek(size_t offset) const
+	Optional<Token> Parser::Peek(int64_t offset) const
 	{
 		if (m_Index + offset >= m_Tokens.size())
 			return {};
@@ -626,6 +712,10 @@ namespace Dynamite
 						return false;
 					}
 					bool operator () (const Node::Reference<Node::ParenthesisTerm> obj) const
+					{
+						return false;
+					}
+					bool operator () (const Node::Reference<Node::FunctionCall> obj) const
 					{
 						return false;
 					}

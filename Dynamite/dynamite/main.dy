@@ -1,6 +1,11 @@
 i32 globalValue = (123 - 67);
 i32 globalValue2 = globalValue;
 
+i8 func(int a)
+{
+	int x = a * 2;
+}
+
 i32 main(i32 argc, char** argv)
 {
 	if (true)
@@ -17,6 +22,8 @@ i32 main(i32 argc, char** argv)
 		u32[] potatoe;
 	}
 
-	i8 x = 10;
+	i8 x = func();
 	u64 y = 218093280;
+
+	func();
 }

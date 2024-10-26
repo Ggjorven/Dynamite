@@ -79,7 +79,7 @@ namespace Dynamite::Node
     struct Statement
     {
     private:
-        using VariantType = Variant<Reference<VariableStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>>;
+        using VariantType = Variant<Reference<VariableStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>, Reference<FunctionCall>>;
         friend class Pulse::Memory::Control;
     private:
         Statement(VariantType statement = {});

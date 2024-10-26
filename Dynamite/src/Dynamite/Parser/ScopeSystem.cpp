@@ -53,10 +53,7 @@ namespace Dynamite
 		});
 
 		if (it == m_Variables.cend())
-		{
-			//Compiler::Error(GetLineNumber(), "Undeclared identifier: {0}", name);
 			return {};
-		}
 
 		return Optional<Type>((*it).VariableType);
 	}

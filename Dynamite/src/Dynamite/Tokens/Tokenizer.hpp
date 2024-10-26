@@ -26,7 +26,7 @@ namespace Dynamite
 
 	public:
 		// Peeking & consuming
-		Optional<char> Peek(size_t offset = 0) const;
+		Optional<char> Peek(int64_t offset = 0) const;
 		char Consume();
 
 		// Handling functions

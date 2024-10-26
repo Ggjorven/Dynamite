@@ -19,7 +19,7 @@ namespace Dynamite::Node
     struct TermExpr
     {
     private:
-        using VariantType = Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>>;
+        using VariantType = Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>, Reference<FunctionCall>>;
         friend class Pulse::Memory::Control;
     private:
         TermExpr(VariantType term = {});

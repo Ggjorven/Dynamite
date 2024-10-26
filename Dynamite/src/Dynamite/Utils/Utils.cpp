@@ -19,7 +19,7 @@ namespace Dynamite::Utils
 	std::string& StrLower(std::string& val)
 	{
 		for (char& c : val)
-			c = std::tolower(c);
+			c = static_cast<char>(std::tolower(static_cast<int>(c)));
 
 		return val;
 	}
