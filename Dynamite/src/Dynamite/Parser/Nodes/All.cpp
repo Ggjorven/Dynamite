@@ -3,6 +3,10 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Utils.hpp"
+
+#include "Dynamite/Types/TypeSystem.hpp"
+
 namespace Dynamite::Node
 {
 
@@ -23,21 +27,28 @@ namespace Dynamite::Node
 	}
 
 	/////////////////////////////////////////////////////////////////
-	// Helper functions // TODO: ...
+	// Helper functions 
 	/////////////////////////////////////////////////////////////////
 	std::string FunctionToString(const Reference<Function> obj, size_t indentLevel)
 	{
-		std::string str(indentLevel, '\t');
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		str += Pulse::Text::Format("([Function] )");
-		/*
-		Type ReturnType;
-		Token Name;
+		std::string returnType = TypeSystem::ToString(obj->ReturnType);
+		std::string functionName = obj->Name.Value;
 
-		std::vector<Reference<VariableStatement>> Parameters;
+		std::string parameters = {};
+		for (size_t i = 0; i < obj->Parameters.size(); i++)
+		{
+			if (i > 0)
+				parameters += ",\n";
 
-		Reference<ScopeStatement> Body;
-		*/
+			std::string parameterStr = VariableStatementToString(obj->Parameters[i], indentLevel + 2);
+			parameters += parameterStr;
+		}
+
+		std::string scope = ScopeStatementToString(obj->Body, indentLevel + 1);
+
+		str += Pulse::Text::Format("([Function] = '{0} {1}(\n{2}\n{4})\n{3}'\n{5})", returnType, functionName, parameters, scope, Utils::StrTimes(Node::TabString, indentLevel + 1), Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}

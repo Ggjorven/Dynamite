@@ -22,6 +22,8 @@ namespace Dynamite
 		char** Argv;
 
 	public:
+		bool Quit = false;
+
 		std::filesystem::path WorkingDir;
 
 		std::vector<std::filesystem::path> Files = { };
@@ -40,6 +42,8 @@ namespace Dynamite
 		const bool Contains(CompilerFlag type) const;
 
 	private:
+		void PrintHelpMenu();
+
 		void ParseArgs(int argc, char** argv);
 	};
 

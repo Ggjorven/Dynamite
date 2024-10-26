@@ -58,7 +58,7 @@ namespace Dynamite
 			return {};
 		}
 
-		return (*it).VariableType;
+		return Optional<Type>((*it).VariableType);
 	}
 
 }

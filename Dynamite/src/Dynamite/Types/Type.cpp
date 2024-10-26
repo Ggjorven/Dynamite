@@ -23,8 +23,13 @@ namespace Dynamite
 
 	bool TypeInfo::operator == (const TypeInfo& other) const
 	{
-		bool result = this->Specifier == other.Specifier;
-		result |= this->Value == other.Value;
+		bool result = (this->Specifier == other.Specifier);
+
+		if (result && this->Specifier == TypeSpecifier::Identifier)
+		{
+			if (this->Value != other.Value)
+				result = false;
+		}
 
 		return result;
 	}
@@ -107,11 +112,11 @@ namespace Dynamite
 		return BackQualifiers.back();
 	}
 
-	bool Type::IsConst() const
+	bool Type::IsMut() const
 	{
 		for (const auto& qualifier : FrontQualifiers)
 		{
-			if (qualifier == TypeQualifier::Const)
+			if (qualifier == TypeQualifier::Mut)
 				return true;
 		}
 
@@ -200,7 +205,7 @@ namespace Dynamite
 	{
 		switch (qualifier)
 		{
-		case TypeQualifier::Const:		return TokenTypeToString(TokenType::Const);
+		case TypeQualifier::Mut:		return TokenTypeToString(TokenType::Mut);
 		case TypeQualifier::Volatile:	return TokenTypeToString(TokenType::Volatile);
 
 		case TypeQualifier::Pointer:	return TokenTypeToString(TokenType::Pointer);
@@ -261,7 +266,7 @@ namespace Dynamite
 
 		switch (tokenType)
 		{
-		case TokenType::Const:				return TypeQualifier::Const;
+		case TokenType::Mut:				return TypeQualifier::Mut;
 		case TokenType::Volatile:			return TypeQualifier::Volatile;
 
 		case TokenType::Pointer:			return TypeQualifier::Pointer;

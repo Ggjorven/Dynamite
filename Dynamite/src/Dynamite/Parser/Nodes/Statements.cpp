@@ -28,8 +28,8 @@ namespace Dynamite::Node
 	{
 	}
 
-	AssignmentStatement::AssignmentStatement(const Token& variable, Reference<Expression> expr)
-		: Variable(variable), Expr(expr)
+	AssignmentStatement::AssignmentStatement(const Type& type, const Token& variable, Reference<Expression> expr)
+		: VariableType(type), Variable(variable), Expr(expr)
 	{
 	}
 
@@ -46,33 +46,78 @@ namespace Dynamite::Node
 		return VariableType;
 	}
 
+
+	Type& AssignmentStatement::GetType()
+	{
+		return VariableType;
+	}
+
 	/////////////////////////////////////////////////////////////////
-	// Helper functions // TODO: ...
+	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string IfStatementToString(const Reference<IfStatement> obj, size_t indentLevel)
 	{
-		return std::string();
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string expressionStr = ExpressionToString(obj->Expr, indentLevel + 1);
+		std::string scopeStr = ScopeStatementToString(obj->Scope, indentLevel);
+
+		if (obj->Next.HasValue())
+		{
+			std::string nextStr = ConditionBranchToString(obj->Next.Value(), indentLevel);
+			str += Pulse::Text::Format("([IfStatement] = '( \n{0} \n{2}) \n{1}'\n{2})\n{3}", expressionStr, scopeStr, Utils::StrTimes(Node::TabString, indentLevel), nextStr);
+		}
+		else
+		{
+			str += Pulse::Text::Format("([IfStatement] = '( \n{0} \n{2}) \n{1}'\n{2})", expressionStr, scopeStr, Utils::StrTimes(Node::TabString, indentLevel));
+		}
+
+		return str;
 	}
 
 	std::string VariableStatementToString(const Reference<VariableStatement> obj, size_t indentLevel)
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
-
-		str += Pulse::Text::Format("([VariableStatement] = '{0} {1} = \n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), obj->Variable.Value, exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+		if (obj->Expr)
+		{
+			std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+			str += Pulse::Text::Format("([VariableStatement] = '{0} {1} = \n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), obj->Variable.Value, exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+		}
+		else
+		{
+			str += Pulse::Text::Format("([VariableStatement] = '{0} {1}')", TypeSystem::ToString(obj->GetType()), obj->Variable.Value);
+		}
 
 		return str;
 	}
 
 	std::string ScopeStatementToString(const Reference<ScopeStatement> obj, size_t indentLevel)
 	{
-		return std::string();
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string statementsStr = {};
+		for (size_t i = 0; i < obj->Statements.size(); i++)
+		{
+			if (i > 0)
+				statementsStr += "\n\n";
+
+			statementsStr += StatementToString(obj->Statements[i], indentLevel + 1);
+		}
+
+		str += Pulse::Text::Format("([ScopeStatement] = '{{\n{0}\n{1}}}'\n{2})", statementsStr, Utils::StrTimes(Node::TabString, indentLevel + 1), Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
 	}
 
 	std::string AssignmentStatementToString(const Reference<AssignmentStatement> obj, size_t indentLevel)
 	{
-		return std::string();
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+		str += Pulse::Text::Format("([AssignmentStatement({0})] = '{1} = \n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), obj->Variable.Value, exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
 	}
 
 	std::string StatementToString(const Reference<Statement> obj, size_t indentLevel)

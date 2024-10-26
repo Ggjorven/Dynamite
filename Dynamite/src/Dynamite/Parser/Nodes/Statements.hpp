@@ -65,11 +65,15 @@ namespace Dynamite::Node
     private:
         friend class Pulse::Memory::Control;
     private:
-        AssignmentStatement(const Token& variable = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
+        AssignmentStatement(const Type& variableType = {}, const Token& variable = {}, Reference<Expression> expr = (Reference<Expression>)NullRef);
 
     public:
+        Type VariableType;
         Token Variable;
+
         Reference<Expression> Expr;
+
+        Type& GetType();
     };
 
     struct Statement

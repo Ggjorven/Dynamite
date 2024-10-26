@@ -26,6 +26,8 @@ namespace Dynamite
         std::string buffer = {};
         uint32_t lineNumber = 1;
 
+        m_Index = 0;
+
         while (Peek().HasValue())
         {
             // Is alphabetic
@@ -230,7 +232,7 @@ namespace Dynamite
             if (compare.empty())
                 compare = TokenTypeToString(type);
 
-            if (buffer == TokenTypeToString(type))
+            if (buffer == compare)
             {
                 if (value.empty())
                     tokens.emplace_back(type, line);
@@ -253,7 +255,7 @@ namespace Dynamite
         else if (handleWord(TokenType::BoolLiteral, "true", "1"))   return true;
 
         // Specifiers
-        else if (handleWord(TokenType::Const))                      return true;
+        else if (handleWord(TokenType::Mut))                        return true;
         else if (handleWord(TokenType::Volatile))                   return true;
 
         // Other

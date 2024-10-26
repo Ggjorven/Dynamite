@@ -3,6 +3,20 @@ i32 globalValue2 = globalValue;
 
 i32 main(i32 argc, char** argv)
 {
+	if (true)
+	{
+		u16 z = 0;
+		z = 10;
+	}
+	else if (true)
+	{
+		u16 a;
+	}
+	else
+	{
+		u32[] potatoe;
+	}
+
 	i8 x = 10;
 	u64 y = 218093280;
 }

@@ -26,6 +26,9 @@ namespace Dynamite
 	{
 		Node::Program program = {};
 
+		m_Index = 0;
+		m_Scopes.Reset();
+
 		// Parse statements
 		while (Peek(0).HasValue())
 		{
@@ -37,8 +40,6 @@ namespace Dynamite
 				Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve a valid variable or function definition.");
 		}
 
-		m_Index = 0;
-		m_Scopes.Reset();
 		return program;
 	}
 
@@ -73,10 +74,16 @@ namespace Dynamite
 
 			Node::Reference<Node::TermExpr> termExpr = Node::New<Node::TermExpr>();
 
-			Type identifierType = m_Scopes.GetVariableType(consumed.Value);
+			Optional<Type> identifierType = m_Scopes.GetVariableType(consumed.Value);
+			if (!identifierType.HasValue())
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", consumed.Value);
+				return {};
+			}
+
 			Token identifierToken = consumed;
 
-			termExpr->Term = Node::New<Node::IdentifierTerm>(identifierType, identifierToken);
+			termExpr->Term = Node::New<Node::IdentifierTerm>(identifierType.Value(), identifierToken);
 
 			return termExpr;
 		}
@@ -319,8 +326,7 @@ namespace Dynamite
 				}
 
 				// Note: Only casts if the internal type is a literalterm
-				// TODO: Add back casting
-				//TypeSystem::Cast(expr.Value()->GetType(), type, expr.Value());
+				Cast(expr.Value()->GetType(), type, expr.Value());
 				variable->Expr = expr.Value();
 			}
 			else
@@ -391,14 +397,34 @@ namespace Dynamite
 		// Variable assignment
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier) && 
-			Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Equals))
+			Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::Equals))
 		{
-			auto assignment = Node::New<Node::AssignmentStatement>(Consume());
-			Consume(); // '=' char
+			auto consumed = Consume();
+			auto type = m_Scopes.GetVariableType(consumed.Value);
+			if (!type.HasValue())
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", consumed.Value);
+				return {};
+			}
+
+			auto assignment = Node::New<Node::AssignmentStatement>(type.Value(), consumed);
+			Consume(); // '=' token
 
 			if (auto expr = ParseExpression())
 			{
+				if (!TypeSystem::Castable(expr.Value()->GetType(), type.Value()))
+				{
+					Compiler::Error(Peek(0).Value().LineNumber, "Variable assignment of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", consumed.Value, TypeSystem::ToString(type.Value()), TypeSystem::ToString(expr.Value()->GetType()));
+
+					// Semicolon `;` resolution
+					CheckConsume(TokenType::Semicolon, "Expected `;`.");
+					return Node::New<Node::Statement>(assignment);
+				}
+
+				// Note: Only casts if the internal type is a literalterm
+				Cast(expr.Value()->GetType(), type.Value(), expr.Value());
 				assignment->Expr = expr.Value();
+
 				CheckConsume(TokenType::Semicolon, "Expected `;`.");
 
 				return Node::New<Node::Statement>(assignment);
@@ -558,9 +584,65 @@ namespace Dynamite
 
 		// Back Qualifiers
 		while (Utils::OptMemberIs(Peek(0), &Token::Type, GetAllTokenTypeQualifiers()))
-			result.BackQualifiers.push_back(TokenTypeToTypeQualifier(Consume().Type));
+		{
+			if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenSquareBracket) &&
+				Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::CloseSquareBracket))
+			{
+				Consume(); // '[' token
+				Consume(); // ']' token
+				
+				result.BackQualifiers.emplace_back(TypeQualifier::Array);
+			}
+			else
+				result.BackQualifiers.push_back(TokenTypeToTypeQualifier(Consume().Type));
+		}
 
 		return result;
+	}
+
+	void Parser::Cast(const Type& from, const Type& to, Node::Reference<Node::Expression> expression)
+	{
+		if (from == to)
+			return;
+
+		struct ExpressionVisitor
+		{
+			const Type& From;
+			const Type& To;
+
+			bool operator () (const Node::Reference<Node::TermExpr> obj) const
+			{
+				struct TermVisitor
+				{
+					const Type& From;
+					const Type& To;
+
+					bool operator () (const Node::Reference<Node::LiteralTerm> obj) const
+					{
+						return TypeSystem::Cast(From, To, obj->Literal.Value);;
+					}
+					bool operator () (const Node::Reference<Node::IdentifierTerm> obj) const
+					{
+						return false;
+					}
+					bool operator () (const Node::Reference<Node::ParenthesisTerm> obj) const
+					{
+						return false;
+					}
+				};
+
+				return std::visit(TermVisitor(From, To), obj->Term);
+			}
+			bool operator () (const Node::Reference<Node::BinaryExpr> obj) const
+			{
+				return false;
+			}
+		};
+
+		std::string originalExprStr = Node::ExpressionToString(expression, 2);
+
+		if (std::visit(ExpressionVisitor(from, to), expression->Expr))
+			Compiler::Warn(Peek(0).Value().LineNumber, "Lost data while casting expression. From: {0}, to {1}\n    Original: \n{2} \n    New: \n{3}", TypeSystem::ToString(from), TypeSystem::ToString(to), originalExprStr, Node::ExpressionToString(expression, 2));
 	}
 
 }

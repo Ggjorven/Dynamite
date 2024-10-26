@@ -42,6 +42,8 @@ namespace Dynamite
 		bool PeekIsType(size_t& offset);
 		Type GetType();
 
+		void Cast(const Type& from, const Type& to, Node::Reference<Node::Expression> expression);
+
 	private:
 		std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;

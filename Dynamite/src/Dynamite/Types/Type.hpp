@@ -45,13 +45,13 @@ namespace Dynamite
 	{
 		None = 0,
 
-		Const, 
+		Mut, 
 		Volatile,
 
 		Pointer,
 		Reference,
 
-		Array
+		Array // TODO: Add array sizes
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ namespace Dynamite
 		// Methods
 		TypeQualifier CleanBackQualifier() const; // Returns the most back qualifier (removes first reference if found)
 
-		bool IsConst() const;
+		bool IsMut() const;
 		bool IsVolatile() const;
 
 		bool IsPointer() const;

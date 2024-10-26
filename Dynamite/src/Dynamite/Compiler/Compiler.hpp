@@ -69,14 +69,14 @@ namespace Dynamite
 	void Compiler::Print(LogLevel logLevel, const std::string& fmt, Args && ...args)
 	{
 		std::string str = Pulse::Text::Format(fmt, std::forward<Args>(args)...);
-		Logger::LogMessage(logLevel, "While {0}:\n    {1}", Pulse::Enum::Name(Get().m_State), str);
+		Logger::LogMessage(logLevel, "While {0}:\n    {1}\n", Pulse::Enum::Name(Get().m_State), str);
 	}
 
 	template<typename ...Args>
 	void Compiler::Print(LogLevel logLevel, uint32_t line, const std::string& fmt, Args&& ...args)
 	{
 		std::string str = Pulse::Text::Format(fmt, std::forward<Args>(args)...);
-		Logger::LogMessage(logLevel, "While {0}:\n    {1}\n\n    Line: {2}\n    File: {3}:{4}", Pulse::Enum::Name(Get().m_State), str, Get().GetCurrentLine(line), Get().m_File.string(), line);
+		Logger::LogMessage(logLevel, "While {0}:\n    {1}\n\n    Line: {2}\n    File: {3}:{4}\n", Pulse::Enum::Name(Get().m_State), str, Get().GetCurrentLine(line), Get().m_File.string(), line);
 	}
 
 }

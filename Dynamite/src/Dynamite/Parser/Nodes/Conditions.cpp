@@ -38,12 +38,29 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	std::string ElseIfBranchToString(const Reference<ElseIfBranch> obj, size_t indentLevel)
 	{
+		/*
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string condition = ExpressionToString(obj->Expr, indentLevel + 2);
 		std::string scope = ScopeStatementToString(obj->Scope, indentLevel + 1);
 
 		str += Pulse::Text::Format("([ElseIfBranch] = '\n{0}Condition: (\n{1}\n{0})\n{2}\n{0}'", std::string(indentLevel + 1, '\t'), condition, scope);
+		*/
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string expressionStr = ExpressionToString(obj->Expr, indentLevel + 1);
+		std::string scopeStr = ScopeStatementToString(obj->Scope, indentLevel);
+
+		if (obj->Next.HasValue())
+		{
+			std::string nextStr = ConditionBranchToString(obj->Next.Value(), indentLevel);
+			str += Pulse::Text::Format("([ElseIfBranch] = '( \n{0} \n{2}) \n{1}'\n{2})\n{3}", expressionStr, scopeStr, Utils::StrTimes(Node::TabString, indentLevel), nextStr);
+		}
+		else
+		{
+			str += Pulse::Text::Format("([ElseIfBranch] = '( \n{0} \n{2}) \n{1}'\n{2})", expressionStr, scopeStr, Utils::StrTimes(Node::TabString, indentLevel));
+		}
 
 		return str;
 	}
@@ -52,9 +69,9 @@ namespace Dynamite::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string scope = ScopeStatementToString(obj->Scope, indentLevel + 1);
+		std::string scope = ScopeStatementToString(obj->Scope, indentLevel);
 
-		str += Pulse::Text::Format("([ElseBranch] = '\n{0}\n{1}'", scope, std::string(indentLevel + 1, '\t'));
+		str += Pulse::Text::Format("([ElseBranch])\n{0}", scope);
 
 		return str;
 	}

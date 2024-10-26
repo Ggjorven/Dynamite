@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Utils.hpp"
+
 namespace Dynamite
 {
 
@@ -24,8 +26,11 @@ namespace Dynamite
 
 	void Compiler::Compile()
 	{
+		if (m_Options.Quit)
+			return;
+
 		// Note: Break when no files are specified.
-		if (m_Options.Files.empty())
+		else if (m_Options.Files.empty())
 		{
 			DY_LOG_ERROR("Compilation terminated, no files specified.");
 			return;
@@ -62,7 +67,7 @@ namespace Dynamite
 				DY_LOG_TRACE("---------------------------------------");
 
 				for (const auto& token : m_Tokens)
-					DY_LOG_TRACE(TokenToString(token));
+					DY_LOG_TRACE("{0}", TokenToString(token));
 				
 				DY_LOG_TRACE("");
 
@@ -72,7 +77,7 @@ namespace Dynamite
 
 				for (const auto& definition : m_Program.Definitions)
 				{
-					DY_LOG_TRACE(DefineToString(definition));
+					DY_LOG_TRACE("{0}", DefineToString(definition));
 					DY_LOG_TRACE("");
 				}
 			}
@@ -101,14 +106,17 @@ namespace Dynamite
 			return "";
 
 		// Move to the start of the next line
-		start++;
+		if (line != 1)
+			start++;
 
 		// Find the end of the line
 		size_t end = m_FileContent.find_first_of("\n\r", start);
 		if (end == std::string::npos)
 			end = m_FileContent.size();
 
-		return m_FileContent.substr(start - 1, end - start);
+		std::string lineStr = m_FileContent.substr(start, end - start);
+		std::string& result = Utils::RemoveFrontIndentation(lineStr);
+		return result;
 	}
 
 }

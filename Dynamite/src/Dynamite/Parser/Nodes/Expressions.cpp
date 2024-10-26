@@ -150,7 +150,7 @@ namespace Dynamite::Node
 
 				std::string literalStr = LiteralTermToString(obj, Indent + 1);
 
-				str += Pulse::Text::Format("([TermExpr] = \n{0}\n{1})", literalStr, Utils::StrTimes(Node::TabString, Indent));
+				str += Pulse::Text::Format("([TermExpr] = '\n{0}'\n{1})", literalStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}
@@ -160,7 +160,7 @@ namespace Dynamite::Node
 
 				std::string identifierStr = IdentifierTermToString(obj, Indent + 1);
 
-				str += Pulse::Text::Format("([TermExpr] = \n{0}\n{1})", identifierStr, Utils::StrTimes(Node::TabString, Indent));
+				str += Pulse::Text::Format("([TermExpr] = '\n{0}'\n{1})", identifierStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}
@@ -170,7 +170,7 @@ namespace Dynamite::Node
 
 				std::string parenthesisStr = ParenthesisTermToString(obj, Indent + 1);
 
-				str += Pulse::Text::Format("([TermExpr] = \n{0}\n{1})", parenthesisStr, Utils::StrTimes(Node::TabString, Indent));
+				str += Pulse::Text::Format("([TermExpr] = '\n{0}'\n{1})", parenthesisStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}

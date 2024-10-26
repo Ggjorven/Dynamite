@@ -77,7 +77,7 @@ namespace Dynamite
 		Pointer = Star,			// '*'
 		Reference = And,		// '&'
 
-		Const = (Return + 1),	// Note: Continue counting form return
+		Mut = (Return + 1),	// Note: Continue counting form return
 		Volatile,
 
 		/////////////////////////////////////////////////////////////////
@@ -170,8 +170,12 @@ namespace Dynamite
 			TokenType::Pointer,
 			TokenType::Reference,
 
-			TokenType::Const,
-			TokenType::Volatile
+			TokenType::Mut,
+			TokenType::Volatile,
+
+			// For Array
+			TokenType::OpenSquareBracket,
+			TokenType::CloseSquareBracket,
 		};
 	}
 
