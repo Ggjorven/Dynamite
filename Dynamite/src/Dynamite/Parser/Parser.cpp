@@ -40,8 +40,11 @@ namespace Dynamite
 				program.Definitions.emplace_back(variableStatement.Value());
 			else if (auto function = ParseFunction())
 				program.Definitions.emplace_back(function.Value());
-			else 
+			else
+			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve a valid variable or function definition.");
+				Consume(); // Consume a token, just to keep going.
+			}
 		}
 
 		return program;
@@ -374,21 +377,26 @@ namespace Dynamite
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier) && 
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Equals))
 		{
-			Type type = GetType();
+			Optional<Type> type = GetType();
+			if (!type.HasValue())
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Invalid type for variable.");
+				return {};
+			}
 
-			Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(type, Consume()); // Identifier token
+			Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(type.Value(), Consume()); // Identifier token
 
 			std::string varName = variable->Variable.Value;
-			m_Scopes.PushVar(varName, type);
+			m_Scopes.PushVar(varName, type.Value());
 
 			Consume(); // '=' token
 
 			// Expression resolution
 			if (auto expr = ParseExpression())
 			{
-				if (!TypeSystem::Castable(expr.Value()->GetType(), type))
+				if (!TypeSystem::Castable(expr.Value()->GetType(), type.Value()))
 				{
-					Compiler::Error(Peek(0).Value().LineNumber, "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, TypeSystem::ToString(type), TypeSystem::ToString(expr.Value()->GetType()));
+					Compiler::Error(Peek(0).Value().LineNumber, "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, TypeSystem::ToString(type.Value()), TypeSystem::ToString(expr.Value()->GetType()));
 
 					// Semicolon `;` resolution
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
@@ -396,7 +404,7 @@ namespace Dynamite
 				}
 
 				// Note: Only casts if the internal type is a literalterm
-				Cast(expr.Value()->GetType(), type, expr.Value());
+				Cast(expr.Value()->GetType(), type.Value(), expr.Value());
 				variable->Expr = expr.Value();
 			}
 			else
@@ -417,12 +425,17 @@ namespace Dynamite
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier) &&
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Semicolon))
 		{
-			Type type = GetType();
+			Optional<Type> type = GetType();
+			if (!type.HasValue())
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Invalid type for variable.");
+				return {};
+			}
 
-			Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(type, Consume()); // Identifier token
+			Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(type.Value(), Consume()); // Identifier token
 
 			std::string varName = variable->Variable.Value;
-			m_Scopes.PushVar(varName, type);
+			m_Scopes.PushVar(varName, type.Value());
 
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
 
@@ -470,6 +483,28 @@ namespace Dynamite
 		{
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
 			return Node::New<Node::Statement>(funcCall.Value());
+		}
+
+		/////////////////////////////////////////////////////////////////
+		// Return
+		/////////////////////////////////////////////////////////////////
+		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Return))
+		{
+			Consume(); // Return token
+
+			if (auto expr = ParseExpression())
+			{
+				auto returnStatement = Node::New<Node::ReturnStatement>(expr.Value());
+				CheckConsume(TokenType::Semicolon, "Expected `;`.");
+
+				return Node::New<Node::Statement>(returnStatement);
+			}
+
+			Compiler::Error(Peek(-1).Value().LineNumber, "Invalid expression.");
+
+			CheckConsume(TokenType::Semicolon, "Expected `;`.");
+
+			return {};
 		}
 
 		/////////////////////////////////////////////////////////////////
@@ -530,9 +565,14 @@ namespace Dynamite
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier) &&
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::OpenParenthesis))
 		{
-			Type returnType = GetType();
+			Optional<Type> returnType = GetType();
+			if (!returnType.HasValue())
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Invalid type as function return type.");
+				return {};
+			}
 
-			Node::Reference<Node::Function> func = Node::New<Node::Function>(returnType, Consume()); // Identifier token
+			Node::Reference<Node::Function> func = Node::New<Node::Function>(returnType.Value(), Consume()); // Identifier token
 
 			std::string funcName = func->Name.Value;
 
@@ -545,9 +585,14 @@ namespace Dynamite
 				if (PeekIsType(parameterOffset) &&
 					Utils::OptMemberIs(Peek(parameterOffset++), &Token::Type, TokenType::Identifier))
 				{
-					Type variableType = GetType();
+					Optional<Type> variableType = GetType();
+					if (!variableType.HasValue())
+					{
+						Compiler::Error(Peek(0).Value().LineNumber, "Invalid type as function parameter.");
+						return func;
+					}
 
-					Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(variableType, Consume()); // Identifier token
+					Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(variableType.Value(), Consume()); // Identifier token
 
 					std::string varName = variable->Variable.Value;
 
@@ -555,7 +600,7 @@ namespace Dynamite
 					// expose the parameters to the scope as well.
 					m_Scopes.BeginScope();
 
-					m_Scopes.PushVar(varName, variableType);
+					m_Scopes.PushVar(varName, variableType.Value());
 
 					if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Equals))
 					{
@@ -581,7 +626,6 @@ namespace Dynamite
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
-			// TODO: Add function to symbols
 			std::vector<Type> parameterTypes = { };
 			for (const auto& parameter : func->Parameters)
 				parameterTypes.push_back(parameter->GetType());
@@ -652,7 +696,7 @@ namespace Dynamite
 		return true;
 	}
 
-	Type Parser::GetType()
+	Optional<Type> Parser::GetType() // TODO: Make optional and retrieve types from TypeSystem
 	{
 		Type result = {};
 
@@ -665,7 +709,14 @@ namespace Dynamite
 			result.Information.Specifier = TokenTypeToTypeSpecifier(Consume().Type);
 
 			if (result.Information.Specifier == TypeSpecifier::Identifier)
-				result.Information.Value = Peek(-1).Value().Value;
+			{
+				std::string name = Peek(-1).Value().Value;
+
+				if (!TypeSystem::Exists(name))
+					return {};
+				
+				result.Information.Value = name;
+			}
 		}
 
 		// Back Qualifiers

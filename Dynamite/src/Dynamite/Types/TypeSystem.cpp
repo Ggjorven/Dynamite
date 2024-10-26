@@ -355,4 +355,9 @@ namespace Dynamite
 		return str;
 	}
 
+	bool TypeSystem::Exists(const std::string& name)
+	{
+		return false;
+	}
+
 }

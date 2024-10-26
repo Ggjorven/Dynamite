@@ -43,7 +43,7 @@ namespace Dynamite
 		void CheckConsume(TokenType expect, const std::string& msg = {});
 
 		bool PeekIsType(size_t& offset);
-		Type GetType();
+		Optional<Type> GetType();
 
 		void Cast(const Type& from, const Type& to, Node::Reference<Node::Expression> expression);
 

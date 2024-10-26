@@ -76,10 +76,23 @@ namespace Dynamite::Node
         Type& GetType();
     };
 
+    struct ReturnStatement
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        ReturnStatement(Reference<Expression> expr = (Reference<Expression>)NullRef);
+
+    public:
+        Reference<Expression> Expr;
+
+        Type& GetType();
+    };
+
     struct Statement
     {
     private:
-        using VariantType = Variant<Reference<VariableStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>, Reference<FunctionCall>>;
+        using VariantType = Variant<Reference<VariableStatement>, Reference<ScopeStatement>, Reference<IfStatement>, Reference<AssignmentStatement>, Reference<ReturnStatement>, Reference<FunctionCall>>;
         friend class Pulse::Memory::Control;
     private:
         Statement(VariantType statement = {});
@@ -95,6 +108,7 @@ namespace Dynamite::Node
     std::string VariableStatementToString(const Reference<VariableStatement> obj, size_t indentLevel = 0);
     std::string ScopeStatementToString(const Reference<ScopeStatement> obj, size_t indentLevel = 0);
     std::string AssignmentStatementToString(const Reference<AssignmentStatement> obj, size_t indentLevel = 0);
+    std::string ReturnStatementToString(const Reference<ReturnStatement> obj, size_t indentLevel = 0);
     std::string StatementToString(const Reference<Statement> obj, size_t indentLevel = 0);
 
 }

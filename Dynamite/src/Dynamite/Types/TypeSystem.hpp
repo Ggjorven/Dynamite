@@ -27,6 +27,8 @@ namespace Dynamite
 
 		static std::string ToString(const Type& type);
 
+		static bool Exists(const std::string& name);
+
 	private:
 		// Note: We have this class so we can support custom
 		// types in the future

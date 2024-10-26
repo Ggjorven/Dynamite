@@ -35,6 +35,11 @@ namespace Dynamite::Node
 	{
 	}
 
+	ReturnStatement::ReturnStatement(Reference<Expression> expr)
+		: Expr(expr)
+	{
+	}
+
 	Statement::Statement(VariantType statement)
 		: StatementObj(statement)
 	{
@@ -52,6 +57,11 @@ namespace Dynamite::Node
 	Type& AssignmentStatement::GetType()
 	{
 		return VariableType;
+	}
+
+	Type& ReturnStatement::GetType()
+	{
+		return Expr->GetType();
 	}
 
 	/////////////////////////////////////////////////////////////////
@@ -122,6 +132,16 @@ namespace Dynamite::Node
 		return str;
 	}
 
+	std::string ReturnStatementToString(const Reference<ReturnStatement> obj, size_t indentLevel)
+	{
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string returnStr = ExpressionToString(obj->Expr, indentLevel + 1);
+		str += Pulse::Text::Format("([ReturnStatement({0})] = '\n{1}'\n{2})", TypeSystem::ToString(obj->GetType()), returnStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
 	std::string StatementToString(const Reference<Statement> obj, size_t indentLevel)
 	{
 		struct StatementVisitor
@@ -143,6 +163,10 @@ namespace Dynamite::Node
 			std::string operator () (const Reference<AssignmentStatement> obj) const
 			{
 				return AssignmentStatementToString(obj, Ident);
+			}
+			std::string operator () (const Reference<ReturnStatement> obj) const
+			{
+				return ReturnStatementToString(obj, Ident);
 			}
 			std::string operator () (const Reference<FunctionCall> obj) const
 			{
