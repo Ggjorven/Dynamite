@@ -38,15 +38,6 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	std::string ElseIfBranchToString(const Reference<ElseIfBranch> obj, size_t indentLevel)
 	{
-		/*
-		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
-
-		std::string condition = ExpressionToString(obj->Expr, indentLevel + 2);
-		std::string scope = ScopeStatementToString(obj->Scope, indentLevel + 1);
-
-		str += Pulse::Text::Format("([ElseIfBranch] = '\n{0}Condition: (\n{1}\n{0})\n{2}\n{0}'", std::string(indentLevel + 1, '\t'), condition, scope);
-		*/
-
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string expressionStr = ExpressionToString(obj->Expr, indentLevel + 1);

@@ -51,7 +51,7 @@ namespace Dynamite
 		Pointer,
 		Reference,
 
-		Array // TODO: Add array sizes
+		Array 
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -86,7 +86,7 @@ namespace Dynamite
 
 		TypeInfo Information = {};
 		
-		// Ex. *, &
+		// Ex. *, &, [] // TODO: Add array sizes
 		std::vector<TypeQualifier> BackQualifiers = { };
 
 	public:

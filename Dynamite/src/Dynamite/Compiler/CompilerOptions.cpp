@@ -21,7 +21,7 @@ namespace Dynamite
 		ParseArgs(argc, argv);
 	}
 
-	const bool CompilerOptions::Contains(CompilerFlag type) const
+	bool CompilerOptions::Contains(CompilerFlag type) const
 	{
 		return static_cast<bool>((Flags & type));
 	}

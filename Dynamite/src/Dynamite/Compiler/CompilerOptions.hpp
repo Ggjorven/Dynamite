@@ -39,7 +39,7 @@ namespace Dynamite
 		~CompilerOptions() = default;
 
 		// Returns true if there is a flag with type value
-		const bool Contains(CompilerFlag type) const;
+		bool Contains(CompilerFlag type) const;
 
 	private:
 		void PrintHelpMenu();

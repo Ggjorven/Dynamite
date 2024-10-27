@@ -14,7 +14,7 @@ namespace Dynamite
 	}
 
 	Compiler::Compiler(const CompilerOptions& options)
-		: m_Options(options), m_State(State::Tokenizing)
+		: m_State(State::Tokenizing), m_Options(options)
 	{
 		s_Instance = this;
 	}

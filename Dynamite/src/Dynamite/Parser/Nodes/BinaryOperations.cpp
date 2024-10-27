@@ -8,7 +8,7 @@
 
 #include "Dynamite/Parser/Nodes/Expressions.hpp"
 
-#include "Dynamite/Types/TypeSystem.hpp"
+#include "Dynamite/Parser/Systems/TypeSystem.hpp"
 
 namespace Dynamite::Node
 {

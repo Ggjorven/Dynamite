@@ -20,7 +20,7 @@ i32 main(i32 argc, char** argv)
 	}
 	else
 	{
-		u32[] potatoe;
+		u32 potatoe;
 	}
 
 	i8 x = func();

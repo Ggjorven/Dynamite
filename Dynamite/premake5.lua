@@ -100,6 +100,11 @@ project "Dynamite"
             "-lzstd"
         }
 
+		disablewarnings
+		{
+			"unknown-pragmas"
+		}
+
     filter "system:macosx"
 		defines "DY_PLATFORM_MACOS"
 		systemversion(MacOSVersion)

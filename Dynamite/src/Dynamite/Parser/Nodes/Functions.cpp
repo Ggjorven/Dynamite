@@ -5,7 +5,7 @@
 
 #include "Dynamite/Utils/Utils.hpp"
 
-#include "Dynamite/Types/TypeSystem.hpp"
+#include "Dynamite/Parser/Systems/TypeSystem.hpp"
 
 #include "Dynamite/Parser/Nodes/Statements.hpp"
 
@@ -65,7 +65,7 @@ namespace Dynamite::Node
 		return str;
 	}
 
-	std::string FunctionCallToString(const Reference<FunctionCall> obj, size_t indentLevel) // TODO: Implement properly
+	std::string FunctionCallToString(const Reference<FunctionCall> obj, size_t indentLevel) 
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
@@ -78,6 +78,7 @@ namespace Dynamite::Node
 			if (i > 0)
 				arguments += ",\n";
 
+			// TODO: Parameters
 			//std::string parameterStr = VariableStatementToString(obj->Parameters[i], indentLevel + 2);
 			//parameters += parameterStr;
 		}

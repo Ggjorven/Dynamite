@@ -5,7 +5,7 @@
 
 #include "Dynamite/Utils/Utils.hpp"
 
-#include "Dynamite/Types/TypeSystem.hpp"
+#include "Dynamite/Parser/Systems/TypeSystem.hpp"
 
 #include "Dynamite/Parser/Nodes/Functions.hpp"
 

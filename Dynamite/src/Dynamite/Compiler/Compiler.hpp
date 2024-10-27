@@ -6,7 +6,7 @@
 #include "Dynamite/Compiler/CompilerOptions.hpp"
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
-#include "Dynamite/Parser/Parser.hpp"
+#include "Dynamite/Parser/Main/Parser.hpp"
 
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
