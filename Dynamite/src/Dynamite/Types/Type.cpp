@@ -42,13 +42,38 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Type
 	/////////////////////////////////////////////////////////////////
+	// QualifierPack operators
+	bool Type::QualifierPack::operator == (const TypeQualifier& qualifier) const
+	{
+		return (this->Qualifier == qualifier);
+	}
+
+	bool Type::QualifierPack::operator != (const TypeQualifier& qualifier) const
+	{
+		return !(*this == qualifier);
+	}
+
+	bool Type::QualifierPack::operator == (const QualifierPack& other) const
+	{
+		if ((this->Value == other.Value) &&
+			(this->Qualifier == other.Qualifier))
+			return true;
+
+		return false;
+	}
+
+	bool Type::QualifierPack::operator != (const QualifierPack& other) const
+	{
+		return !(*this == other);
+	}
+	
 	// Constructors
 	Type::Type(const TypeInfo& info)
 		: Information(info)
 	{
 	}
 
-	Type::Type(const std::vector<TypeQualifier>& front, const TypeInfo& info, const std::vector<TypeQualifier>& back)
+	Type::Type(const std::vector<QualifierPack>& front, const TypeInfo& info, const std::vector<QualifierPack>& back)
 		: FrontQualifiers(front), Information(info), BackQualifiers(back)
 	{
 	}
@@ -154,14 +179,33 @@ namespace Dynamite
 
 	Type Type::Clean() const
 	{
+		Type clean = RemoveReference();
+
 		// No front qualifiers (const, volatile)
-		Type clean = Type({}, this->Information, this->BackQualifiers);
+		clean.FrontQualifiers = {};
+
+		return clean;
+	}
+
+	Type Type::RemoveReference() const
+	{
+		// No front qualifiers (const, volatile)
+		Type clean = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
 
 		// Remove reference if it is the last qualifier
 		if (!clean.BackQualifiers.empty() && clean.BackQualifiers.back() == TypeQualifier::Reference)
 			clean.BackQualifiers.pop_back();
 
 		return clean;
+	}
+
+	Type Type::AddReference() const
+	{
+		Type ret = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
+
+		ret.BackQualifiers.emplace_back(TypeQualifier::Reference);
+
+		return ret;
 	}
 
 	/////////////////////////////////////////////////////////////////

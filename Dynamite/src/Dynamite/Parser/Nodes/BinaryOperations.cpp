@@ -39,22 +39,22 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Methods
 	/////////////////////////////////////////////////////////////////
-	Type& BinaryAddition::GetType()
+	Type BinaryAddition::GetType() const
 	{
 		return ResultType;
 	}
 
-	Type& BinarySubtraction::GetType()
+	Type BinarySubtraction::GetType() const
 	{
 		return ResultType;
 	}
 
-	Type& BinaryMultiplication::GetType()
+	Type BinaryMultiplication::GetType() const
 	{
 		return ResultType;
 	}
 
-	Type& BinaryDivision::GetType()
+	Type BinaryDivision::GetType() const
 	{
 		return ResultType;
 	}

@@ -25,7 +25,7 @@ namespace Dynamite::Node
         Reference<Expression> LHS;
         Reference<Expression> RHS;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct BinarySubtraction
@@ -41,7 +41,7 @@ namespace Dynamite::Node
         Reference<Expression> LHS;
         Reference<Expression> RHS;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct BinaryMultiplication
@@ -57,7 +57,7 @@ namespace Dynamite::Node
         Reference<Expression> LHS;
         Reference<Expression> RHS;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct BinaryDivision
@@ -73,7 +73,7 @@ namespace Dynamite::Node
         Reference<Expression> LHS;
         Reference<Expression> RHS;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     // TODO: More binary operations

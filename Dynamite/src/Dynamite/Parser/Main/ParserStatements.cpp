@@ -233,9 +233,18 @@ namespace Dynamite
 			{
 				auto returnStatement = Node::New<Node::ReturnStatement>(expr.Value());
 				
-				// TODO: Check if returnStatement matches the returnType of the function
-				
 				statement->StatementObj = returnStatement;
+				
+				// Check if returnStatement matches the returnType of the function
+				// or is castable to the proper returnType.
+				if (!TypeSystem::Castable(expr.Value()->GetType(), m_Tracker.Get<Node::Function>()->GetType()))
+				{
+					Compiler::Error(Peek(0).Value().LineNumber, "Function '{0}' expects type {1} as return type, instead it got {2}, {2} is not castable to {1}.", m_Tracker.Get<Node::Function>()->Name.Value, TypeSystem::ToString(m_Tracker.Get<Node::Function>()->GetType()), TypeSystem::ToString(expr.Value()->GetType()));
+
+					CheckConsume(TokenType::Semicolon, "Expected `;`.");
+					m_Tracker.Pop<Node::Statement>();
+					return {};
+				}
 
 				CheckConsume(TokenType::Semicolon, "Expected `;`.");
 				return m_Tracker.Return<Node::Statement>();
@@ -268,6 +277,8 @@ namespace Dynamite
 				m_Tracker.Pop<Node::Statement>();
 				return {};
 			}
+
+			assignment->VariableType = type.Value();
 
 			Consume(); // '=' token
 

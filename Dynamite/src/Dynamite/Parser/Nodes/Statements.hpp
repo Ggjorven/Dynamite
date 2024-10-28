@@ -46,7 +46,7 @@ namespace Dynamite::Node
         // What's the variable set to? Can be a NullRef.
         Reference<Expression> Expr;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct ScopeStatement
@@ -73,7 +73,7 @@ namespace Dynamite::Node
 
         Reference<Expression> Expr;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct ReturnStatement
@@ -86,7 +86,7 @@ namespace Dynamite::Node
     public:
         Reference<Expression> Expr;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct Statement

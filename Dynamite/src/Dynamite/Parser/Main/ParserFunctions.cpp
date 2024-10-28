@@ -45,7 +45,7 @@ namespace Dynamite
 
 			function->ReturnType = returnType.Value();
 
-			// Parse arguments // TODO: Add default args and handle it here
+			// Parse arguments
 			while (true)
 			{
 				size_t index = 0;
@@ -75,6 +75,15 @@ namespace Dynamite
 				}
 				else
 					break;
+			}
+			
+			// Check if argument count matches.
+			if (function->Arguments.size() != FunctionSystem::GetRequiredArgCount(function->Function.Value))
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Function: '{0} expects {1} argument(s), got {2}.'", function->Function.Value, FunctionSystem::GetRequiredArgCount(function->Function.Value), function->Arguments.size());
+
+				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+				return m_Tracker.Return<Node::FunctionCall>();
 			}
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -112,7 +121,7 @@ namespace Dynamite
 
 			Consume(); // '(' token
 
-			std::vector<Type> parameterTypes = { };
+			std::vector<std::pair<Type, bool>> parameterTypes = { };
 			while (true)
 			{
 				size_t parameterOffset = 0;
@@ -128,8 +137,6 @@ namespace Dynamite
 						Compiler::Error(Peek(0).Value().LineNumber, "Invalid type as function parameter.");
 						return m_Tracker.Return<Node::Function>();
 					}
-
-					parameterTypes.push_back(variableType.Value());
 
 					variable->VariableType = variableType.Value();
 					variable->Variable = Consume(); // Identifier token
@@ -152,6 +159,8 @@ namespace Dynamite
 					}
 
 					func->Parameters.push_back(variable);
+
+					parameterTypes.emplace_back(variable->VariableType, ((variable->Expr == (Node::Reference<Node::Expression>)Node::NullRef) ? true : false));
 
 					// Continue if the next is a comma
 					if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Comma))

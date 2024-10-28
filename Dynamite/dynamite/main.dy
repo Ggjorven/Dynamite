@@ -1,9 +1,9 @@
 i32 globalValue = (123 - 67);
 i32 globalValue2 = globalValue;
 
-i8 func(i8 a)
+i8& func(i8 a)
 {
-	i8 x = a * 2;
+	i8 x = a;
 	return x;
 }
 
@@ -23,7 +23,7 @@ i32 main(i32 argc, char** argv)
 		u32 potatoe;
 	}
 
-	mut i8 x = func();
+	mut i8 x = func(10);
 	u64 y = 218093280;
 
 	func();

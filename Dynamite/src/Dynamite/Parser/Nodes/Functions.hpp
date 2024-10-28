@@ -29,7 +29,7 @@ namespace Dynamite::Node
 
         Reference<ScopeStatement> Body;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct FunctionCall
@@ -45,7 +45,7 @@ namespace Dynamite::Node
 
         std::vector<Reference<Expression>> Arguments;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     /////////////////////////////////////////////////////////////////

@@ -74,23 +74,23 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Methods
 	/////////////////////////////////////////////////////////////////
-	Type& TermExpr::GetType()
+	Type TermExpr::GetType() const
 	{
 		struct TermVisitor
 		{
-			Type& operator () (const Reference<LiteralTerm> obj) const
+			Type operator () (const Reference<LiteralTerm> obj) const
 			{
 				return obj->GetType();
 			}
-			Type& operator () (const Reference<IdentifierTerm> obj) const
+			Type operator () (const Reference<IdentifierTerm> obj) const
+			{
+				return obj->GetType().AddReference();
+			}
+			Type operator () (const Reference<ParenthesisTerm> obj) const
 			{
 				return obj->GetType();
 			}
-			Type& operator () (const Reference<ParenthesisTerm> obj) const
-			{
-				return obj->GetType();
-			}
-			Type& operator () (const Reference<FunctionCall> obj) const
+			Type operator () (const Reference<FunctionCall> obj) const
 			{
 				return obj->GetType();
 			}
@@ -99,23 +99,23 @@ namespace Dynamite::Node
 		return std::visit(TermVisitor(), Term);
 	}
 
-	Type& BinaryExpr::GetType()
+	Type BinaryExpr::GetType() const
 	{
 		struct OperationVisitor
 		{
-			Type& operator () (const Reference<BinaryAddition> obj) const
+			Type operator () (const Reference<BinaryAddition> obj) const
 			{
 				return obj->GetType();
 			}
-			Type& operator () (const Reference<BinarySubtraction> obj) const
+			Type operator () (const Reference<BinarySubtraction> obj) const
 			{
 				return obj->GetType();
 			}
-			Type& operator () (const Reference<BinaryMultiplication> obj) const
+			Type operator () (const Reference<BinaryMultiplication> obj) const
 			{
 				return obj->GetType();
 			}
-			Type& operator () (const Reference<BinaryDivision> obj) const
+			Type operator () (const Reference<BinaryDivision> obj) const
 			{
 				return obj->GetType();
 			}
@@ -124,15 +124,15 @@ namespace Dynamite::Node
 		return std::visit(OperationVisitor(), Operation);
 	}
 
-	Type& Expression::GetType()
+	Type Expression::GetType() const
 	{
 		struct ExpressionVisitor
 		{
-			Type& operator () (const Reference<TermExpr> obj) const
+			Type operator () (const Reference<TermExpr> obj) const
 			{
 				return obj->GetType();
 			}
-			Type& operator () (const Reference<BinaryExpr> obj) const
+			Type operator () (const Reference<BinaryExpr> obj) const
 			{
 				return obj->GetType();
 			}

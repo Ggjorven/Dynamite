@@ -112,7 +112,7 @@ namespace Dynamite
 
 		// Front Qualifiers
 		while (Utils::OptMemberIs(Peek(0), &Token::Type, GetAllTokenTypeQualifiers()))
-			result.FrontQualifiers.push_back(TokenTypeToTypeQualifier(Consume().Type));
+			result.FrontQualifiers.emplace_back(TokenTypeToTypeQualifier(Consume().Type));
 
 		// Type
 		{
@@ -140,11 +140,10 @@ namespace Dynamite
 				auto size = Consume(); // IntegerLiteral token
 				Consume(); // ']' token
 				
-				// TODO: Add array sizes
-				result.BackQualifiers.emplace_back(TypeQualifier::Array);
+				result.BackQualifiers.emplace_back(TypeQualifier::Array, size.Value);
 			}
 			else
-				result.BackQualifiers.push_back(TokenTypeToTypeQualifier(Consume().Type));
+				result.BackQualifiers.emplace_back(TokenTypeToTypeQualifier(Consume().Type));
 		}
 
 		return result;

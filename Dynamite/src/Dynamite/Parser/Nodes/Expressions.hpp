@@ -27,7 +27,7 @@ namespace Dynamite::Node
     public:
         VariantType Term;
 
-        Type& GetType();
+        Type GetType() const;
     };
     
     struct BinaryExpr
@@ -42,7 +42,7 @@ namespace Dynamite::Node
     public:
         VariantType Operation;
         
-        Type& GetType();
+        Type GetType() const;
     };
     
     struct Expression
@@ -56,7 +56,7 @@ namespace Dynamite::Node
     public:
         VariantType Expr;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     /////////////////////////////////////////////////////////////////

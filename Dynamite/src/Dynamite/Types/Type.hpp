@@ -81,19 +81,35 @@ namespace Dynamite
 	struct Type
 	{
 	public:
-		// Ex. const, volatile
-		std::vector<TypeQualifier> FrontQualifiers = { };
+		struct QualifierPack // Note: We have this struct to support array sizes
+		{
+		public:
+			TypeQualifier Qualifier;
+			std::string Value; // ex. Array size, so '5'
+
+		public:
+			bool operator == (const TypeQualifier& qualifier) const;
+			bool operator != (const TypeQualifier& qualifier) const;
+
+			bool operator == (const QualifierPack& other) const;
+			bool operator != (const QualifierPack& other) const;
+
+			inline operator TypeQualifier() const { return Qualifier; }
+		};
+	public:
+		// Ex. mut, volatile
+		std::vector<QualifierPack> FrontQualifiers = { };
 
 		TypeInfo Information = {};
 		
-		// Ex. *, &, [] // TODO: Add array sizes
-		std::vector<TypeQualifier> BackQualifiers = { };
+		// Ex. *, &, []
+		std::vector<QualifierPack> BackQualifiers = { };
 
 	public:
 		// Constructors
 		Type() = default;
 		Type(const TypeInfo& info);
-		Type(const std::vector<TypeQualifier>& front, const TypeInfo& info, const std::vector<TypeQualifier>& back = {});
+		Type(const std::vector<QualifierPack>& front, const TypeInfo& info, const std::vector<QualifierPack>& back = {});
 		~Type() = default;
 
 		// Operators
@@ -114,8 +130,11 @@ namespace Dynamite
 
 		bool IsArray() const;
 
-		// Note: Removes const, volatile & references, but not pointers.
+		// Note: Removes mut, volatile & references, but not pointers.
 		Type Clean() const;
+		Type RemoveReference() const;
+
+		Type AddReference() const;
 	};
 
 	/////////////////////////////////////////////////////////////////

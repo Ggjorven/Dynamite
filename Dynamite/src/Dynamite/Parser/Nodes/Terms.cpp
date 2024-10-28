@@ -33,17 +33,17 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Methods
 	/////////////////////////////////////////////////////////////////
-	Type& LiteralTerm::GetType()
+	Type LiteralTerm::GetType() const
 	{
 		return LiteralType;
 	}
 
-	Type& IdentifierTerm::GetType()
+	Type IdentifierTerm::GetType() const
 	{
 		return IdentifierType;
 	}
 
-	Type& ParenthesisTerm::GetType()
+	Type ParenthesisTerm::GetType() const
 	{
 		return Expr->GetType();
 	}

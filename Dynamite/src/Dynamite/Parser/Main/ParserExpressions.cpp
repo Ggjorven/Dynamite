@@ -146,7 +146,7 @@ namespace Dynamite
 					break;
 				}
 
-				auto binExpr = Node::New<Node::BinaryExpr>(operation.Type, TypeSystem::GetResultType(exprLHS->GetType(), exprRHS.Value()->GetType()), exprLHS, exprRHS.Value());
+				auto binExpr = Node::New<Node::BinaryExpr>(operation.Type, TypeSystem::GetBinExprResultType(exprLHS->GetType(), exprRHS.Value()->GetType()), exprLHS, exprRHS.Value());
 
 				// Set the result expr to the computed binary expression
 				expr->Expr = binExpr;

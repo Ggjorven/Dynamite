@@ -48,17 +48,17 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Methods
 	/////////////////////////////////////////////////////////////////
-	Type& VariableStatement::GetType()
+	Type VariableStatement::GetType() const
 	{
 		return VariableType;
 	}
 
-	Type& AssignmentStatement::GetType()
+	Type AssignmentStatement::GetType() const
 	{
 		return VariableType;
 	}
 
-	Type& ReturnStatement::GetType()
+	Type ReturnStatement::GetType() const
 	{
 		return Expr->GetType();
 	}

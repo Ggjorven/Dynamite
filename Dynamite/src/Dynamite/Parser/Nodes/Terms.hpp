@@ -23,7 +23,7 @@ namespace Dynamite::Node
         Type LiteralType;
         Token Literal;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     struct IdentifierTerm
@@ -37,7 +37,7 @@ namespace Dynamite::Node
         Type IdentifierType;
         Token Identifier;
 
-        Type& GetType();
+        Type GetType() const;
     };
 
     // Note: We have this as a seperate term, to support expressions within parenthesis.
@@ -51,10 +51,8 @@ namespace Dynamite::Node
     public:
         Reference<Expression> Expr;
         
-        Type& GetType();
+        Type GetType() const;
     };
-
-    // TODO: Function (call) term
 
     /////////////////////////////////////////////////////////////////
     // Helper functions

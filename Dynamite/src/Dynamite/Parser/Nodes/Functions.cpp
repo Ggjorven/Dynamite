@@ -28,12 +28,12 @@ namespace Dynamite::Node
 	/////////////////////////////////////////////////////////////////
 	// Methods
 	/////////////////////////////////////////////////////////////////
-	Type& Function::GetType()
+	Type Function::GetType() const
 	{
 		return ReturnType;
 	}
 
-	Type& FunctionCall::GetType()
+	Type FunctionCall::GetType() const
 	{
 		return ReturnType;
 	}
@@ -78,9 +78,8 @@ namespace Dynamite::Node
 			if (i > 0)
 				arguments += ",\n";
 
-			// TODO: Parameters
-			//std::string parameterStr = VariableStatementToString(obj->Parameters[i], indentLevel + 2);
-			//parameters += parameterStr;
+			std::string argumentStr = ExpressionToString(obj->Arguments[i], indentLevel + 2);
+			arguments += argumentStr;
 		}
 
 		str += Pulse::Text::Format("([FunctionCall({0})] = '{1}(\n{2}\n{3})'\n{4})", returnType, functionName, arguments, Utils::StrTimes(Node::TabString, indentLevel + 1), Utils::StrTimes(Node::TabString, indentLevel));

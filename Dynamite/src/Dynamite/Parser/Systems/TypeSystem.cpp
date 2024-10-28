@@ -19,21 +19,25 @@ namespace Dynamite
 		// Note: This function exists for the future
 	}
 
-	bool TypeSystem::Castable(const Type& from, const Type& to) // TODO: Improve this bloody function
+	bool TypeSystem::Castable(const Type& from, const Type& to)
 	{
-		if (from == to)
-			return true;
+		// Checks
+		{
+			if (from == to)
+				return true;
 
-		if (from.Information.Specifier == to.Information.Specifier)
-			return true;
+			if (from.IsPointer() && to.IsPointer())
+				return true;
 
-		// Pointers can always be cast to one another.
-		if (from.IsPointer() && to.IsPointer())
-			return true;
+			if (!from.IsReference() && to.IsReference())
+				return false;
 
-		// Can't cast from void to a non-void type.
-		if (from == TypeSpecifier::Void && to != TypeSpecifier::Void)
-			return false;
+			if (from == TypeSpecifier::Void && to != TypeSpecifier::Void)
+				return false;
+			
+			if (from.Information.Specifier == to.Information.Specifier)
+				return true;
+		}
 
 		using namespace Pulse::Enum;
 		switch (Fuse(from.Information.Specifier, to.Information.Specifier))
@@ -115,14 +119,7 @@ namespace Dynamite
 		if (from == to)
 			return false;
 
-		if (from.IsPointer() && to.IsPointer())
-			return false;
-
-		if (from != TypeSpecifier::Void && to == TypeSpecifier::Void)
-		{
-			value = "";
-			return false; // Maybe return true?
-		}
+		// Note: We don't perform any checks here since it should only cast if TypeSystem::Castable
 
 		using namespace Pulse::Enum;
 		switch (Fuse(from.Information.Specifier, to.Information.Specifier))
@@ -324,7 +321,7 @@ namespace Dynamite
 		}
 		case TokenType::CharArrayLiteral:
 		{
-			return Type({}, TypeSpecifier::Char, { TypeQualifier::Array });
+			return Type({}, TypeSpecifier::Char, { {TypeQualifier::Array} });
 		}
 
 		default:
@@ -334,9 +331,22 @@ namespace Dynamite
 		return {};
 	}
 
-	Type TypeSystem::GetResultType(const Type& lhs, const Type& rhs)
+	Type TypeSystem::GetBinExprResultType(const Type& lhs, const Type& rhs)
 	{
-		// TODO: Actually compute result type
+		// Checks
+		{
+			if (lhs == rhs)
+				return lhs.RemoveReference();
+
+			if (lhs.IsPointer() && rhs.IsPointer())
+				return lhs.RemoveReference();
+		
+			if ((IsIntegral(lhs) && IsFloat(rhs)) || (IsFloat(lhs) && IsIntegral(rhs)))
+				return GetFloat(GetSize(GetLargest(lhs, rhs)));
+
+			// TODO: Add more checks
+		}
+
 		return lhs;
 	}
 
@@ -369,6 +379,160 @@ namespace Dynamite
 	bool TypeSystem::IsVoid(const Type& type)
 	{
 		return type.Information.Specifier == TypeSpecifier::Void;
+	}
+
+	bool TypeSystem::IsBool(const Type& type)
+	{
+		if (type.IsPointer())
+			return false;
+
+		if (type.Information.Specifier == TypeSpecifier::Bool)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool TypeSystem::IsIntegral(const Type& type)
+	{
+		if (type.IsPointer())
+			return false;
+
+		if (type.Information.Specifier == TypeSpecifier::Int8 ||
+			type.Information.Specifier == TypeSpecifier::Int16 ||
+			type.Information.Specifier == TypeSpecifier::Int32 ||
+			type.Information.Specifier == TypeSpecifier::Int64 ||
+
+			type.Information.Specifier == TypeSpecifier::UInt8 ||
+			type.Information.Specifier == TypeSpecifier::UInt16 ||
+			type.Information.Specifier == TypeSpecifier::UInt32 ||
+			type.Information.Specifier == TypeSpecifier::UInt64)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool TypeSystem::IsFloat(const Type& type)
+	{
+		if (type.IsPointer())
+			return false;
+
+		if (type.Information.Specifier == TypeSpecifier::Float32 ||
+			type.Information.Specifier == TypeSpecifier::Float64)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool TypeSystem::IsChar(const Type& type)
+	{
+		if (type.IsPointer())
+			return false;
+
+		if (type.Information.Specifier == TypeSpecifier::Char)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	size_t TypeSystem::GetSize(const Type& type)
+	{
+		if (type.IsPointer() || type.IsArray())
+			return sizeof(void*);
+
+		switch (type.Information.Specifier)
+		{
+		case TypeSpecifier::Void:			return 0;
+
+		case TypeSpecifier::Bool:			return sizeof(bool);
+
+		case TypeSpecifier::Int8:			return sizeof(int8_t);
+		case TypeSpecifier::Int16:			return sizeof(int16_t);
+		case TypeSpecifier::Int32:			return sizeof(int32_t);
+		case TypeSpecifier::Int64:			return sizeof(int64_t);
+
+		case TypeSpecifier::UInt8:			return sizeof(uint8_t);
+		case TypeSpecifier::UInt16:			return sizeof(uint16_t);
+		case TypeSpecifier::UInt32:			return sizeof(uint32_t);
+		case TypeSpecifier::UInt64:			return sizeof(uint64_t);
+
+		case TypeSpecifier::Float32:		return sizeof(float);
+		case TypeSpecifier::Float64:		return sizeof(double);
+
+		case TypeSpecifier::Char:			return sizeof(char);
+
+		default:
+			break;
+		}
+
+		return 0;
+	}
+
+	Type TypeSystem::GetLargest(const Type& lhs, const Type& rhs)
+	{
+		size_t lhsSize = GetSize(lhs);
+		size_t rhsSize = GetSize(rhs);
+
+		if (lhsSize == rhsSize)
+			return lhs;
+		
+		if (lhsSize > rhsSize)
+			return lhs;
+
+		return rhs;
+	}
+
+	Type TypeSystem::GetInt(size_t size)
+	{
+		switch (size)
+		{
+		case sizeof(int8_t):				return Type(TypeSpecifier::Int8);
+		case sizeof(int16_t):				return Type(TypeSpecifier::Int16);
+		case sizeof(int32_t):				return Type(TypeSpecifier::Int32);
+		case sizeof(int64_t):				return Type(TypeSpecifier::Int64);
+
+		default:
+			break;
+		}
+
+		return Type(TypeSpecifier::None);
+	}
+
+	Type TypeSystem::GetUInt(size_t size)
+	{
+		switch (size)
+		{
+		case sizeof(int8_t):				return Type(TypeSpecifier::UInt8);
+		case sizeof(int16_t):				return Type(TypeSpecifier::UInt16);
+		case sizeof(int32_t):				return Type(TypeSpecifier::UInt32);
+		case sizeof(int64_t):				return Type(TypeSpecifier::UInt64);
+
+		default:
+			break;
+		}
+
+		return Type(TypeSpecifier::None);
+	}
+
+	Type TypeSystem::GetFloat(size_t size)
+	{
+		switch (size)
+		{
+		case sizeof(float):					return Type(TypeSpecifier::Float32);
+		case sizeof(double):				return Type(TypeSpecifier::Float64);
+
+		default:
+			break;
+		}
+
+		return Type(TypeSpecifier::None);
 	}
 
 }
