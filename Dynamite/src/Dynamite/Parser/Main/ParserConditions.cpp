@@ -29,6 +29,8 @@ namespace Dynamite
 		if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Else) 
 			&& Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::If))
 		{
+			Node::Reference<Node::ConditionBranch> condition = m_Tracker.New<Node::ConditionBranch>();
+			
 			Consume(); // 'else' token
 			Consume(); // 'if' token
 
@@ -36,16 +38,17 @@ namespace Dynamite
 
 			if (auto expr = ParseExpression())
 			{
-				auto elif = Node::New<Node::ElseIfBranch>(expr.Value());
-
 				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+
+				auto elif = Node::New<Node::ElseIfBranch>(expr.Value());
+				condition->Branch = elif;
 
 				if (auto scope = ParseScopeStatement())
 				{
 					elif->Scope = scope.Value();
 					elif->Next = ParseConditionBrach(); // Note: Can be NullRef
 
-					return Node::New<Node::ConditionBranch>(elif);
+					return m_Tracker.Return<Node::ConditionBranch>();
 				}
 				else
 					Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve valid scope.");
@@ -54,7 +57,7 @@ namespace Dynamite
 				Compiler::Error(Peek(0).Value().LineNumber, "Invalid expression.");
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
-
+			m_Tracker.Pop<Node::ConditionBranch>();
 			return {};
 		}
 
@@ -63,15 +66,19 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Else))
 		{
+			Node::Reference<Node::ConditionBranch> condition = m_Tracker.New<Node::ConditionBranch>();
+
 			Consume(); // 'else' token
 
 			if (auto scope = ParseScopeStatement())
 			{
-				return Node::New<Node::ConditionBranch>(Node::New<Node::ElseBranch>(scope.Value()));
-			}
-			else
-				Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve valid scope.");
+				condition->Branch = Node::New<Node::ElseBranch>(scope.Value());
 
+				return m_Tracker.Return<Node::ConditionBranch>();
+			}
+			
+			Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve valid scope.");
+			m_Tracker.Pop<Node::ConditionBranch>();
 			return {};
 		}
 

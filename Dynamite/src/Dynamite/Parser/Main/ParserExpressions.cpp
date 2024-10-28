@@ -28,24 +28,29 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		if (Utils::OptMemberIs(Peek(0), &Token::Type, GetAllTokenTypeLiterals()))
 		{
+			Node::Reference<Node::TermExpr> termExpr = m_Tracker.New<Node::TermExpr>();
+
 			auto consumed = Consume();
-
-			Node::Reference<Node::TermExpr> termExpr = Node::New<Node::TermExpr>();
-
-			Type literalType = TypeSystem::GetTypeFromLiteral(consumed.Type, consumed.Value);
-			Token literalToken = consumed;
 			
-			termExpr->Term = Node::New<Node::LiteralTerm>(literalType, literalToken);
+			auto literalTerm = Node::New<Node::LiteralTerm>();
+			literalTerm->LiteralType = TypeSystem::GetTypeFromLiteral(consumed.Type, consumed.Value);
+			literalTerm->Literal = consumed;
 
-			return termExpr;
+			termExpr->Term = literalTerm;
+
+			return m_Tracker.Return<Node::TermExpr>();
 		}
 
 		/////////////////////////////////////////////////////////////////
-		// FunctionCall
+		// Function call
 		/////////////////////////////////////////////////////////////////
 		else if (auto funcCall = ParseFunctionCall())
 		{
-			return Node::New<Node::TermExpr>(funcCall.Value());
+			Node::Reference<Node::TermExpr> termExpr = m_Tracker.New<Node::TermExpr>();
+
+			termExpr->Term = funcCall.Value();
+
+			return m_Tracker.Return<Node::TermExpr>();
 		}
 
 		/////////////////////////////////////////////////////////////////
@@ -53,22 +58,25 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier))
 		{
-			auto consumed = Consume();
+			Node::Reference<Node::TermExpr> termExpr = m_Tracker.New<Node::TermExpr>();
 
-			Node::Reference<Node::TermExpr> termExpr = Node::New<Node::TermExpr>();
+			auto consumed = Consume();
 
 			Optional<Type> identifierType = ScopeSystem::GetVariableType(consumed.Value);
 			if (!identifierType.HasValue())
 			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", consumed.Value);
+				m_Tracker.Pop<Node::TermExpr>();
 				return {};
 			}
 
-			Token identifierToken = consumed;
+			auto identifierTerm = Node::New<Node::IdentifierTerm>();
+			identifierTerm->IdentifierType = identifierType.Value();
+			identifierTerm->Identifier = consumed;
 
-			termExpr->Term = Node::New<Node::IdentifierTerm>(identifierType.Value(), identifierToken);
+			termExpr->Term = identifierTerm;
 
-			return termExpr;
+			return m_Tracker.Return<Node::TermExpr>();
 		}
 
 		/////////////////////////////////////////////////////////////////
@@ -76,18 +84,25 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenParenthesis))
 		{
+			Node::Reference<Node::TermExpr> termExpr = m_Tracker.New<Node::TermExpr>();
+
 			Consume(); // '(' token
 
 			auto expr = ParseExpression();
 			if (!expr.HasValue())
 			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve a valid expression");
+				m_Tracker.Pop<Node::TermExpr>();
 				return {};
 			}
 
-			CheckConsume(TokenType::CloseParenthesis, "Expected `)`");
+			auto parenthesis = Node::New<Node::ParenthesisTerm>();
+			parenthesis->Expr = expr.Value();
 
-			return Node::New<Node::TermExpr>(Node::New<Node::ParenthesisTerm>(expr.Value()));
+			termExpr->Term = parenthesis;
+
+			CheckConsume(TokenType::CloseParenthesis, "Expected `)`");
+			return m_Tracker.Return<Node::TermExpr>();
 		}
 
 		return {};
@@ -98,14 +113,11 @@ namespace Dynamite
 	Optional<Node::Reference<Node::Expression>> Parser::ParseExpression(size_t minimumPrecedence)
 	{
 		/////////////////////////////////////////////////////////////////
-		// TermExpr
+		// All expressions
 		/////////////////////////////////////////////////////////////////
 		if (auto term = ParseTermExpr())
 		{
-			/////////////////////////////////////////////////////////////////
-			// Expression retrieval/creation
-			/////////////////////////////////////////////////////////////////
-			Node::Reference<Node::Expression> expr = Node::New<Node::Expression>(term.Value());
+			Node::Reference<Node::Expression> expr = m_Tracker.New<Node::Expression>(term.Value());
 
 			while (true)
 			{
@@ -142,7 +154,7 @@ namespace Dynamite
 
 			// Note: This is either a binary expression or just a normal expression.
 			// The loop up top accounts for both
-			return expr;
+			return m_Tracker.Return<Node::Expression>();
 		}
 
 		return {};

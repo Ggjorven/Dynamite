@@ -28,22 +28,23 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::If))
 		{
-			auto consumed = Consume();
+			Node::Reference<Node::IfStatement> ifStatement = m_Tracker.New<Node::IfStatement>();
+
+			Consume(); // If token
 
 			CheckConsume(TokenType::OpenParenthesis, "Expected `(`.");
 
 			if (auto expr = ParseExpression())
 			{
-				auto ifStatement = Node::New<Node::IfStatement>(expr.Value());
+				ifStatement->Expr = expr.Value();
 
 				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
-
 				if (auto scope = ParseScopeStatement())
 				{
 					ifStatement->Scope = scope.Value();
 					ifStatement->Next = ParseConditionBrach(); // Note: Can be NullRef
 
-					return ifStatement;
+					return m_Tracker.Return<Node::IfStatement>();
 				}
 				else
 					Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve valid scope.");
@@ -52,7 +53,7 @@ namespace Dynamite
 				Compiler::Error(Peek(0).Value().LineNumber, "Invalid expression.");
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
-
+			m_Tracker.Pop<Node::IfStatement>();
 			return {};
 		}
 
@@ -63,22 +64,25 @@ namespace Dynamite
 
 	Optional<Node::Reference<Node::ScopeStatement>> Parser::ParseScopeStatement(bool startScope)
 	{
-		if (!Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenCurlyBrace))
-			return {};
+		if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenCurlyBrace))
+		{
+			Node::Reference<Node::ScopeStatement> scope = m_Tracker.New<Node::ScopeStatement>();
+			
+			Consume(); // '{' token
 
-		Consume(); // '{' token
+			if (startScope)
+				ScopeSystem::BeginScope();
 
-		if (startScope)
-			ScopeSystem::BeginScope();
+			while (auto statement = ParseStatement())
+				scope->Statements.push_back(statement.Value());
 
-		Node::Reference<Node::ScopeStatement> scope = Node::New<Node::ScopeStatement>();
-		while (auto statement = ParseStatement())
-			scope->Statements.push_back(statement.Value());
+			ScopeSystem::EndScope();
 
-		ScopeSystem::EndScope();
+			CheckConsume(TokenType::CloseCurlyBrace, "Expected `}}`");
+			return m_Tracker.Return<Node::ScopeStatement>();
+		}
 
-		CheckConsume(TokenType::CloseCurlyBrace, "Expected `}}`");
-		return scope;
+		return {};
 	}
 
 
@@ -94,6 +98,8 @@ namespace Dynamite
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier) && 
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Equals))
 		{
+			Node::Reference<Node::VariableStatement> variable =m_Tracker.New<Node::VariableStatement>();
+
 			Optional<Type> type = GetType();
 			if (!type.HasValue())
 			{
@@ -101,10 +107,10 @@ namespace Dynamite
 				return {};
 			}
 
-			Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(type.Value(), Consume()); // Identifier token
+			variable->VariableType = type.Value();
+			variable->Variable = Consume(); // Identifier token
 
-			std::string varName = variable->Variable.Value;
-			ScopeSystem::PushVar(varName, type.Value());
+			ScopeSystem::PushVar(variable->Variable.Value, type.Value());
 
 			Consume(); // '=' token
 
@@ -113,11 +119,10 @@ namespace Dynamite
 			{
 				if (!TypeSystem::Castable(expr.Value()->GetType(), type.Value()))
 				{
-					Compiler::Error(Peek(0).Value().LineNumber, "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", varName, TypeSystem::ToString(type.Value()), TypeSystem::ToString(expr.Value()->GetType()));
+					Compiler::Error(Peek(0).Value().LineNumber, "Variable creation of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", variable->Variable.Value, TypeSystem::ToString(type.Value()), TypeSystem::ToString(expr.Value()->GetType()));
 
-					// Semicolon `;` resolution
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
-					return variable;
+					return m_Tracker.Return<Node::VariableStatement>();
 				}
 
 				// Note: Only casts if the internal type is a literalterm
@@ -127,10 +132,8 @@ namespace Dynamite
 			else
 				Compiler::Error(Peek(0).Value().LineNumber, "Invalid expression.");
 
-			// Semicolon ';' resolution
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-
-			return variable;
+			return m_Tracker.Return<Node::VariableStatement>();
 		}
 		
 		/////////////////////////////////////////////////////////////////
@@ -142,6 +145,8 @@ namespace Dynamite
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier) &&
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Semicolon))
 		{
+			Node::Reference<Node::VariableStatement> variable = m_Tracker.New<Node::VariableStatement>();
+
 			Optional<Type> type = GetType();
 			if (!type.HasValue())
 			{
@@ -149,14 +154,13 @@ namespace Dynamite
 				return {};
 			}
 
-			Node::Reference<Node::VariableStatement> variable = Node::New<Node::VariableStatement>(type.Value(), Consume()); // Identifier token
+			variable->VariableType = type.Value();
+			variable->Variable = Consume(); // Identifier token
 
-			std::string varName = variable->Variable.Value;
-			ScopeSystem::PushVar(varName, type.Value());
+			ScopeSystem::PushVar(variable->Variable.Value, type.Value());
 
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-
-			return variable;
+			return m_Tracker.Return<Node::VariableStatement>();
 		}
 
 		return {};
@@ -171,8 +175,13 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenCurlyBrace))
 		{
-			if (auto scope = ParseScopeStatement())
-				return Node::New<Node::Statement>(scope.Value());
+			if (auto scopeStatement = ParseScopeStatement())
+			{
+				Node::Reference<Node::Statement> statement = m_Tracker.New<Node::Statement>();
+				statement->StatementObj = scopeStatement.Value();
+
+				return m_Tracker.Return<Node::Statement>();
+			}
 			else
 				Compiler::Error(Peek(0).Value().LineNumber, "Invalid scope.");
 		}
@@ -180,17 +189,23 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		// If statement
 		/////////////////////////////////////////////////////////////////
-		else if (auto if_ = ParseIfStatement())
+		else if (auto ifStatement = ParseIfStatement())
 		{
-			return Node::New<Node::Statement>(if_.Value());
+			Node::Reference<Node::Statement> statement = m_Tracker.New<Node::Statement>();
+			statement->StatementObj = ifStatement.Value();
+
+			return m_Tracker.Return<Node::Statement>();
 		}
 
 		/////////////////////////////////////////////////////////////////
 		// Variable creation
 		/////////////////////////////////////////////////////////////////
-		else if (auto var = ParseVariableStatement())
+		else if (auto varStatement = ParseVariableStatement())
 		{
-			return Node::New<Node::Statement>(var.Value());
+			Node::Reference<Node::Statement> statement = m_Tracker.New<Node::Statement>();
+			statement->StatementObj = varStatement.Value();
+
+			return m_Tracker.Return<Node::Statement>();
 		}
 
 		/////////////////////////////////////////////////////////////////
@@ -198,8 +213,11 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		else if (auto funcCall = ParseFunctionCall())
 		{
+			Node::Reference<Node::Statement> statement = m_Tracker.New<Node::Statement>();
+			statement->StatementObj = funcCall.Value();
+
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-			return Node::New<Node::Statement>(funcCall.Value());
+			return m_Tracker.Return<Node::Statement>();
 		}
 
 		/////////////////////////////////////////////////////////////////
@@ -207,22 +225,26 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Return))
 		{
+			Node::Reference<Node::Statement> statement = m_Tracker.New<Node::Statement>();
+
 			Consume(); // Return token
 
 			if (auto expr = ParseExpression())
 			{
-				// TODO: Check if returnStatement matches the returnType of the function
-
 				auto returnStatement = Node::New<Node::ReturnStatement>(expr.Value());
-				CheckConsume(TokenType::Semicolon, "Expected `;`.");
+				
+				// TODO: Check if returnStatement matches the returnType of the function
+				
+				statement->StatementObj = returnStatement;
 
-				return Node::New<Node::Statement>(returnStatement);
+				CheckConsume(TokenType::Semicolon, "Expected `;`.");
+				return m_Tracker.Return<Node::Statement>();
 			}
 
 			Compiler::Error(Peek(-1).Value().LineNumber, "Invalid expression.");
-
+			
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-
+			m_Tracker.Pop<Node::Statement>();
 			return {};
 		}
 
@@ -232,26 +254,31 @@ namespace Dynamite
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier) && 
 			Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::Equals))
 		{
-			auto consumed = Consume();
-			auto type = ScopeSystem::GetVariableType(consumed.Value);
+			Node::Reference<Node::Statement> statement = m_Tracker.New<Node::Statement>();
+			auto assignment = Node::New<Node::AssignmentStatement>();
+
+			statement->StatementObj = assignment;
+
+			assignment->Variable = Consume(); // Identifier token
+
+			Optional<Type> type = ScopeSystem::GetVariableType(assignment->Variable.Value);
 			if (!type.HasValue())
 			{
-				Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", consumed.Value);
+				Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", assignment->Variable.Value);
+				m_Tracker.Pop<Node::Statement>();
 				return {};
 			}
 
-			auto assignment = Node::New<Node::AssignmentStatement>(type.Value(), consumed);
 			Consume(); // '=' token
 
 			if (auto expr = ParseExpression())
 			{
 				if (!TypeSystem::Castable(expr.Value()->GetType(), type.Value()))
 				{
-					Compiler::Error(Peek(0).Value().LineNumber, "Variable assignment of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", consumed.Value, TypeSystem::ToString(type.Value()), TypeSystem::ToString(expr.Value()->GetType()));
+					Compiler::Error(Peek(0).Value().LineNumber, "Variable assignment of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", assignment->Variable.Value, TypeSystem::ToString(type.Value()), TypeSystem::ToString(expr.Value()->GetType()));
 
-					// Semicolon `;` resolution
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
-					return Node::New<Node::Statement>(assignment);
+					return m_Tracker.Return<Node::Statement>();
 				}
 
 				// Note: Only casts if the internal type is a literalterm
@@ -259,12 +286,11 @@ namespace Dynamite
 				assignment->Expr = expr.Value();
 
 				CheckConsume(TokenType::Semicolon, "Expected `;`.");
-
-				return Node::New<Node::Statement>(assignment);
+				return m_Tracker.Return<Node::Statement>();
 			}
-			else
-				Compiler::Error(Peek(0).Value().LineNumber, "Invalid expression.");
 
+			Compiler::Error(Peek(0).Value().LineNumber, "Invalid expression.");
+			m_Tracker.Pop<Node::Statement>();
 			return {};
 		}
 

@@ -19,9 +19,12 @@ namespace Dynamite
 		// Note: This function exists for the future
 	}
 
-	bool TypeSystem::Castable(const Type& from, const Type& to)
+	bool TypeSystem::Castable(const Type& from, const Type& to) // TODO: Improve this bloody function
 	{
 		if (from == to)
+			return true;
+
+		if (from.Information.Specifier == to.Information.Specifier)
 			return true;
 
 		// Pointers can always be cast to one another.

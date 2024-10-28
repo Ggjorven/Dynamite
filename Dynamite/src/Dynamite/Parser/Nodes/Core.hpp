@@ -37,10 +37,10 @@ namespace Dynamite::Node
 	struct IfStatement;
 	struct VariableStatement;
 	struct AssignmentStatement;
+	struct ScopeStatement;
 
 	struct ElseIfBranch;
 	struct ElseBranch;
-	struct ScopeStatement;
 	struct ConditionBranch;	
 
 	struct Function;

@@ -53,7 +53,6 @@ namespace Dynamite::Node
 		return VariableType;
 	}
 
-
 	Type& AssignmentStatement::GetType()
 	{
 		return VariableType;

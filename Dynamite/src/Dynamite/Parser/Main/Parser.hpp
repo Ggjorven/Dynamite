@@ -2,6 +2,7 @@
 
 #include "Dynamite/Core/Core.hpp"
 
+#include "Dynamite/Parser/Main/Tracker.hpp"
 #include "Dynamite/Parser/Nodes/All.hpp"
 
 namespace Dynamite
@@ -47,6 +48,8 @@ namespace Dynamite
 	private:
 		std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
+	
+		Tracker m_Tracker;
 	};
 
 }
