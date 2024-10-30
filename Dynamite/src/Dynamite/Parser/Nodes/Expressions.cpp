@@ -59,11 +59,35 @@ namespace Dynamite::Node
 			break;
 		}
 
-		// TODO: Other operations
+		case TokenType::Or:
+		{
+			Operation = Node::New<BinaryOR>(resultType, lhs, rhs);
+			break;
+		}
+		case TokenType::And:
+		{
+			Operation = Node::New<BinaryAND>(resultType, lhs, rhs);
+			break;
+		}
+		case TokenType::Xor:
+		{
+			Operation = Node::New<BinaryXOR>(resultType, lhs, rhs);
+			break;
+		}
 
 		default:
 			break;
 		}
+	}
+
+	AddressExpr::AddressExpr(Reference<Expression> expression)
+		: Expr(expression)
+	{
+	}
+
+	DereferenceExpr::DereferenceExpr(Reference<Expression> expression)
+		: Expr(expression)
+	{
 	}
 
 	Expression::Expression(VariantType expr)
@@ -84,15 +108,32 @@ namespace Dynamite::Node
 			}
 			Type operator () (const Reference<IdentifierTerm> obj) const
 			{
-				return obj->GetType().AddReference();
+				return obj->GetType();
 			}
 			Type operator () (const Reference<ParenthesisTerm> obj) const
 			{
 				return obj->GetType();
 			}
-			Type operator () (const Reference<FunctionCall> obj) const
+		};
+
+		return std::visit(TermVisitor(), Term);
+	}
+
+	bool TermExpr::IsLValue() const
+	{
+		struct TermVisitor
+		{
+			bool operator () (const Reference<LiteralTerm>) const
 			{
-				return obj->GetType();
+				return false;
+			}
+			bool operator () (const Reference<IdentifierTerm>) const
+			{
+				return true;
+			}
+			bool operator () (const Reference<ParenthesisTerm> obj) const
+			{
+				return obj->IsLValue();
 			}
 		};
 
@@ -119,9 +160,44 @@ namespace Dynamite::Node
 			{
 				return obj->GetType();
 			}
+
+			Type operator () (const Reference<BinaryOR> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Reference<BinaryAND> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Reference<BinaryXOR> obj) const
+			{
+				return obj->GetType();
+			}
 		};
 
 		return std::visit(OperationVisitor(), Operation);
+	}
+
+	Type AddressExpr::GetType() const
+	{
+		Type ptrType = Expr->GetType().Copy();
+		ptrType.AddPointer();
+
+		return ptrType;
+	}
+
+	Type DereferenceExpr::GetType() const
+	{
+		Type noPtrType = Expr->GetType().Copy();
+		if (!noPtrType.IsPointer())
+		{
+			DY_LOG_WARN("Trying to get the dereferenced type of a non-pointer type.");
+			return noPtrType;
+		}
+
+		noPtrType.BackQualifiers.pop_back();
+
+		return noPtrType;
 	}
 
 	Type Expression::GetType() const
@@ -135,6 +211,47 @@ namespace Dynamite::Node
 			Type operator () (const Reference<BinaryExpr> obj) const
 			{
 				return obj->GetType();
+			}
+			Type operator () (const Reference<FunctionCall> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Reference<AddressExpr> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Reference<DereferenceExpr> obj) const
+			{
+				return obj->GetType();
+			}
+		};
+
+		return std::visit(ExpressionVisitor(), Expr);
+	}
+
+	bool Expression::IsLValue() const
+	{
+		struct ExpressionVisitor
+		{
+			bool operator () (const Reference<TermExpr> obj) const
+			{
+				return obj->IsLValue();
+			}
+			bool operator () (const Reference<BinaryExpr>) const
+			{
+				return false;
+			}
+			bool operator () (const Reference<FunctionCall> obj) const
+			{
+				return obj->GetType().IsPointer();
+			}
+			bool operator () (const Reference<AddressExpr> obj) const
+			{
+				return true;
+			}
+			bool operator () (const Reference<DereferenceExpr> obj) const
+			{
+				return true;
 			}
 		};
 
@@ -177,16 +294,6 @@ namespace Dynamite::Node
 				std::string parenthesisStr = ParenthesisTermToString(obj, Indent + 1);
 
 				str += Pulse::Text::Format("([TermExpr] = '\n{0}'\n{1})", parenthesisStr, Utils::StrTimes(Node::TabString, Indent));
-
-				return str;
-			}
-			std::string operator () (const Reference<FunctionCall> obj) const
-			{
-				std::string str = Utils::StrTimes(Node::TabString, Indent);
-
-				std::string functionCall = FunctionCallToString(obj, Indent + 1);
-
-				str += Pulse::Text::Format("([TermExpr] = '\n{0}'\n{1})", functionCall, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}
@@ -241,9 +348,62 @@ namespace Dynamite::Node
 
 				return str;
 			}
+
+			std::string operator () (const Reference<BinaryOR> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string binaryStr = BinaryORToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BinaryExpr] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Reference<BinaryAND> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string binaryStr = BinaryANDToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BinaryExpr] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Reference<BinaryXOR> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string binaryStr = BinaryXORToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BinaryExpr] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
 		};
 
 		return std::visit(BinaryExprVisitor(indentLevel), obj->Operation);
+	}
+
+	std::string AddressExprToString(const Reference<AddressExpr> obj, size_t indentLevel)
+	{
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+
+		str += Pulse::Text::Format("([AddressExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string DereferenceExprToString(const Reference<DereferenceExpr> obj, size_t indentLevel)
+	{
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+
+		str += Pulse::Text::Format("([DereferenceExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
 	}
 
 	std::string ExpressionToString(const Reference<Expression> obj, size_t indentLevel)
@@ -270,6 +430,36 @@ namespace Dynamite::Node
 
 				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", binaryStr, Utils::StrTimes(Node::TabString, Indent));
 				
+				return str;
+			}
+			std::string operator () (const Reference<FunctionCall> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string functionCall = FunctionCallToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", functionCall, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Reference<AddressExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string addressStr = AddressExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", addressStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Reference<DereferenceExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string dereferenceStr = DereferenceExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", dereferenceStr, Utils::StrTimes(Node::TabString, Indent));
+
 				return str;
 			}
 		};

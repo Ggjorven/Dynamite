@@ -48,8 +48,8 @@ namespace Dynamite
 		Mut, 
 		Volatile,
 
+		//Reference,
 		Pointer,
-		Reference,
 
 		Array 
 	};
@@ -119,29 +119,35 @@ namespace Dynamite
 		bool operator == (const TypeInfo& info) const;
 		bool operator != (const TypeInfo& info) const;
 
-		// Methods
-		TypeQualifier CleanBackQualifier() const; // Returns the most back qualifier (removes first reference if found)
-
+		// Checks
 		bool IsMut() const;
 		bool IsVolatile() const;
 
 		bool IsPointer() const;
-		bool IsReference() const;
 
 		bool IsArray() const;
 
-		// Note: Removes mut, volatile & references, but not pointers.
-		Type Clean() const;
-		Type RemoveReference() const;
+		// Adds
+		void AddMut();
+		void AddVolatile();
 
-		Type AddReference() const;
+		void AddPointer();
+
+		void AddArray(const std::string& size);
+
+		std::string GetArraySize();
+		void SetArraySize(const std::string& value);
+
+		// Note: Removes mut & volatile, but not pointers.
+		Type Clean() const;
+		Type Copy() const;
 	};
 
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string TypeSpecifierToString(TypeSpecifier specifier);
-	std::string TypeQualifierToString(TypeQualifier qualifier);
+	std::string TypeQualifierToString(TypeQualifier qualifier, const std::string& value = {});
 
 	TypeSpecifier TokenTypeToTypeSpecifier(TokenType tokenType);
 	TypeQualifier TokenTypeToTypeQualifier(TokenType tokenType);

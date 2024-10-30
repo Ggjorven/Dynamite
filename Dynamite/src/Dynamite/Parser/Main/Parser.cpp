@@ -142,6 +142,14 @@ namespace Dynamite
 				
 				result.BackQualifiers.emplace_back(TypeQualifier::Array, size.Value);
 			}
+			else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenSquareBracket) &&
+				Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::CloseSquareBracket))
+			{
+				Consume();
+				Consume();
+
+				result.BackQualifiers.emplace_back(TypeQualifier::Array);
+			}
 			else
 				result.BackQualifiers.emplace_back(TokenTypeToTypeQualifier(Consume().Type));
 		}
@@ -178,15 +186,23 @@ namespace Dynamite
 					{
 						return false;
 					}
-					bool operator () (const Node::Reference<Node::FunctionCall>) const
-					{
-						return false;
-					}
 				};
 
 				return std::visit(TermVisitor(From, To), obj->Term);
 			}
 			bool operator () (const Node::Reference<Node::BinaryExpr>) const
+			{
+				return false;
+			}
+			bool operator () (const Node::Reference<Node::FunctionCall>) const
+			{
+				return false;
+			}
+			bool operator () (const Node::Reference<Node::AddressExpr>) const
+			{
+				return false;
+			}
+			bool operator () (const Node::Reference<Node::DereferenceExpr>) const
 			{
 				return false;
 			}

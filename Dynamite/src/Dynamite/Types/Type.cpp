@@ -122,21 +122,7 @@ namespace Dynamite
 		return !(*this == info);
 	}
 
-	// Methods
-	TypeQualifier Type::CleanBackQualifier() const
-	{
-		if (BackQualifiers.empty())
-			return TypeQualifier::None;
-
-		if (BackQualifiers.size() >= 2)
-		{
-			if (BackQualifiers.back() == TypeQualifier::Reference)
-				return BackQualifiers.at(BackQualifiers.size() - 2);
-		}
-
-		return BackQualifiers.back();
-	}
-
+	// Checks
 	bool Type::IsMut() const
 	{
 		for (const auto& qualifier : FrontQualifiers)
@@ -161,51 +147,64 @@ namespace Dynamite
 
 	bool Type::IsPointer() const
 	{
-		return (CleanBackQualifier() == TypeQualifier::Pointer);
-	}
-
-	bool Type::IsReference() const
-	{
-		if (!BackQualifiers.empty() && BackQualifiers.back() == TypeQualifier::Reference)
-			return true;
-
-		return false;
+		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Pointer));
 	}
 
 	bool Type::IsArray() const
 	{
-		return (CleanBackQualifier() == TypeQualifier::Array);
+		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Array));
+	}
+
+	// Adds
+	void Type::AddMut()
+	{
+		if (!IsMut())
+			FrontQualifiers.emplace_back(TypeQualifier::Mut);
+	}
+
+	void Type::AddVolatile()
+	{
+		if (!IsVolatile())
+			FrontQualifiers.emplace_back(TypeQualifier::Mut);
+	}
+
+	void Type::AddPointer()
+	{
+		BackQualifiers.emplace_back(TypeQualifier::Pointer);
+	}
+
+	void Type::AddArray(const std::string& size)
+	{
+		BackQualifiers.emplace_back(TypeQualifier::Array, size);
+	}
+
+	std::string Type::GetArraySize()
+	{
+		if (!IsArray())
+			return {};
+
+		return BackQualifiers.back().Value;
+	}
+
+	void Type::SetArraySize(const std::string& value)
+	{
+		if (!IsArray())
+		{
+			DY_LOG_WARN("Trying to set array size, when Type is not an array.");
+			return;
+		}
+
+		BackQualifiers.back().Value = value;
 	}
 
 	Type Type::Clean() const
 	{
-		Type clean = RemoveReference();
-
-		// No front qualifiers (const, volatile)
-		clean.FrontQualifiers = {};
-
-		return clean;
+		return Type({}, this->Information, this->BackQualifiers);
 	}
 
-	Type Type::RemoveReference() const
+	Type Type::Copy() const
 	{
-		// No front qualifiers (const, volatile)
-		Type clean = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
-
-		// Remove reference if it is the last qualifier
-		if (!clean.BackQualifiers.empty() && clean.BackQualifiers.back() == TypeQualifier::Reference)
-			clean.BackQualifiers.pop_back();
-
-		return clean;
-	}
-
-	Type Type::AddReference() const
-	{
-		Type ret = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
-
-		ret.BackQualifiers.emplace_back(TypeQualifier::Reference);
-
-		return ret;
+		return Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
 	}
 
 	/////////////////////////////////////////////////////////////////
@@ -245,7 +244,7 @@ namespace Dynamite
 
 	}
 
-	std::string TypeQualifierToString(TypeQualifier qualifier)
+	std::string TypeQualifierToString(TypeQualifier qualifier, const std::string& value)
 	{
 		switch (qualifier)
 		{
@@ -253,9 +252,9 @@ namespace Dynamite
 		case TypeQualifier::Volatile:	return TokenTypeToString(TokenType::Volatile);
 
 		case TypeQualifier::Pointer:	return TokenTypeToString(TokenType::Pointer);
-		case TypeQualifier::Reference:	return TokenTypeToString(TokenType::Reference);
+		//case TypeQualifier::Reference:	return TokenTypeToString(TokenType::Reference);
 
-		case TypeQualifier::Array:		return "[]";
+		case TypeQualifier::Array:		return std::string("[") + value + std::string("]");
 
 		default:
 			break;
@@ -314,7 +313,7 @@ namespace Dynamite
 		case TokenType::Volatile:			return TypeQualifier::Volatile;
 
 		case TokenType::Pointer:			return TypeQualifier::Pointer;
-		case TokenType::Reference:			return TypeQualifier::Reference;
+		//case TokenType::Reference:			return TypeQualifier::Reference;
 
 		default:
 			break;

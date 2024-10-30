@@ -29,7 +29,7 @@ namespace Dynamite
 			if (from.IsPointer() && to.IsPointer())
 				return true;
 
-			if (!from.IsReference() && to.IsReference())
+			if ((!from.IsPointer() && to.IsPointer()) || (from.IsPointer() && !to.IsPointer()))
 				return false;
 
 			if (from == TypeSpecifier::Void && to != TypeSpecifier::Void)
@@ -331,15 +331,15 @@ namespace Dynamite
 		return {};
 	}
 
-	Type TypeSystem::GetBinExprResultType(const Type& lhs, const Type& rhs)
+	Type TypeSystem::GetBinExprResultType(const Type& lhs, TokenType operation, const Type& rhs)
 	{
 		// Checks
 		{
 			if (lhs == rhs)
-				return lhs.RemoveReference();
+				return lhs.Clean();
 
 			if (lhs.IsPointer() && rhs.IsPointer())
-				return lhs.RemoveReference();
+				return lhs.Clean();
 		
 			if ((IsIntegral(lhs) && IsFloat(rhs)) || (IsFloat(lhs) && IsIntegral(rhs)))
 				return GetFloat(GetSize(GetLargest(lhs, rhs)));
@@ -347,23 +347,23 @@ namespace Dynamite
 			// TODO: Add more checks
 		}
 
-		return lhs;
+		return GetLargest(lhs, rhs);
 	}
 
 	std::string TypeSystem::ToString(const Type& type)
 	{
 		std::string str = {};
 
-		for (const auto& qualifier : type.FrontQualifiers)
-			str += TypeQualifierToString(qualifier) + ' ';
+		for (const auto& [qualifier, value] : type.FrontQualifiers)
+			str += TypeQualifierToString(qualifier, value) + ' ';
 
 		if (type.Information.Specifier == TypeSpecifier::Identifier)
 			str += type.Information.Value;
 		else
 			str += TypeSpecifierToString(type.Information.Specifier);
 
-		for (const auto& qualifier : type.BackQualifiers)
-			str += TypeQualifierToString(qualifier);
+		for (const auto& [qualifier, value] : type.BackQualifiers)
+			str += TypeQualifierToString(qualifier, value);
 
 		return str;
 	}

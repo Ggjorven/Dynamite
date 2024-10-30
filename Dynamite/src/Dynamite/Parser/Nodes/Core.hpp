@@ -19,6 +19,8 @@ namespace Dynamite::Node
 									
 	struct TermExpr;
 	struct BinaryExpr;
+	struct AddressExpr;
+	struct DereferenceExpr;
 
 	// Note: Can be an expression or statement
 	struct FunctionCall; 

@@ -77,7 +77,7 @@ namespace Dynamite
 		// Specifiers
 		/////////////////////////////////////////////////////////////////
 		Pointer = Star,			// '*'
-		Reference = And,		// '&'
+		//Reference = And,		// '&'
 
 		Mut = (Return + 1),	// Note: Continue counting form return
 		Volatile,
@@ -170,7 +170,7 @@ namespace Dynamite
 	{
 		return {
 			TokenType::Pointer,
-			TokenType::Reference,
+			//TokenType::Reference,
 
 			TokenType::Mut,
 			TokenType::Volatile,

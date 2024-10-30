@@ -36,6 +36,21 @@ namespace Dynamite::Node
 	{
 	}
 
+	BinaryOR::BinaryOR(const Type& type, Reference<Expression> lhs, Reference<Expression> rhs)
+		: ResultType(type), LHS(lhs), RHS(rhs)
+	{
+	}
+
+	BinaryAND::BinaryAND(const Type& type, Reference<Expression> lhs, Reference<Expression> rhs)
+		: ResultType(type), LHS(lhs), RHS(rhs)
+	{
+	}
+
+	BinaryXOR::BinaryXOR(const Type& type, Reference<Expression> lhs, Reference<Expression> rhs)
+		: ResultType(type), LHS(lhs), RHS(rhs)
+	{
+	}
+
 	/////////////////////////////////////////////////////////////////
 	// Methods
 	/////////////////////////////////////////////////////////////////
@@ -55,6 +70,21 @@ namespace Dynamite::Node
 	}
 
 	Type BinaryDivision::GetType() const
+	{
+		return ResultType;
+	}
+
+	Type BinaryOR::GetType() const
+	{
+		return ResultType;
+	}
+
+	Type BinaryAND::GetType() const
+	{
+		return ResultType;
+	}
+
+	Type BinaryXOR::GetType() const
 	{
 		return ResultType;
 	}
@@ -118,6 +148,48 @@ namespace Dynamite::Node
 		return str;
 	}
 
+	std::string BinaryORToString(const Reference<BinaryOR> obj, size_t indentLevel)
+	{
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
+
+		str += Pulse::Text::Format("([BinaryOR({0})] = '\n{1}\n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string BinaryANDToString(const Reference<BinaryAND> obj, size_t indentLevel)
+	{
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
+
+		str += Pulse::Text::Format("([BinaryAND({0})] = '\n{1}\n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string BinaryXORToString(const Reference<BinaryXOR> obj, size_t indentLevel)
+	{
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
+
+		str += Pulse::Text::Format("([BinaryXOR({0})] = '\n{1}\n{2}'\n{3})", TypeSystem::ToString(obj->GetType()), lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
 	Optional<size_t> GetBinaryPrecendence(TokenType operation)
 	{
 		switch (operation)
@@ -130,13 +202,25 @@ namespace Dynamite::Node
 		case TokenType::Divide:
 			return 1;
 
-		// TODO: Additional binary operators
+		case TokenType::And:
+			return 2;
+
+		case TokenType::Xor:
+			return 3;
+
+		case TokenType::Or:
+			return 4;
 
 		default:
 			break;
 		}
 
 		return {};
+	}
+
+	size_t GetMaxBinaryPrecendence()
+	{
+		return 5;
 	}
 
 }

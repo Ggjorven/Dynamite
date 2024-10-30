@@ -24,7 +24,7 @@ namespace Dynamite
 		static bool Cast(const Type& from, const Type& to, std::string& value);
 
 		static Type GetTypeFromLiteral(TokenType literalType, const std::string& value);
-		static Type GetBinExprResultType(const Type& lhs, const Type& rhs);
+		static Type GetBinExprResultType(const Type& lhs, TokenType operation, const Type& rhs);
 
 		static std::string ToString(const Type& type);
 

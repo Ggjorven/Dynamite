@@ -80,7 +80,7 @@ namespace Dynamite
 			// Check if argument count matches.
 			if (function->Arguments.size() != FunctionSystem::GetRequiredArgCount(function->Function.Value))
 			{
-				Compiler::Error(Peek(0).Value().LineNumber, "Function: '{0} expects {1} argument(s), got {2}.'", function->Function.Value, FunctionSystem::GetRequiredArgCount(function->Function.Value), function->Arguments.size());
+				Compiler::Error(Peek(0).Value().LineNumber, "Function '{0}' expects {1} argument(s), got {2}.", function->Function.Value, FunctionSystem::GetRequiredArgCount(function->Function.Value), function->Arguments.size());
 
 				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 				return m_Tracker.Return<Node::FunctionCall>();

@@ -42,18 +42,6 @@ namespace Dynamite
 		}
 
 		/////////////////////////////////////////////////////////////////
-		// Function call
-		/////////////////////////////////////////////////////////////////
-		else if (auto funcCall = ParseFunctionCall())
-		{
-			Node::Reference<Node::TermExpr> termExpr = m_Tracker.New<Node::TermExpr>();
-
-			termExpr->Term = funcCall.Value();
-
-			return m_Tracker.Return<Node::TermExpr>();
-		}
-
-		/////////////////////////////////////////////////////////////////
 		// Identifier
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier))
@@ -110,50 +98,145 @@ namespace Dynamite
 
 
 
+	void Parser::HandleBinaryOperators(Node::Reference<Node::Expression>& expr, size_t minimumPrecedence)
+	{
+		while (true)
+		{
+			Optional<Token> current = Peek(0);
+			Optional<size_t> precedence = {};
+			size_t nextMinimumPrecedence = Pulse::Numeric::Max<size_t>();
+
+			// Note: It breaks out and just returns the normal expression if
+			// it's not a binary expression.
+			if (!current.HasValue())
+				break;
+
+			precedence = Node::GetBinaryPrecendence(current.Value().Type);
+			if (!precedence.HasValue() || precedence.Value() < minimumPrecedence)
+				break;
+			else
+				nextMinimumPrecedence = precedence.Value() + 1;
+
+			auto exprLHS = Node::New<Node::Expression>(expr->Expr);
+			Token operation = Consume();
+
+			auto exprRHS = ParseExpression(nextMinimumPrecedence);
+			if (!exprRHS.HasValue())
+			{
+				Compiler::Error(Peek(-1).Value().LineNumber, "Unable to parse expression.");
+				break;
+			}
+
+			auto binExpr = Node::New<Node::BinaryExpr>(operation.Type, TypeSystem::GetBinExprResultType(exprLHS->GetType(), operation.Type, exprRHS.Value()->GetType()), exprLHS, exprRHS.Value());
+
+			// Set the result expr to the computed binary expression
+			expr->Expr = binExpr;
+		}
+	}
+
+
+
 	Optional<Node::Reference<Node::Expression>> Parser::ParseExpression(size_t minimumPrecedence)
 	{
 		/////////////////////////////////////////////////////////////////
-		// All expressions
+		// Function call
 		/////////////////////////////////////////////////////////////////
-		if (auto term = ParseTermExpr())
+		if (auto funcCall = ParseFunctionCall())
+		{
+			Node::Reference<Node::Expression> expr = m_Tracker.New<Node::Expression>(funcCall.Value());
+
+			// Note: This is either a binary expression or just a normal expression.
+			// The function accounts for both
+			HandleBinaryOperators(expr, minimumPrecedence);
+
+			return m_Tracker.Return<Node::Expression>();
+		}
+
+		/////////////////////////////////////////////////////////////////
+		// Address
+		/////////////////////////////////////////////////////////////////
+		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::And))
+		{
+			Node::Reference<Node::Expression> expr = m_Tracker.New<Node::Expression>();
+			Node::Reference<Node::AddressExpr> address = Node::New<Node::AddressExpr>();
+
+			expr->Expr = address;
+
+			Consume(); // '&' token
+
+			if (auto addressExpr = ParseExpression(Node::GetMaxBinaryPrecendence()))
+			{
+				address->Expr = addressExpr.Value();
+
+				if (!addressExpr.Value()->IsLValue())
+				{
+					Compiler::Error(Peek(-1).Value().LineNumber, "Can't take memory address of an RValue.");
+					m_Tracker.Pop<Node::Expression>();
+					return {};
+				}
+
+				// Note: This is either a binary expression or just a normal expression.
+				// The function accounts for both
+				HandleBinaryOperators(expr, minimumPrecedence);
+
+				return m_Tracker.Return<Node::Expression>();
+			}
+
+			Compiler::Error(Peek(-1).Value().LineNumber, "Expected expression.");
+			return m_Tracker.Return<Node::Expression>();
+		}
+
+		/////////////////////////////////////////////////////////////////
+		// Dereference
+		/////////////////////////////////////////////////////////////////
+		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Pointer))
+		{
+			Node::Reference<Node::Expression> expr = m_Tracker.New<Node::Expression>();
+			Node::Reference<Node::DereferenceExpr> dereference = Node::New<Node::DereferenceExpr>();
+
+			expr->Expr = dereference;
+
+			Consume(); // '*' token
+
+			if (auto dereferenceExpr = ParseExpression(Node::GetMaxBinaryPrecendence()))
+			{
+				dereference->Expr = dereferenceExpr.Value();
+				
+				if (!dereferenceExpr.Value()->IsLValue())
+				{
+					Compiler::Error(Peek(-1).Value().LineNumber, "Can't dereference an RValue.");
+					m_Tracker.Pop<Node::Expression>();
+					return {};
+				}
+				else if (!dereferenceExpr.Value()->GetType().IsPointer())
+				{
+					Compiler::Error(Peek(-1).Value().LineNumber, "Can't dereference an non-pointer.");
+					m_Tracker.Pop<Node::Expression>();
+					return {};
+				}
+
+				// Note: This is either a binary expression or just a normal expression.
+				// The function accounts for both
+				HandleBinaryOperators(expr, minimumPrecedence);
+
+				return m_Tracker.Return<Node::Expression>();
+			}
+
+			Compiler::Error(Peek(-1).Value().LineNumber, "Expected expression.");
+			return m_Tracker.Return<Node::Expression>();
+		}
+
+		/////////////////////////////////////////////////////////////////
+		// Term
+		/////////////////////////////////////////////////////////////////
+		else if (auto term = ParseTermExpr())
 		{
 			Node::Reference<Node::Expression> expr = m_Tracker.New<Node::Expression>(term.Value());
 
-			while (true)
-			{
-				Optional<Token> current = Peek(0);
-				Optional<size_t> precedence = {};
-				size_t nextMinimumPrecedence = Pulse::Numeric::Max<size_t>();
-
-				// Note: It breaks out and just returns the normal expression if
-				// it's not a binary expression.
-				if (!current.HasValue())
-					break;
-
-				precedence = Node::GetBinaryPrecendence(current.Value().Type);
-				if (!precedence.HasValue() || precedence.Value() < minimumPrecedence)
-					break;
-				else
-					nextMinimumPrecedence = precedence.Value() + 1;
-
-				auto exprLHS = Node::New<Node::Expression>(expr->Expr);
-				Token operation = Consume();
-
-				auto exprRHS = ParseExpression(nextMinimumPrecedence);
-				if (!exprRHS.HasValue())
-				{
-					Compiler::Error(Peek(-1).Value().LineNumber, "Unable to parse expression.");
-					break;
-				}
-
-				auto binExpr = Node::New<Node::BinaryExpr>(operation.Type, TypeSystem::GetBinExprResultType(exprLHS->GetType(), exprRHS.Value()->GetType()), exprLHS, exprRHS.Value());
-
-				// Set the result expr to the computed binary expression
-				expr->Expr = binExpr;
-			}
-
 			// Note: This is either a binary expression or just a normal expression.
-			// The loop up top accounts for both
+			// The function accounts for both
+			HandleBinaryOperators(expr, minimumPrecedence);
+
 			return m_Tracker.Return<Node::Expression>();
 		}
 

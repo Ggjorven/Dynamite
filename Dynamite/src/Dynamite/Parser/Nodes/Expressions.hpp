@@ -19,7 +19,7 @@ namespace Dynamite::Node
     struct TermExpr
     {
     private:
-        using VariantType = Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>, Reference<FunctionCall>>;
+        using VariantType = Variant<Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>>;
         friend class Pulse::Memory::Control;
     private:
         TermExpr(VariantType term = {});
@@ -28,12 +28,14 @@ namespace Dynamite::Node
         VariantType Term;
 
         Type GetType() const;
+
+        bool IsLValue() const;
     };
     
     struct BinaryExpr
     {
     private:
-        using VariantType = Variant<Reference<BinaryAddition>, Reference<BinarySubtraction>, Reference<BinaryMultiplication>, Reference<BinaryDivision>>;
+        using VariantType = Variant<Reference<BinaryAddition>, Reference<BinarySubtraction>, Reference<BinaryMultiplication>, Reference<BinaryDivision>, Reference<BinaryOR>, Reference<BinaryAND>, Reference<BinaryXOR>>;
         friend class Pulse::Memory::Control;
     private:
         BinaryExpr(VariantType operation = {});
@@ -44,11 +46,37 @@ namespace Dynamite::Node
         
         Type GetType() const;
     };
+
+    struct AddressExpr
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        AddressExpr(Reference<Expression> expression = (Reference<Expression>)NullRef);
+
+    public:
+        Reference<Expression> Expr;
+
+        Type GetType() const;
+    };
+
+    struct DereferenceExpr
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        DereferenceExpr(Reference<Expression> expression = (Reference<Expression>)NullRef);
+
+    public:
+        Reference<Expression> Expr;
+
+        Type GetType() const;
+    };
     
     struct Expression
     {
     private:
-        using VariantType = Variant<Reference<TermExpr>, Reference<BinaryExpr>>;
+        using VariantType = Variant<Reference<TermExpr>, Reference<BinaryExpr>, Reference<FunctionCall>, Reference<AddressExpr>, Reference<DereferenceExpr>>;
         friend class Pulse::Memory::Control;
     private:
         Expression(VariantType expr = {});
@@ -57,6 +85,8 @@ namespace Dynamite::Node
         VariantType Expr;
 
         Type GetType() const;
+
+        bool IsLValue() const;
     };
 
     /////////////////////////////////////////////////////////////////
@@ -64,6 +94,8 @@ namespace Dynamite::Node
     /////////////////////////////////////////////////////////////////
     std::string TermExprToString(const Reference<TermExpr> obj, size_t indentLevel = 0);
     std::string BinaryExprToString(const Reference<BinaryExpr> obj, size_t indentLevel = 0);
+    std::string AddressExprToString(const Reference<AddressExpr> obj, size_t indentLevel = 0);
+    std::string DereferenceExprToString(const Reference<DereferenceExpr> obj, size_t indentLevel = 0);
     std::string ExpressionToString(const Reference<Expression> obj, size_t indentLevel = 0);
 
 }

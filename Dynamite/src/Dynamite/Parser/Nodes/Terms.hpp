@@ -52,6 +52,8 @@ namespace Dynamite::Node
         Reference<Expression> Expr;
         
         Type GetType() const;
+
+        bool IsLValue() const;
     };
 
     /////////////////////////////////////////////////////////////////
