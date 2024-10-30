@@ -1,6 +1,14 @@
 i32 globalValue = (123 - 67);
 i32 globalValue2 = globalValue;
 
+
+u32 DeclTest(i32 x = 19);
+
+u32 DeclTest(i32 x = 19)
+{
+	return x;
+}
+
 u8* func(u8* a)
 {
 	return a;

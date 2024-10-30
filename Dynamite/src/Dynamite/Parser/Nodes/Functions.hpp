@@ -50,6 +50,20 @@ namespace Dynamite::Node
         Type GetType() const;
     };
 
+    struct Function // Note: Used to simplify function definitions
+    {
+    private:
+        using VariantType = Variant<Reference<FunctionDeclaration>, Reference<FunctionDefinition>>;
+        friend class Pulse::Memory::Control;
+    private:
+        Function(VariantType function = {});
+
+    public:
+        VariantType Func;
+
+        Type GetType() const;
+    };
+
     struct FunctionCall
     {
     private:

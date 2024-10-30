@@ -41,8 +41,24 @@ namespace Dynamite
 		{
 			if (auto variableStatement = ParseVariableStatement())
 				program.Definitions.emplace_back(variableStatement.Value());
-			else if (auto function = ParseFunctionDefinition())
-				program.Definitions.emplace_back(function.Value());
+			else if (auto function = ParseFunction())
+			{
+				struct FunctionVisitor
+				{
+					Node::Program& Prog;
+
+					void operator () (const Node::Reference<Node::FunctionDeclaration> obj)
+					{
+						Prog.Definitions.emplace_back(obj);
+					}
+					void operator () (const Node::Reference<Node::FunctionDefinition> obj)
+					{
+						Prog.Definitions.emplace_back(obj);
+					}
+				};
+
+				std::visit(FunctionVisitor(program), function.Value()->Func);
+			}
 			else
 			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve a valid variable or function definition.");

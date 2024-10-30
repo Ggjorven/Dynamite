@@ -32,8 +32,7 @@ namespace Dynamite
 		Optional<Node::Reference<Node::VariableStatement>>		ParseVariableStatement();
 
 		Optional<Node::Reference<Node::Statement>>				ParseStatement();
-		Optional<Node::Reference<Node::FunctionDeclaration>>	ParseFunctionDeclaration();
-		Optional<Node::Reference<Node::FunctionDefinition>>		ParseFunctionDefinition();
+		Optional<Node::Reference<Node::Function>>				ParseFunction();
 
 	private:
 		// Peeking & Consuming

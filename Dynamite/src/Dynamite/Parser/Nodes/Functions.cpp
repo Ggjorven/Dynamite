@@ -25,6 +25,11 @@ namespace Dynamite::Node
 	{
 	}
 
+    Function::Function(VariantType function)
+		: Func(function)
+	{
+	}
+
 	FunctionCall::FunctionCall(const Type& returnType, const Token& function, const std::vector<Reference<Expression>>& arguments)
 		: ReturnType(returnType), Function(function), Arguments(arguments)
 	{
@@ -41,6 +46,23 @@ namespace Dynamite::Node
 	Type FunctionDefinition::GetType() const
 	{
 		return ReturnType;
+	}
+
+	Type Function::GetType() const
+	{
+		struct FunctionVisitor
+		{
+			Type operator () (const Reference<FunctionDeclaration> obj)
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Reference<FunctionDefinition> obj)
+			{
+				return obj->GetType();
+			}
+		};
+
+		return std::visit(FunctionVisitor(), Func);
 	}
 
 	Type FunctionCall::GetType() const

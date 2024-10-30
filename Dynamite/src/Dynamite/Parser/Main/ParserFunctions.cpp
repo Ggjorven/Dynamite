@@ -94,18 +94,7 @@ namespace Dynamite
 	}
 
 
-
-	Optional<Node::Reference<Node::FunctionDeclaration>> Parser::ParseFunctionDeclaration()
-	{
-		// TODO: Implement
-
-
-		return {};
-	}
-
-
-
-	Optional<Node::Reference<Node::FunctionDefinition>> Parser::ParseFunctionDefinition()
+	Optional<Node::Reference<Node::Function>> Parser::ParseFunction()
 	{
 		size_t offset = 0;
 		
@@ -116,7 +105,7 @@ namespace Dynamite
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier) &&
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::OpenParenthesis))
 		{
-			Node::Reference<Node::FunctionDefinition> func = m_Tracker.New<Node::FunctionDefinition>();
+			Node::Reference<Node::Function> func = Node::New<Node::Function>();
 			
 			Optional<Type> returnType = GetType();
 			if (!returnType.HasValue())
@@ -126,12 +115,14 @@ namespace Dynamite
 				return {};
 			}
 
-			func->ReturnType = returnType.Value();
-			func->Name = Consume(); // Identifier token
+			Token name = Consume(); // Identifier token
+        	std::vector<Node::Reference<Node::VariableStatement>> parameters = { };
 
 			Consume(); // '(' token
 
-			std::vector<std::pair<Type, bool>> parameterTypes = { };
+			bool hasDefaultArguments = false;
+			std::vector<Type> parameterTypes = { };
+			std::vector<std::pair<Type, bool>> parameterTypesAndDefault = { };
 			while (true)
 			{
 				size_t parameterOffset = 0;
@@ -145,17 +136,11 @@ namespace Dynamite
 					if (!variableType.HasValue())
 					{
 						Compiler::Error(Peek(0).Value().LineNumber, "Invalid type as function parameter.");
-						return m_Tracker.Return<Node::FunctionDefinition>();
+						return {};
 					}
 
 					variable->VariableType = variableType.Value();
 					variable->Variable = Consume(); // Identifier token
-
-					// Note: We begin the scope here so we can 
-					// expose the parameters to the scope as well.
-					ScopeSystem::BeginScope();
-
-					ScopeSystem::PushVar(variable->Variable.Value, variableType.Value());
 
 					// Check if it has a default value
 					if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Equals))
@@ -168,9 +153,11 @@ namespace Dynamite
 							Compiler::Error("Expected expression.");
 					}
 
-					func->Parameters.push_back(variable);
+					parameters.push_back(variable);
 
-					parameterTypes.emplace_back(variable->VariableType, ((variable->Expr == (Node::Reference<Node::Expression>)Node::NullRef) ? true : false));
+					hasDefaultArguments |= (variable->Expr == ((Node::Reference<Node::Expression>)Node::NullRef) ? false : true);
+					parameterTypes.emplace_back(variable->VariableType);
+					parameterTypesAndDefault.emplace_back(variable->VariableType, ((variable->Expr == (Node::Reference<Node::Expression>)Node::NullRef) ? true : false));
 
 					// Continue if the next is a comma
 					if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Comma))
@@ -185,20 +172,71 @@ namespace Dynamite
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
-			FunctionSystem::Add(func->Name.Value, func->GetType(), parameterTypes);
+			if (!FunctionSystem::Exists(name.Value, returnType.Value(), parameterTypes))
+				FunctionSystem::Add(name.Value, returnType.Value(), parameterTypesAndDefault);
 
-			if (auto body = ParseScopeStatement(false))
-				func->Body = body.Value();
-			else
-				Compiler::Error(Peek(0).Value().LineNumber, "Expected scope.");
-
-			if (!TypeSystem::IsVoid(returnType.Value()))
+			/////////////////////////////////////////////////////////////////
+			// Declaration
+			/////////////////////////////////////////////////////////////////
+			if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Semicolon))
 			{
-				if (func->Body->Statements.empty() || !std::holds_alternative<Node::Reference<Node::ReturnStatement>>(func->Body->Statements.back()->StatementObj))
-					Compiler::Warn(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");;
+				Consume(); // ';' token
+
+				Node::Reference<Node::FunctionDeclaration> declaration = m_Tracker.New<Node::FunctionDeclaration>();
+				declaration->ReturnType = returnType.Value();
+				declaration->Name = name;
+				declaration->Parameters = parameters;
+
+				func->Func = declaration;
+
+				m_Tracker.Pop<Node::FunctionDeclaration>();
+			}
+			/////////////////////////////////////////////////////////////////
+			// Definition
+			/////////////////////////////////////////////////////////////////
+			else
+			{
+				Node::Reference<Node::FunctionDefinition> definition = m_Tracker.New<Node::FunctionDefinition>();
+				definition->ReturnType = returnType.Value();
+				definition->Name = name;
+				definition->Parameters = parameters;
+
+				// Check if the declaration matches the definition
+				if (FunctionSystem::Exists(definition->Name.Value, definition->ReturnType, parameterTypes))
+				{
+					if (hasDefaultArguments)
+					{
+						Compiler::Error(Peek(-1).Value().LineNumber, "Cannot redefine default arguments.");
+					}
+				}
+
+				// Note: We begin the scope here so we can 
+				// expose the parameters to the scope as well.
+				ScopeSystem::BeginScope();
+
+				// Expose parameters
+				for (const auto& parameter : parameters)
+					ScopeSystem::PushVar(parameter->Variable.Value, parameter->GetType());
+
+				// Parse the scope
+				if (auto body = ParseScopeStatement(false))
+					definition->Body = body.Value();
+				else
+					Compiler::Error(Peek(0).Value().LineNumber, "Expected function body.");
+
+				// Check for ending return statement
+				if (!TypeSystem::IsVoid(returnType.Value()))
+				{
+					if (definition->Body->Statements.empty() || !std::holds_alternative<Node::Reference<Node::ReturnStatement>>(definition->Body->Statements.back()->StatementObj))
+						Compiler::Warn(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");;
+				}
+
+				func->Func = definition;
+
+				m_Tracker.Pop<Node::FunctionDefinition>();
 			}
 
-			return m_Tracker.Return<Node::FunctionDefinition>();
+			return func;
 		}
 
 		return {};

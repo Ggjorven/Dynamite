@@ -48,6 +48,8 @@ namespace Dynamite::Node
 	struct FunctionDeclaration;
 	struct FunctionDefinition;
 
+	struct Function;
+
 	struct Program;
 
 	/////////////////////////////////////////////////////////////////

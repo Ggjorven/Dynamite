@@ -20,9 +20,15 @@ namespace Dynamite
 	public:
 		struct Function
 		{
+		public:
+			struct Overload
+			{
+				Type ReturnType;
+				std::vector<std::pair<Type, bool>> Parameters; // Type & required bool
+			};
+		public:
 			std::string Name;
-			Type ReturnType;
-			std::vector<std::pair<Type, bool>> Parameters; // Type & required bool
+			Overload OverloadObj; // TODO: Add support for multiple overloads
 		};
 	public:
 		static void Reset();
@@ -34,6 +40,8 @@ namespace Dynamite
 
 		static size_t GetArgCount(const std::string& functionName);
 		static size_t GetRequiredArgCount(const std::string& functionName);
+
+		static bool Exists(const std::string& name, const Type& returnType, const std::vector<Type>& parameters = { });
 
 	private:
 		inline static std::vector<Function> s_Functions = {};

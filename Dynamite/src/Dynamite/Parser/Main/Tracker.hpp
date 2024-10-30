@@ -64,7 +64,8 @@ namespace Dynamite
 		std::vector<Node::Reference<Node::ElseIfBranch>> m_ElseIfBranchs = {};
 		std::vector<Node::Reference<Node::ElseBranch>> m_ElseBranchs = {};
 		std::vector<Node::Reference<Node::ConditionBranch>> m_ConditionBranchs = {};
-
+		
+		// Note: "Function" does not get tracked.
 		std::vector<Node::Reference<Node::FunctionDefinition>> m_FunctionDefinitions = {};
 		std::vector<Node::Reference<Node::FunctionDeclaration>> m_FunctionDeclarations = {};
 	};

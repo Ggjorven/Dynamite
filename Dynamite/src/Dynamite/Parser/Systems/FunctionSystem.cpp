@@ -22,7 +22,7 @@ namespace Dynamite
 
 	void FunctionSystem::Add(const std::string& name, Type returnType, const std::vector<std::pair<Type, bool>>& parameters)
 	{
-		s_Functions.emplace_back(name, returnType, parameters);
+		s_Functions.emplace_back(name, Function::Overload(returnType, parameters));
 	}
 
 	Optional<Type> FunctionSystem::GetReturnType(const std::string& functionName)
@@ -35,7 +35,7 @@ namespace Dynamite
 		if (it == s_Functions.cend())
 			return {};
 
-		return Optional<Type>((*it).ReturnType);
+		return Optional<Type>((*it).OverloadObj.ReturnType);
 	}
 
 	Optional<Type> FunctionSystem::GetArgumentType(const std::string& functionName, size_t index)
@@ -47,10 +47,10 @@ namespace Dynamite
 
 		if (it == s_Functions.cend())
 			return {};
-		else if (index >= (*it).Parameters.size())
+		else if (index >= (*it).OverloadObj.Parameters.size())
 			return {};
 
-		return Optional<Type>((*it).Parameters[index].first);
+		return Optional<Type>((*it).OverloadObj.Parameters[index].first);
 	}
 
 	size_t FunctionSystem::GetArgCount(const std::string& functionName)
@@ -63,7 +63,7 @@ namespace Dynamite
 		if (it == s_Functions.cend())
 			return 0;
 
-		return (*it).Parameters.size();
+		return (*it).OverloadObj.Parameters.size();
 	}
 
 	size_t FunctionSystem::GetRequiredArgCount(const std::string& functionName)
@@ -73,10 +73,10 @@ namespace Dynamite
 			return func.Name == functionName;
 		});
 
-		if (it == s_Functions.cend() || it->Parameters.empty())
+		if (it == s_Functions.cend() || it->OverloadObj.Parameters.empty())
 			return 0;
 
-		auto& parameters = it->Parameters;
+		auto& parameters = it->OverloadObj.Parameters;
 		size_t requiredCount = parameters.size();
 
 		for (size_t i = parameters.size(); i-- > 0;)
@@ -90,6 +90,32 @@ namespace Dynamite
 		}
 
 		return requiredCount;
+	}
+
+	bool FunctionSystem::Exists(const std::string& name, const Type& returnType, const std::vector<Type>& parameters)
+	{
+		const auto it = std::ranges::find_if(std::as_const(s_Functions), [&](const Function& func)
+		{
+			return func.Name == name;
+		});
+
+		if (it == s_Functions.cend())
+			return false;
+
+		// Checks
+		if ((*it).OverloadObj.ReturnType != returnType)
+			return false;
+
+		if ((*it).OverloadObj.Parameters.size() != parameters.size())
+			return false;
+
+		for (size_t i = 0; i < parameters.size(); i++)
+		{
+			if ((*it).OverloadObj.Parameters[i].first != parameters[i])
+				return false;
+		}
+
+		return true;
 	}
 
 
