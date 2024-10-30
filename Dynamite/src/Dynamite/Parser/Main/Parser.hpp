@@ -20,19 +20,20 @@ namespace Dynamite
 
 	public:
 		// Parsing methods
-		Optional<Node::Reference<Node::FunctionCall>>		ParseFunctionCall();
-		Optional<Node::Reference<Node::TermExpr>>			ParseTermExpr();
-		void												HandleBinaryOperators(Node::Reference<Node::Expression>& expr, size_t minimumPrecedence);
-		Optional<Node::Reference<Node::Expression>>			ParseExpression(size_t minimumPrecedence = 0);
+		Optional<Node::Reference<Node::FunctionCall>>			ParseFunctionCall();
+		Optional<Node::Reference<Node::TermExpr>>				ParseTermExpr();
+		void													HandleBinaryOperators(Node::Reference<Node::Expression>& expr, size_t minimumPrecedence);
+		Optional<Node::Reference<Node::Expression>>				ParseExpression(size_t minimumPrecedence = 0);
 		
-		Optional<Node::Reference<Node::ConditionBranch>>	ParseConditionBrach();
+		Optional<Node::Reference<Node::ConditionBranch>>		ParseConditionBrach();
 		
-		Optional<Node::Reference<Node::IfStatement>>		ParseIfStatement();
-		Optional<Node::Reference<Node::ScopeStatement>>		ParseScopeStatement(bool startScope = true);
-		Optional<Node::Reference<Node::VariableStatement>>	ParseVariableStatement();
+		Optional<Node::Reference<Node::IfStatement>>			ParseIfStatement();
+		Optional<Node::Reference<Node::ScopeStatement>>			ParseScopeStatement(bool startScope = true);
+		Optional<Node::Reference<Node::VariableStatement>>		ParseVariableStatement();
 
-		Optional<Node::Reference<Node::Statement>>			ParseStatement();
-		Optional<Node::Reference<Node::Function>>			ParseFunction();
+		Optional<Node::Reference<Node::Statement>>				ParseStatement();
+		Optional<Node::Reference<Node::FunctionDeclaration>>	ParseFunctionDeclaration();
+		Optional<Node::Reference<Node::FunctionDefinition>>		ParseFunctionDefinition();
 
 	private:
 		// Peeking & Consuming

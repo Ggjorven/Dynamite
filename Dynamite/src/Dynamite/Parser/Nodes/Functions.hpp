@@ -12,12 +12,30 @@ namespace Dynamite::Node
     /////////////////////////////////////////////////////////////////
     // Functions
     /////////////////////////////////////////////////////////////////
-    struct Function
+    struct FunctionDeclaration
     {
     private:
         friend class Pulse::Memory::Control;
     private:
-        Function(const Type& returnType = {}, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = { }, Reference<ScopeStatement> body = (Reference<ScopeStatement>)NullRef);
+        FunctionDeclaration(const Type& returnType = {}, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = { });
+
+    public:
+        Type ReturnType;
+        Token Name;
+
+        // Note: The expression can be a NullRef, since not every
+        // arguments has a default value.
+        std::vector<Reference<VariableStatement>> Parameters;
+
+        Type GetType() const;
+    };
+
+    struct FunctionDefinition
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        FunctionDefinition(const Type& returnType = {}, const Token& name = {}, const std::vector<Reference<VariableStatement>>& parameters = { }, Reference<ScopeStatement> body = (Reference<ScopeStatement>)NullRef);
 
     public:
         Type ReturnType;
@@ -51,7 +69,8 @@ namespace Dynamite::Node
     /////////////////////////////////////////////////////////////////
     // Helper functions
     /////////////////////////////////////////////////////////////////
-    std::string FunctionToString(const Reference<Function> obj, size_t indentLevel = 0);
+    std::string FunctionDeclarationToString(const Reference<FunctionDeclaration> obj, size_t indentLevel = 0);
+    std::string FunctionDefinitionToString(const Reference<FunctionDefinition> obj, size_t indentLevel = 0);
     std::string FunctionCallToString(const Reference<FunctionCall> obj, size_t indentLevel = 0);
 
 }

@@ -41,7 +41,7 @@ namespace Dynamite
 		{
 			if (auto variableStatement = ParseVariableStatement())
 				program.Definitions.emplace_back(variableStatement.Value());
-			else if (auto function = ParseFunction())
+			else if (auto function = ParseFunctionDefinition())
 				program.Definitions.emplace_back(function.Value());
 			else
 			{

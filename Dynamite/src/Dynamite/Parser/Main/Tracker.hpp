@@ -40,6 +40,8 @@ namespace Dynamite
 		
 		std::vector<Node::Reference<Node::TermExpr>> m_TermExprs = {};
 		std::vector<Node::Reference<Node::BinaryExpr>> m_BinaryExprs = {};
+		std::vector<Node::Reference<Node::AddressExpr>> m_AddressExprs = {};
+		std::vector<Node::Reference<Node::DereferenceExpr>> m_DereferenceExprs = {};
 		
 		std::vector<Node::Reference<Node::FunctionCall>> m_FunctionCalls = {};
 		
@@ -63,7 +65,8 @@ namespace Dynamite
 		std::vector<Node::Reference<Node::ElseBranch>> m_ElseBranchs = {};
 		std::vector<Node::Reference<Node::ConditionBranch>> m_ConditionBranchs = {};
 
-		std::vector<Node::Reference<Node::Function>> m_Functions = {};
+		std::vector<Node::Reference<Node::FunctionDefinition>> m_FunctionDefinitions = {};
+		std::vector<Node::Reference<Node::FunctionDeclaration>> m_FunctionDeclarations = {};
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -107,6 +110,8 @@ namespace Dynamite
 
 		TRACKER_TRACK(TermExpr);
 		TRACKER_TRACK(BinaryExpr);
+		TRACKER_TRACK(AddressExpr);
+		TRACKER_TRACK(DereferenceExpr);
 
 		TRACKER_TRACK(FunctionCall);
 
@@ -130,7 +135,8 @@ namespace Dynamite
 		TRACKER_TRACK(ElseBranch);
 		TRACKER_TRACK(ConditionBranch);
 
-		TRACKER_TRACK(Function);
+		TRACKER_TRACK(FunctionDeclaration);
+		TRACKER_TRACK(FunctionDefinition);
 
 		//static_assert(false, "Unhandled TNode passed in.")
 		return (Node::Reference<TNode>)Node::NullRef;
@@ -149,6 +155,8 @@ namespace Dynamite
 
 		TRACKER_POP(TermExpr);
 		TRACKER_POP(BinaryExpr);
+		TRACKER_POP(AddressExpr);
+		TRACKER_POP(DereferenceExpr);
 
 		TRACKER_POP(FunctionCall);
 
@@ -172,7 +180,8 @@ namespace Dynamite
 		TRACKER_POP(ElseBranch);
 		TRACKER_POP(ConditionBranch);
 
-		TRACKER_POP(Function);
+		TRACKER_POP(FunctionDeclaration);
+		TRACKER_POP(FunctionDefinition);
 
 		//static_assert(false, "Unhandled TNode passed in.")
 		return (Node::Reference<TNode>)Node::NullRef;
@@ -185,6 +194,8 @@ namespace Dynamite
 
 		TRACKER_GET(TermExpr);
 		TRACKER_GET(BinaryExpr);
+		TRACKER_GET(AddressExpr);
+		TRACKER_GET(DereferenceExpr);
 
 		TRACKER_GET(FunctionCall);
 
@@ -208,7 +219,8 @@ namespace Dynamite
 		TRACKER_GET(ElseBranch);
 		TRACKER_GET(ConditionBranch);
 
-		TRACKER_GET(Function);
+		TRACKER_GET(FunctionDeclaration);
+		TRACKER_GET(FunctionDefinition);
 
 		//static_assert(false, "Unhandled TNode passed in.")
 		return (Node::Reference<TNode>)Node::NullRef;

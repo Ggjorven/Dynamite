@@ -95,7 +95,17 @@ namespace Dynamite
 
 
 
-	Optional<Node::Reference<Node::Function>> Parser::ParseFunction()
+	Optional<Node::Reference<Node::FunctionDeclaration>> Parser::ParseFunctionDeclaration()
+	{
+		// TODO: Implement
+
+
+		return {};
+	}
+
+
+
+	Optional<Node::Reference<Node::FunctionDefinition>> Parser::ParseFunctionDefinition()
 	{
 		size_t offset = 0;
 		
@@ -106,13 +116,13 @@ namespace Dynamite
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::Identifier) &&
 			Utils::OptMemberIs(Peek(offset++), &Token::Type, TokenType::OpenParenthesis))
 		{
-			Node::Reference<Node::Function> func = m_Tracker.New<Node::Function>(); 
+			Node::Reference<Node::FunctionDefinition> func = m_Tracker.New<Node::FunctionDefinition>();
 			
 			Optional<Type> returnType = GetType();
 			if (!returnType.HasValue())
 			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Invalid type as function return type.");
-				m_Tracker.Pop<Node::Function>();
+				m_Tracker.Pop<Node::FunctionDefinition>();
 				return {};
 			}
 
@@ -135,7 +145,7 @@ namespace Dynamite
 					if (!variableType.HasValue())
 					{
 						Compiler::Error(Peek(0).Value().LineNumber, "Invalid type as function parameter.");
-						return m_Tracker.Return<Node::Function>();
+						return m_Tracker.Return<Node::FunctionDefinition>();
 					}
 
 					variable->VariableType = variableType.Value();
@@ -188,7 +198,7 @@ namespace Dynamite
 					Compiler::Warn(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");;
 			}
 
-			return m_Tracker.Return<Node::Function>();
+			return m_Tracker.Return<Node::FunctionDefinition>();
 		}
 
 		return {};

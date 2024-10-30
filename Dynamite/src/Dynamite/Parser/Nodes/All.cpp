@@ -27,9 +27,13 @@ namespace Dynamite::Node
 		{
 			size_t Indent;
 
-			std::string operator () (const Reference<Function> obj) const
+			std::string operator () (const Reference<FunctionDeclaration> obj) const
 			{
-				return FunctionToString(obj, Indent);
+				return FunctionDeclarationToString(obj, Indent);
+			}
+			std::string operator () (const Reference<FunctionDefinition> obj) const
+			{
+				return FunctionDefinitionToString(obj, Indent);
 			}
 			std::string operator () (const Reference<VariableStatement> obj) const
 			{

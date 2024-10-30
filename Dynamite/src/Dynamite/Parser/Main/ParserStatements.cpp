@@ -237,9 +237,9 @@ namespace Dynamite
 				
 				// Check if returnStatement matches the returnType of the function
 				// or is castable to the proper returnType.
-				if (!TypeSystem::Castable(expr.Value()->GetType(), m_Tracker.Get<Node::Function>()->GetType()))
+				if (!TypeSystem::Castable(expr.Value()->GetType(), m_Tracker.Get<Node::FunctionDefinition>()->GetType()))
 				{
-					Compiler::Error(Peek(0).Value().LineNumber, "Function '{0}' expects type {1} as return type, instead it got {2}, {2} is not castable to {1}.", m_Tracker.Get<Node::Function>()->Name.Value, TypeSystem::ToString(m_Tracker.Get<Node::Function>()->GetType()), TypeSystem::ToString(expr.Value()->GetType()));
+					Compiler::Error(Peek(0).Value().LineNumber, "Function '{0}' expects type {1} as return type, instead it got {2}, {2} is not castable to {1}.", m_Tracker.Get<Node::FunctionDefinition>()->Name.Value, TypeSystem::ToString(m_Tracker.Get<Node::FunctionDefinition>()->GetType()), TypeSystem::ToString(expr.Value()->GetType()));
 
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
 					m_Tracker.Pop<Node::Statement>();

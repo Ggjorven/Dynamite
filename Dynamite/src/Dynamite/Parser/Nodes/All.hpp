@@ -18,7 +18,7 @@ namespace Dynamite::Node
     struct Program
     {
     public:
-        using VariantType = Variant<Reference<VariableStatement>, Reference<Function>>;
+        using VariantType = Variant<Reference<VariableStatement>, Reference<FunctionDeclaration>, Reference<FunctionDefinition>>;
     public:
         std::vector<VariantType> Definitions = { };
     };

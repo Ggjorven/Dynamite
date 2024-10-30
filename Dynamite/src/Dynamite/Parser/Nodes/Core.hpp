@@ -45,7 +45,9 @@ namespace Dynamite::Node
 	struct ElseBranch;
 	struct ConditionBranch;	
 
-	struct Function;
+	struct FunctionDeclaration;
+	struct FunctionDefinition;
+
 	struct Program;
 
 	/////////////////////////////////////////////////////////////////
