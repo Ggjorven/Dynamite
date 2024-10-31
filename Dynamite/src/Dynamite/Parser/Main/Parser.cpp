@@ -192,13 +192,13 @@ namespace Dynamite
 
 					bool operator () (const Node::Reference<Node::LiteralTerm> obj) const
 					{
-						return TypeSystem::Cast(From, To, obj->Literal.Value);;
+						return TypeSystem::Cast(From, To, obj->Literal.Value);
 					}
-					bool operator () (const Node::Reference<Node::IdentifierTerm>) const
+					bool operator () (const Node::Reference<Node::IdentifierTerm> obj) const
 					{
 						return false;
 					}
-					bool operator () (const Node::Reference<Node::ParenthesisTerm>) const
+					bool operator () (const Node::Reference<Node::ParenthesisTerm> obj) const
 					{
 						return false;
 					}
@@ -225,8 +225,9 @@ namespace Dynamite
 		};
 
 		std::string originalExprStr = Node::ExpressionToString(expression, 2);
+		bool lostData = std::visit(ExpressionVisitor(from, to), expression->Expr);
 
-		if (std::visit(ExpressionVisitor(from, to), expression->Expr))
+		if (lostData)
 			Compiler::Warn(Peek(0).Value().LineNumber, "Lost data while casting expression. From: {0}, to {1}\n    Original: \n{2} \n    New: \n{3}", TypeSystem::ToString(from), TypeSystem::ToString(to), originalExprStr, Node::ExpressionToString(expression, 2));
 	}
 

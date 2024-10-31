@@ -30,8 +30,8 @@ namespace Dynamite::Node
 	{
 	}
 
-	FunctionCall::FunctionCall(const Type& returnType, const Token& function, const std::vector<Reference<Expression>>& arguments)
-		: ReturnType(returnType), Function(function), Arguments(arguments)
+	FunctionCall::FunctionCall(const Type& returnType, const Token& function, const std::vector<Reference<Expression>>& arguments, size_t overloadIndex)
+		: ReturnType(returnType), Function(function), Arguments(arguments), OverloadIndex(overloadIndex)
 	{
 	}
 
@@ -70,10 +70,15 @@ namespace Dynamite::Node
 		return ReturnType;
 	}
 
+	void FunctionCall::SetType(const Type& type)
+	{
+		ReturnType = type;
+	}
+
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
-	std::string FunctionDeclarationToString(const Reference<FunctionDeclaration> obj, size_t indentLevel) // TODO: Check if correct
+	std::string FunctionDeclarationToString(const Reference<FunctionDeclaration> obj, size_t indentLevel)
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 

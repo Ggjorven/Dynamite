@@ -106,6 +106,7 @@ namespace Dynamite
 			}
 
 			function->ReturnType = FunctionSystem::GetReturnTypes(function->Function.Value)[functionOverload];
+			function->OverloadIndex = functionOverload;
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 			return m_Tracker.Return<Node::FunctionCall>();

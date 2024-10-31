@@ -26,6 +26,7 @@ namespace Dynamite::Node
         Reference<Expression> RHS;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct BinarySubtraction
@@ -42,6 +43,7 @@ namespace Dynamite::Node
         Reference<Expression> RHS;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct BinaryMultiplication
@@ -58,6 +60,7 @@ namespace Dynamite::Node
         Reference<Expression> RHS;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct BinaryDivision
@@ -74,6 +77,7 @@ namespace Dynamite::Node
         Reference<Expression> RHS;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct BinaryOR
@@ -90,6 +94,7 @@ namespace Dynamite::Node
         Reference<Expression> RHS;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct BinaryAND
@@ -106,6 +111,7 @@ namespace Dynamite::Node
         Reference<Expression> RHS;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct BinaryXOR
@@ -122,6 +128,7 @@ namespace Dynamite::Node
         Reference<Expression> RHS;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     /////////////////////////////////////////////////////////////////

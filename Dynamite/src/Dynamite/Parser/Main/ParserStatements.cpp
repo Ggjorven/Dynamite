@@ -246,6 +246,9 @@ namespace Dynamite
 					return {};
 				}
 
+				// Note: Only casts if the internal value is a literal
+				Cast(expr.Value()->GetType(), m_Tracker.Get<Node::FunctionDefinition>()->GetType(), expr.Value());
+
 				CheckConsume(TokenType::Semicolon, "Expected `;`.");
 				return m_Tracker.Return<Node::Statement>();
 			}
@@ -274,6 +277,12 @@ namespace Dynamite
 			if (!type.HasValue())
 			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", assignment->Variable.Value);
+				m_Tracker.Pop<Node::Statement>();
+				return {};
+			}
+			else if (!type.Value().IsMut())
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Cannot assign value to an immutable variable.");
 				m_Tracker.Pop<Node::Statement>();
 				return {};
 			}

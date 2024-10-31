@@ -24,6 +24,7 @@ namespace Dynamite::Node
         Token Literal;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct IdentifierTerm
@@ -38,6 +39,7 @@ namespace Dynamite::Node
         Token Identifier;
 
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     // Note: We have this as a seperate term, to support expressions within parenthesis.
@@ -52,6 +54,7 @@ namespace Dynamite::Node
         Reference<Expression> Expr;
         
         Type GetType() const;
+        void SetType(const Type& type);
 
         bool IsLValue() const;
     };

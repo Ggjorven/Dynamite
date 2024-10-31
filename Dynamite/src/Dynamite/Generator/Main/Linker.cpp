@@ -30,7 +30,7 @@ namespace Dynamite
 
         // Add all arguments
         {
-            args.push_back("lld");                            // Command name
+            args.push_back("lld");
 
             stringRefs.push_back("/out:" + (outputDir / "output.exe").string());
             args.push_back(stringRefs.back().c_str());

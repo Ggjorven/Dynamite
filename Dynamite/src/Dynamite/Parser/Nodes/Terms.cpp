@@ -38,14 +38,29 @@ namespace Dynamite::Node
 		return LiteralType;
 	}
 
+	void LiteralTerm::SetType(const Type& type)
+	{
+		LiteralType = type;
+	}
+
 	Type IdentifierTerm::GetType() const
 	{
 		return IdentifierType;
 	}
 
+	void IdentifierTerm::SetType(const Type& type)
+	{
+		IdentifierType = type;
+	}
+
 	Type ParenthesisTerm::GetType() const
 	{
 		return Expr->GetType();
+	}
+
+	void ParenthesisTerm::SetType(const Type& type)
+	{
+		Expr->SetType(type);
 	}
 
 	bool ParenthesisTerm::IsLValue() const

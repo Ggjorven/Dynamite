@@ -69,7 +69,7 @@ namespace Dynamite::Node
     private:
         friend class Pulse::Memory::Control;
     private:
-        FunctionCall(const Type& returnType = {}, const Token& function = {}, const std::vector<Reference<Expression>>& arguments = { });
+        FunctionCall(const Type& returnType = {}, const Token& function = {}, const std::vector<Reference<Expression>>& arguments = { }, size_t overloadIndex = 0);
 
     public:
         Type ReturnType;
@@ -77,7 +77,10 @@ namespace Dynamite::Node
 
         std::vector<Reference<Expression>> Arguments;
 
+        size_t OverloadIndex = 0;
+
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     /////////////////////////////////////////////////////////////////

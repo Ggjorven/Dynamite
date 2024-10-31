@@ -155,6 +155,19 @@ namespace Dynamite
 		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Array));
 	}
 
+	bool Type::IsUnsigned() const
+	{
+		if (Information.Specifier == TypeSpecifier::UInt8 ||
+			Information.Specifier == TypeSpecifier::UInt16 ||
+			Information.Specifier == TypeSpecifier::UInt32 ||
+			Information.Specifier == TypeSpecifier::UInt64)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	// Adds
 	void Type::AddMut()
 	{
@@ -178,7 +191,7 @@ namespace Dynamite
 		BackQualifiers.emplace_back(TypeQualifier::Array, size);
 	}
 
-	std::string Type::GetArraySize()
+	std::string Type::GetArraySize() const
 	{
 		if (!IsArray())
 			return {};

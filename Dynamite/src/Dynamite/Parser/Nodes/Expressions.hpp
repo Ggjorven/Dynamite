@@ -28,6 +28,7 @@ namespace Dynamite::Node
         VariantType Term;
 
         Type GetType() const;
+        void SetType(const Type& type);
 
         bool IsLValue() const;
     };
@@ -45,6 +46,7 @@ namespace Dynamite::Node
         VariantType Operation;
         
         Type GetType() const;
+        void SetType(const Type& type);
     };
 
     struct AddressExpr
@@ -58,6 +60,7 @@ namespace Dynamite::Node
         Reference<Expression> Expr;
 
         Type GetType() const;
+        void SetType(const Type& type); // Note: Just pass in the pointer type, the function will remove it.
     };
 
     struct DereferenceExpr
@@ -71,6 +74,7 @@ namespace Dynamite::Node
         Reference<Expression> Expr;
 
         Type GetType() const;
+        void SetType(const Type& type); // Note: Just pass in the value type, the function will add a pointer to it.
     };
     
     struct Expression
@@ -85,6 +89,7 @@ namespace Dynamite::Node
         VariantType Expr;
 
         Type GetType() const;
+        void SetType(const Type& type);
 
         bool IsLValue() const;
     };

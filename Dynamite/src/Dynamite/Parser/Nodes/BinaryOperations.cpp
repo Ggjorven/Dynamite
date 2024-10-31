@@ -59,9 +59,23 @@ namespace Dynamite::Node
 		return ResultType;
 	}
 
+	void BinaryAddition::SetType(const Type& type)
+	{
+		ResultType = type;
+		LHS->SetType(type);
+		RHS->SetType(type);
+	}
+
 	Type BinarySubtraction::GetType() const
 	{
 		return ResultType;
+	}
+
+	void BinarySubtraction::SetType(const Type& type)
+	{
+		ResultType = type;
+		LHS->SetType(type);
+		RHS->SetType(type);
 	}
 
 	Type BinaryMultiplication::GetType() const
@@ -69,9 +83,23 @@ namespace Dynamite::Node
 		return ResultType;
 	}
 
+	void BinaryMultiplication::SetType(const Type& type)
+	{
+		ResultType = type;
+		LHS->SetType(type);
+		RHS->SetType(type);
+	}
+
 	Type BinaryDivision::GetType() const
 	{
 		return ResultType;
+	}
+
+	void BinaryDivision::SetType(const Type& type)
+	{
+		ResultType = type;
+		LHS->SetType(type);
+		RHS->SetType(type);
 	}
 
 	Type BinaryOR::GetType() const
@@ -79,14 +107,35 @@ namespace Dynamite::Node
 		return ResultType;
 	}
 
+	void BinaryOR::SetType(const Type& type)
+	{
+		ResultType = type;
+		LHS->SetType(type);
+		RHS->SetType(type);
+	}
+
 	Type BinaryAND::GetType() const
 	{
 		return ResultType;
 	}
 
+	void BinaryAND::SetType(const Type& type)
+	{
+		ResultType = type;
+		LHS->SetType(type);
+		RHS->SetType(type);
+	}
+
 	Type BinaryXOR::GetType() const
 	{
 		return ResultType;
+	}
+
+	void BinaryXOR::SetType(const Type& type)
+	{
+		ResultType = type;
+		LHS->SetType(type);
+		RHS->SetType(type);
 	}
 
 	/////////////////////////////////////////////////////////////////

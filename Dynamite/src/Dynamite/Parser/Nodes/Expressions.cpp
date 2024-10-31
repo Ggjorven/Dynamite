@@ -119,6 +119,29 @@ namespace Dynamite::Node
 		return std::visit(TermVisitor(), Term);
 	}
 
+	void TermExpr::SetType(const Type& type)
+	{
+		struct TermVisitor
+		{
+			const Type& ToType;
+
+			void operator () (Reference<LiteralTerm> obj) const
+			{
+				return obj->SetType(ToType);
+			}
+			void operator () (Reference<IdentifierTerm> obj) const
+			{
+				return obj->SetType(ToType);
+			}
+			void operator () (Reference<ParenthesisTerm> obj) const
+			{
+				return obj->SetType(ToType);
+			}
+		};
+
+		std::visit(TermVisitor(type), Term);
+	}
+
 	bool TermExpr::IsLValue() const
 	{
 		struct TermVisitor
@@ -178,12 +201,62 @@ namespace Dynamite::Node
 		return std::visit(OperationVisitor(), Operation);
 	}
 
+	void BinaryExpr::SetType(const Type& type)
+	{
+		struct OperationVisitor
+		{
+			const Type& ToType;
+
+			void operator () (Reference<BinaryAddition> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<BinarySubtraction> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<BinaryMultiplication> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<BinaryDivision> obj) const
+			{
+				obj->SetType(ToType);
+			}
+
+			void operator () (Reference<BinaryOR> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<BinaryAND> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<BinaryXOR> obj) const
+			{
+				obj->SetType(ToType);
+			}
+		};
+
+		std::visit(OperationVisitor(type), Operation);
+	}
+
 	Type AddressExpr::GetType() const
 	{
 		Type ptrType = Expr->GetType().Copy();
 		ptrType.AddPointer();
 
 		return ptrType;
+	}
+
+	void AddressExpr::SetType(const Type& type)
+	{
+		Type nonPtrType = type;
+
+		if (type.IsPointer())
+			nonPtrType.BackQualifiers.pop_back();
+
+		Expr->SetType(nonPtrType);
 	}
 
 	Type DereferenceExpr::GetType() const
@@ -198,6 +271,14 @@ namespace Dynamite::Node
 		noPtrType.BackQualifiers.pop_back();
 
 		return noPtrType;
+	}
+
+	void DereferenceExpr::SetType(const Type& type)
+	{
+		Type ptrType = type;
+		ptrType.AddPointer();
+
+		Expr->SetType(ptrType);
 	}
 
 	Type Expression::GetType() const
@@ -227,6 +308,37 @@ namespace Dynamite::Node
 		};
 
 		return std::visit(ExpressionVisitor(), Expr);
+	}
+
+	void Expression::SetType(const Type& type)
+	{
+		struct ExpressionVisitor
+		{
+			const Type& ToType;
+
+			void operator () (Reference<TermExpr> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<BinaryExpr> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<FunctionCall> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<AddressExpr> obj) const
+			{
+				obj->SetType(ToType);
+			}
+			void operator () (Reference<DereferenceExpr> obj) const
+			{
+				obj->SetType(ToType);
+			}
+		};
+
+		std::visit(ExpressionVisitor(type), Expr);
 	}
 
 	bool Expression::IsLValue() const

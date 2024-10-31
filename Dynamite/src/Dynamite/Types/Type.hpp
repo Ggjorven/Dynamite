@@ -127,6 +127,8 @@ namespace Dynamite
 
 		bool IsArray() const;
 
+		bool IsUnsigned() const;
+
 		// Adds
 		void AddMut();
 		void AddVolatile();
@@ -135,7 +137,7 @@ namespace Dynamite
 
 		void AddArray(const std::string& size);
 
-		std::string GetArraySize();
+		std::string GetArraySize() const;
 		void SetArraySize(const std::string& value);
 
 		// Note: Removes mut & volatile, but not pointers.
