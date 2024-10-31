@@ -15,6 +15,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/Support/raw_ostream.h>
 
 namespace Dynamite
 {
@@ -53,6 +54,9 @@ namespace Dynamite
 
             std::visit(DefineVisitor(context, builder, mod), definition);
         }
+
+        if (Compiler::GetOptions().Contains(CompilerFlag::Verbose))
+            mod.print(llvm::outs(), nullptr, false, true);
 
         // Verification of module.
         if (llvm::verifyModule(mod, &llvm::errs()))

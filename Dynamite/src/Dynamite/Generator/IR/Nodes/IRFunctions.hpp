@@ -17,7 +17,7 @@ namespace Dynamite
 		static void GenDeclaration(const Node::Reference<Node::FunctionDeclaration> declaration, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 		static void GenDefinition(const Node::Reference<Node::FunctionDefinition> definition, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 	
-		// TODO: Function call
+		static void GenFunctionCall(const Node::Reference<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 	};
 
 }

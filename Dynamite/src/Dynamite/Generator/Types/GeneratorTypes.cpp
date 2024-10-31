@@ -155,5 +155,11 @@ namespace Dynamite
 		return returnValue;
 	}
 
+	llvm::Value* GeneratorTypes::Cast(llvm::IRBuilder<>& builder, llvm::Value* value, llvm::Type* to)
+	{
+		DY_ASSERT(0, "TODO");
+		return value;
+	}
+
 
 }

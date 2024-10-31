@@ -30,10 +30,12 @@ namespace Dynamite
 		static void EndScope();
 
 		static void PushVar(const std::string& name, const Type& type);
-		static void PopVars(size_t count);
 
 		static Optional<Type> GetVariableType(const std::string& name);
-
+	
+	private:
+		static void PopVars(size_t count);
+	
 	private:
 		inline static std::vector<Variable> s_Variables = {};
 		inline static std::vector<size_t> s_Scopes = { 0 };

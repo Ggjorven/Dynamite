@@ -23,14 +23,24 @@ namespace Dynamite
         s_Functions[name].push_back(func);
     }
 
+    IRFunctionCollection::Function& IRFunctionCollection::GetFunction(const std::string& name, size_t overloadIndex)
+    {
+        return s_Functions.at(name)[overloadIndex];
+    }
+
     llvm::FunctionCallee& IRFunctionCollection::GetLLVMFunction(const std::string& name, size_t overloadIndex)
     {
         return s_Functions.at(name)[overloadIndex].Callee;
     }
 
-    llvm::Value* IRFunctionCollection::GetLLVMArg(const std::string& funcName, const std::string& argName, size_t overloadIndex)
+    llvm::Value* IRFunctionCollection::GetLLVMArg(const std::string& funcName, size_t argIndex, size_t overloadIndex)
     {
-        return s_Functions.at(funcName)[overloadIndex].Arguments.at(argName);
+        return s_Functions.at(funcName)[overloadIndex].Arguments.at(argIndex).first;
+    }
+
+    Type& IRFunctionCollection::GetLLVMArgType(const std::string& funcName, size_t argIndex, size_t overloadIndex)
+    {
+        return s_Functions.at(funcName)[overloadIndex].Arguments.at(argIndex).second;
     }
 
 }

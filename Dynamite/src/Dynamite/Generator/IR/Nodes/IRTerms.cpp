@@ -8,6 +8,7 @@
 #include "Dynamite/Generator/Types/GeneratorTypes.hpp"
 
 #include "Dynamite/Generator/IR/Nodes/IRStatements.hpp"
+#include "Dynamite/Generator/IR/IRScopeCollection.hpp"
 #include "Dynamite/Generator/IR/IRFunctionCollection.hpp"
 
 #include <llvm/IR/DerivedTypes.h>
@@ -35,8 +36,7 @@ namespace Dynamite
 			}
 			llvm::Value* operator () (const Node::Reference<Node::IdentifierTerm> obj) const
 			{
-				DY_ASSERT(0, "TODO");
-				return nullptr;
+				return GenIdentifier(obj, Context, Builder, Module, EnforceType);
 			}
 			llvm::Value* operator () (const Node::Reference<Node::ParenthesisTerm> obj) const
 			{
@@ -54,6 +54,22 @@ namespace Dynamite
 			return GeneratorTypes::GetValue(context, enforceType.Value(), lit->Literal.Value).LLVMValue;
 		
 		return GeneratorTypes::GetValue(context, lit->GetType(), lit->Literal.Value).LLVMValue;
+	}
+
+	llvm::Value* IRTerms::GenIdentifier(const Node::Reference<Node::IdentifierTerm> identifier, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
+	{
+		llvm::Type* type = GeneratorTypes::GetType(context, identifier->GetType()).LLVMType;
+
+		if (enforceType.HasValue() && (identifier->GetType() != enforceType.Value()))
+		{
+			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetLLVMValue(identifier->Identifier.Value));
+			type = GeneratorTypes::GetType(context, enforceType.Value()).LLVMType;
+			
+			// TODO: Cast to enforced type before loading
+			return GeneratorTypes::Cast(builder, nonCastValue, type);
+		}
+
+		return builder.CreateLoad(type, IRScopeCollection::GetLLVMValue(identifier->Identifier.Value));
 	}
 
 }

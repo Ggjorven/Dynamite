@@ -17,8 +17,8 @@ namespace Dynamite
 	public:
 		static llvm::Value* GenTerm(const Node::Reference<Node::TermExpr> term, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType = {});
 
-		// Reference<LiteralTerm>, Reference<IdentifierTerm>, Reference<ParenthesisTerm>>;
 		static llvm::Value* GenLiteral(const Node::Reference<Node::LiteralTerm> term, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType = {});
+		static llvm::Value* GenIdentifier(const Node::Reference<Node::IdentifierTerm> identifier, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType = {});
 	};
 
 }

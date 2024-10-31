@@ -38,20 +38,20 @@ namespace Dynamite
 		s_Variables.emplace_back(name, type);
 	}
 
-	void ScopeSystem::PopVars(size_t count)
-	{
-		if (count <= s_Variables.size())
-			s_Variables.resize(s_Variables.size() - count);
-		else
-			s_Variables.clear(); 
-	}
-
 	Optional<Type> ScopeSystem::GetVariableType(const std::string& name)
 	{
 		const auto it = std::ranges::find_if(std::as_const(s_Variables), [&](const Variable& var) { return var.Name == name; });
 		if (it == s_Variables.cend()) return {};
 
 		return (*it).VariableType;
+	}
+
+	void ScopeSystem::PopVars(size_t count)
+	{
+		if (count <= s_Variables.size())
+			s_Variables.resize(s_Variables.size() - count);
+		else
+			s_Variables.clear();
 	}
 
 }

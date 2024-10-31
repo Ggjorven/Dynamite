@@ -9,6 +9,9 @@
 
 #include "Dynamite/Generator/IR/IRState.hpp"
 #include "Dynamite/Generator/IR/Nodes/IRStatements.hpp"
+#include "Dynamite/Generator/IR/Nodes/IRExpressions.hpp"
+
+#include "Dynamite/Generator/IR/IRScopeCollection.hpp"
 #include "Dynamite/Generator/IR/IRFunctionCollection.hpp"
 
 #include <llvm/IR/DerivedTypes.h>
@@ -51,6 +54,8 @@ namespace Dynamite
 				llvm::Value* argValue = arg;
 				argValue->setName(variable->Variable.Value);
 
+				func.Arguments.emplace_back(argValue, variable->VariableType);
+
 				argIndex++;
 			}
 		}
@@ -89,10 +94,14 @@ namespace Dynamite
 				llvm::Value* argValue = arg;
 				argValue->setName(variable->Variable.Value);
 
+				func.Arguments.emplace_back(argValue, variable->VariableType);
+
 				argIndex++;
 			}
 		}
 
+		IRFunctionCollection::AddFunction(definition->Name.Value, func);
+		
 		// Generate body
 		{
 			// Set parsing state
@@ -103,12 +112,36 @@ namespace Dynamite
 			llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", llvmFunc);
 			builder.SetInsertPoint(entry);
 
-			IRStatements::GenScope(definition->Body, context, builder, mod);
+			{
+				IRScopeCollection::BeginScope();
+
+				// Push parameters to the scope, so they are available
+				for (size_t argIndex = 0; argIndex < func.Arguments.size(); argIndex++)
+					IRScopeCollection::PushVar(definition->Parameters[argIndex]->Variable.Value, definition->Parameters[argIndex]->GetType(), func.Arguments[argIndex].first);
+
+				IRStatements::GenScope(definition->Body, context, builder, mod);
+			}
 
 			IRState::CurrentFunction = nullptr;
 		}
+	}
 
-		IRFunctionCollection::AddFunction(definition->Name.Value, func);
+	void IRFunctions::GenFunctionCall(const Node::Reference<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
+	{
+		auto& func = IRFunctionCollection::GetFunction(funcCall->Function.Value, funcCall->OverloadIndex);
+
+		std::vector<llvm::Value*> arguments;
+		arguments.reserve(func.Arguments.size());
+
+		for (size_t argIndex = 0; argIndex < func.Arguments.size(); argIndex++)
+		{
+			auto argExpr = funcCall->Arguments[argIndex];
+			llvm::Value* value = IRExpressions::GenExpression(argExpr, context, builder, mod, func.Arguments[argIndex].second);
+
+			arguments.emplace_back(value);
+		}
+
+		builder.CreateCall(func.Callee, arguments);
 	}
 
 }

@@ -16,9 +16,10 @@ namespace Dynamite
 	public:
 		static void GenStatement(const Node::Reference<Node::Statement> statement, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 		
-		static void GenScope(const Node::Reference<Node::ScopeStatement> scope, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
+		static void GenVariable(const Node::Reference<Node::VariableStatement> var, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
+		static void GenScope(const Node::Reference<Node::ScopeStatement> scope, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, bool startScope = true);
 		static void GenReturn(const Node::Reference<Node::ReturnStatement> ret, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
-		// TODO: Function call
+		static void GenFunctionCall(const Node::Reference<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 	};
 
 }
