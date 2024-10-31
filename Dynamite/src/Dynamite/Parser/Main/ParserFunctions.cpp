@@ -35,15 +35,12 @@ namespace Dynamite
 			
 			Consume(); // '(' token
 
-			Optional<Type> returnType = FunctionSystem::GetReturnType(function->Function.Value);
-			if (!returnType.HasValue())
+			if (!FunctionSystem::Exists(function->Function.Value))
 			{
 				Compiler::Error(Peek(-2).Value().LineNumber, "Undefined symbol: {0}", function->Function.Value);
 				m_Tracker.Pop<Node::FunctionCall>();
 				return {};
 			}
-
-			function->ReturnType = returnType.Value();
 
 			// Parse arguments
 			while (true)
@@ -52,39 +49,63 @@ namespace Dynamite
 
 				if (auto argument = ParseExpression())
 				{
-					Optional<Type> symbolArgType = FunctionSystem::GetArgumentType(function->Function.Value, index);
-					if (!symbolArgType.HasValue())
+					std::vector<Type> symbolArgTypes = FunctionSystem::GetArgumentTypes(function->Function.Value, index);
+					if (symbolArgTypes.empty())
 					{
 						Compiler::Error(Peek(0).Value().LineNumber, "Passed in {0} arguments, when the symbol for '{1}' doesn't match.", index + 1, function->Function.Value);
 						m_Tracker.Pop<Node::FunctionCall>();
 						return {};
 					}
 
-					if (!TypeSystem::Castable(argument.Value()->GetType(), symbolArgType.Value()))
-					{
-						Compiler::Error(Peek(0).Value().LineNumber, "Argument {0} expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", index, TypeSystem::ToString(symbolArgType.Value()), TypeSystem::ToString(argument.Value()->GetType()));
-
-						CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
-						return m_Tracker.Return<Node::FunctionCall>();
-					}
-
-					// Note: Only casts if the internal type is a literalterm
-					Cast(argument.Value()->GetType(), symbolArgType.Value(), argument.Value());
 					function->Arguments.push_back(argument.Value());
+
+					// Continue if the next is a comma
+					if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Comma))
+					{
+						Consume(); // ',' token
+						continue;
+					}
 					index++;
 				}
 				else
 					break;
 			}
-			
-			// Check if argument count matches.
-			if (function->Arguments.size() != FunctionSystem::GetRequiredArgCount(function->Function.Value))
-			{
-				Compiler::Error(Peek(0).Value().LineNumber, "Function '{0}' expects {1} argument(s), got {2}.", function->Function.Value, FunctionSystem::GetRequiredArgCount(function->Function.Value), function->Arguments.size());
 
-				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
-				return m_Tracker.Return<Node::FunctionCall>();
+			const FunctionSystem::Function& functionDefinitions = *FunctionSystem::GetFunction(function->Function.Value);
+
+			size_t functionOverload = Pulse::Numeric::Max<size_t>();
+			for (size_t overloadIndex = 0; overloadIndex < functionDefinitions.Overloads.size(); overloadIndex++)
+			{
+				const auto& overload = functionDefinitions.Overloads[overloadIndex];
+
+				if ((overload.Parameters.size() < FunctionSystem::GetRequiredArgCounts(function->Function.Value)[overloadIndex]) ||
+					(overload.Parameters.size() > FunctionSystem::GetArgCounts(function->Function.Value)[overloadIndex]))
+					continue;
+
+				bool continueLoop = false;
+				for (size_t parameterIndex = 0; parameterIndex < overload.Parameters.size(); parameterIndex++)
+				{
+					if (function->Arguments.size() <= parameterIndex || !TypeSystem::Castable(function->Arguments[parameterIndex]->GetType(), overload.Parameters[parameterIndex].first))
+					{
+						continueLoop = true;
+						break;
+					}
+				}
+
+				if (continueLoop)
+					continue;
+
+				functionOverload = overloadIndex;
 			}
+
+			if (functionOverload == Pulse::Numeric::Max<size_t>())
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Function call does not match any of the symbols.");
+				m_Tracker.Pop<Node::FunctionCall>();
+				return {};
+			}
+
+			function->ReturnType = FunctionSystem::GetReturnTypes(function->Function.Value)[functionOverload];
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 			return m_Tracker.Return<Node::FunctionCall>();
@@ -126,6 +147,8 @@ namespace Dynamite
 			while (true)
 			{
 				size_t parameterOffset = 0;
+
+				size_t a = m_Index;
 
 				if (PeekIsType(parameterOffset) &&
 					Utils::OptMemberIs(Peek(parameterOffset++), &Token::Type, TokenType::Identifier))

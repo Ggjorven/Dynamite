@@ -3,6 +3,7 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Utils/Utils.hpp"
 #include "Dynamite/Utils/Checks.hpp"
 
 #include "Dynamite/Compiler/Compiler.hpp"
@@ -47,15 +48,10 @@ namespace Dynamite
 
 	Optional<Type> ScopeSystem::GetVariableType(const std::string& name)
 	{
-		const auto it = std::ranges::find_if(std::as_const(s_Variables), [&](const Variable& var)
-		{
-			return var.Name == name;
-		});
+		const auto it = std::ranges::find_if(std::as_const(s_Variables), [&](const Variable& var) { return var.Name == name; });
+		if (it == s_Variables.cend()) return {};
 
-		if (it == s_Variables.cend())
-			return {};
-
-		return Optional<Type>((*it).VariableType);
+		return (*it).VariableType;
 	}
 
 }

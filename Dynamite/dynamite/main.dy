@@ -1,12 +1,17 @@
 i32 globalValue = (123 - 67);
 i32 globalValue2 = globalValue;
 
-
 u32 DeclTest(i32 x = 19);
+u32 DeclTest(i32 x, i32 y);
 
-u32 DeclTest(i32 x = 19)
+u32 DeclTest(i32 x)
 {
 	return x;
+}
+
+u32 DeclTest(i32 x, i32 y)
+{
+	return x + y;
 }
 
 u8* func(u8* a)
@@ -16,6 +21,9 @@ u8* func(u8* a)
 
 i32 main(i32 argc, char** argv)
 {
+	DeclTest(1);
+	DeclTest(1, 2);
+
 	if (true)
 	{
 		u16 z = 0;
