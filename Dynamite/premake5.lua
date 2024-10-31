@@ -11,7 +11,7 @@ project "Dynamite"
 	architecture "x86_64"
 
 	debugdir ("%{wks.location}")
-	debugargs { "Dynamite/dynamite/main.dy --I=IncludeDir1 --Verbose" }
+	debugargs { "--debug Dynamite/dynamite/main.dy --I=IncludeDir1 --verbose" }
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")

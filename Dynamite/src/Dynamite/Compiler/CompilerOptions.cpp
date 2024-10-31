@@ -48,6 +48,9 @@ namespace Dynamite
 		DY_LOG_TRACE("     Sets the logging level to 'verbose' which prints");
 		DY_LOG_TRACE("     a lot more debug information.");
 		DY_LOG_TRACE("");
+		DY_LOG_TRACE(" (-) --debug ");
+		DY_LOG_TRACE("     Output .pdb file alongside executable.");
+		DY_LOG_TRACE("");
 		DY_LOG_TRACE(" (-) --help ");
 		DY_LOG_TRACE("     Prints this help menu.");
 
@@ -92,6 +95,9 @@ namespace Dynamite
 			else if (Utils::StrLower(flagName) == "verbose")
 				Flags |= CompilerFlag::Verbose;
 
+			else if (Utils::StrLower(flagName) == "debug")
+				Flags |= CompilerFlag::Debug;
+
 			///////////////////////////////////
 			// Other
 			///////////////////////////////////
@@ -101,9 +107,7 @@ namespace Dynamite
 
 				Files.clear();
 				IncludeDirs.clear();
-				Flags = CompilerFlag::None;
-
-				Quit = true;
+				Flags = CompilerFlag::Help;
 
 				return;
 			}

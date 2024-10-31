@@ -5,6 +5,10 @@
 
 #include "Dynamite/Utils/Utils.hpp"
 
+#include "Dynamite/Generator/Main/Linker.hpp"
+
+#include <chrono>
+
 namespace Dynamite
 {
 
@@ -26,7 +30,7 @@ namespace Dynamite
 
 	void Compiler::Compile()
 	{
-		if (m_Options.Quit)
+		if (m_Options.Contains(CompilerFlag::Help))
 			return;
 
 		// Note: Break when no files are specified.
@@ -38,12 +42,14 @@ namespace Dynamite
 
 		Tokenizer tokenizer(m_FileContent);
 		Parser parser(m_Tokens);
-		// ...
+		Generator generator(m_Program);
 		
+		auto startTime = std::chrono::steady_clock::now();
+
 		for (const auto& file : m_Options.Files)
 		{
 			m_File = file;
-			DY_LOG_TRACE("Compiling '{0}'.", m_File.string());
+			DY_LOG_INFO("Compiling '{0}'.", m_File.string());
 			
 			// Read contents
 			std::ifstream input(m_File);
@@ -58,6 +64,9 @@ namespace Dynamite
 
 			m_State = State::Parsing;
 			m_Program = parser.GetProgram();
+
+			m_State = State::Generating;
+			generator.Generate(m_Options.OutputDir / file.filename());
 
 			// Log extra info when verbosity is enabled
 			if (m_Options.Contains(CompilerFlag::Verbose))
@@ -82,6 +91,17 @@ namespace Dynamite
 				}
 			}
 		}
+
+		auto endTime = std::chrono::steady_clock::now();
+		DY_LOG_TRACE("Compilation took {0}ms.", std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
+
+		std::vector<std::filesystem::path> objectPaths = m_Options.Files;
+		for (auto& path : objectPaths)
+			path = m_Options.OutputDir / CompilerOptions::IntermediateDirectory / path.filename().replace_extension(".o");
+
+		Linker::Link(m_Options.OutputDir, objectPaths);
+
+		DY_LOG_TRACE("Linking took {0}ms.", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - endTime).count());
 	}
 
 	Compiler& Compiler::Get()

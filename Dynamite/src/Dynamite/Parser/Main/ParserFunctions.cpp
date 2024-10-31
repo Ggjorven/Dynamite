@@ -115,6 +115,7 @@ namespace Dynamite
 	}
 
 
+
 	Optional<Node::Reference<Node::Function>> Parser::ParseFunction()
 	{
 		size_t offset = 0;

@@ -10,7 +10,7 @@
 namespace Dynamite
 {
 
-	enum class CompilerFlag : uint8_t	{ None = 0, Verbose = 1 << 0 };
+	enum class CompilerFlag : uint8_t	{ None = 0, Help = 1 << 0, Verbose = 1 << 1, Debug = 1 << 2 };
 
 	struct CompilerOptions
 	{
@@ -22,8 +22,6 @@ namespace Dynamite
 		char** Argv;
 
 	public:
-		bool Quit = false;
-
 		std::filesystem::path WorkingDir;
 
 		std::vector<std::filesystem::path> Files = { };

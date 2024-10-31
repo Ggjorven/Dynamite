@@ -7,6 +7,7 @@
 
 #include "Dynamite/Tokens/Tokenizer.hpp"
 #include "Dynamite/Parser/Main/Parser.hpp"
+#include "Dynamite/Generator/Main/Generator.hpp"
 
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
@@ -57,6 +58,7 @@ namespace Dynamite
 		CompilerOptions m_Options;
 
 		std::filesystem::path m_File = {};
+
 		std::string m_FileContent = {};
 		std::vector<Token> m_Tokens = { };
 		Node::Program m_Program = {};
