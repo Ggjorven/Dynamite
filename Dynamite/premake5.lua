@@ -18,7 +18,7 @@ project "Dynamite"
 
 	-- Note: VS2022/Make only need the pchheader filename
 	pchheader "dypch.h"
-	pchsource "src/Dynamite/dypch.cpp"
+	pchsource "src/dypch.cpp"
 
 	--------------------------------------
 	-- Files & Options
@@ -111,7 +111,7 @@ project "Dynamite"
 
 	filter "action:xcode*"
 		-- Note: XCode needs the full pch header path
-		pchheader "src/Dynamite/dypch.h"
+		pchheader "src/dypch.h"
 
 		-- Note: If we don't add the header files to the externalincludedirs
 		-- we can't use <angled> brackets to include files.
