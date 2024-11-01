@@ -36,7 +36,7 @@ namespace Dynamite
 
 		static ValueMetaData GetValue(llvm::LLVMContext& context, const Type& type, const std::string& value);
 
-		static llvm::Value* Cast(llvm::IRBuilder<>& builder, llvm::Value* value, llvm::Type* to);
+		static llvm::Value* Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to);
 	};
 
 }

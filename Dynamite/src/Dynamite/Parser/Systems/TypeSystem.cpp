@@ -97,6 +97,34 @@ namespace Dynamite
 		case Fuse(TypeSpecifier::UInt64, TypeSpecifier::Int64):			return true;
 		// */
 
+		// Int to float
+		case Fuse(TypeSpecifier::Int8, TypeSpecifier::Float32):			return true;
+		case Fuse(TypeSpecifier::Int16, TypeSpecifier::Float32):		return true;
+		case Fuse(TypeSpecifier::Int32, TypeSpecifier::Float32):		return true;
+
+		case Fuse(TypeSpecifier::UInt8, TypeSpecifier::Float32):		return true;
+		case Fuse(TypeSpecifier::UInt16, TypeSpecifier::Float32):		return true;
+		case Fuse(TypeSpecifier::UInt32, TypeSpecifier::Float32):		return true;
+
+		case Fuse(TypeSpecifier::Int8, TypeSpecifier::Float64):			return true;
+		case Fuse(TypeSpecifier::Int16, TypeSpecifier::Float64):		return true;
+		case Fuse(TypeSpecifier::Int32, TypeSpecifier::Float64):		return true;
+		case Fuse(TypeSpecifier::Int64, TypeSpecifier::Float64):		return true;
+
+		case Fuse(TypeSpecifier::UInt8, TypeSpecifier::Float64):		return true;
+		case Fuse(TypeSpecifier::UInt16, TypeSpecifier::Float64):		return true;
+		case Fuse(TypeSpecifier::UInt32, TypeSpecifier::Float64):		return true;
+		case Fuse(TypeSpecifier::UInt64, TypeSpecifier::Float64):		return true;
+
+		// Float to int
+		case Fuse(TypeSpecifier::Float32, TypeSpecifier::Int32):		return true;
+		case Fuse(TypeSpecifier::Float32, TypeSpecifier::UInt32):		return true;
+		case Fuse(TypeSpecifier::Float32, TypeSpecifier::Int64):		return true;
+		case Fuse(TypeSpecifier::Float32, TypeSpecifier::UInt64):		return true;
+
+		case Fuse(TypeSpecifier::Float64, TypeSpecifier::Int64):		return true;
+		case Fuse(TypeSpecifier::Float64, TypeSpecifier::UInt64):		return true;
+
 		// Char conversions
 		case Fuse(TypeSpecifier::Char, TypeSpecifier::Int8):			return true;
 		case Fuse(TypeSpecifier::Char, TypeSpecifier::Int16):			return true;

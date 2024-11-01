@@ -63,10 +63,8 @@ namespace Dynamite
 		if (enforceType.HasValue() && (identifier->GetType() != enforceType.Value()))
 		{
 			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetLLVMValue(identifier->Identifier.Value));
-			type = GeneratorTypes::GetType(context, enforceType.Value()).LLVMType;
 			
-			// TODO: Cast to enforced type before loading
-			return GeneratorTypes::Cast(builder, nonCastValue, type);
+			return GeneratorTypes::Cast(builder, nonCastValue, identifier->GetType(), enforceType.Value());
 		}
 
 		return builder.CreateLoad(type, IRScopeCollection::GetLLVMValue(identifier->Identifier.Value));

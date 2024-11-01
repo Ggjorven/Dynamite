@@ -1,5 +1,5 @@
 i32 main(i32 argc, char** argv)
 {
-	i32 x = 10;
+	f32 x = 11.0;
 	return x;
 }

@@ -175,6 +175,10 @@ namespace Dynamite
 
 	void Parser::Cast(const Type& from, const Type& to, Node::Reference<Node::Expression> expression)
 	{
+		// TODO: Remove
+		// Note: We temporarily disable parser casting to check what the generator can do.
+		return;
+
 		if (from == to)
 			return;
 

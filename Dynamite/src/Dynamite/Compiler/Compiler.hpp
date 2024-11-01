@@ -46,8 +46,16 @@ namespace Dynamite
 		template<typename ...Args> inline static void Warn(const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Warn, fmt, std::forward<Args>(args)...); }
 		template<typename ...Args> inline static void Warn(uint32_t line, const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Warn, line, fmt, std::forward<Args>(args)...); }
 
-		template<typename ...Args> inline static void Error(const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Error, fmt, std::forward<Args>(args)...); }
-		template<typename ...Args> inline static void Error(uint32_t line, const std::string& fmt, Args&& ...args) { Print<Args...>(LogLevel::Error, line, fmt, std::forward<Args>(args)...); }
+		template<typename ...Args> inline static void Error(const std::string& fmt, Args&& ...args) 
+		{ 
+			Print<Args...>(LogLevel::Error, fmt, std::forward<Args>(args)...); 
+			Get().m_ErrorCount++; 
+		}
+		template<typename ...Args> inline static void Error(uint32_t line, const std::string& fmt, Args&& ...args) 
+		{ 
+			Print<Args...>(LogLevel::Error, line, fmt, std::forward<Args>(args)...); 
+			Get().m_ErrorCount++;
+		}
 
 	private:
 		// Private methods
@@ -56,6 +64,8 @@ namespace Dynamite
 	private:
 		State m_State;
 		CompilerOptions m_Options;
+
+		size_t m_ErrorCount = 0;
 
 		std::filesystem::path m_File = {};
 

@@ -9,6 +9,7 @@
 
 #include "Dynamite/Generator/IR/Nodes/IRTerms.hpp"
 #include "Dynamite/Generator/IR/Nodes/IRStatements.hpp"
+#include "Dynamite/Generator/IR/Nodes/IRFunctions.hpp"
 #include "Dynamite/Generator/IR/IRFunctionCollection.hpp"
 
 #include <llvm/IR/DerivedTypes.h>
@@ -41,8 +42,7 @@ namespace Dynamite
 			}
 			llvm::Value* operator () (const Node::Reference<Node::FunctionCall> obj) const
 			{
-				DY_ASSERT(0, "TODO");
-				return nullptr;
+				return GenFunctionCall(obj, Context, Builder, Module);
 			}
 			llvm::Value* operator () (const Node::Reference<Node::AddressExpr> obj) const
 			{
@@ -62,6 +62,11 @@ namespace Dynamite
 	llvm::Value* IRExpressions::GenTerm(const Node::Reference<Node::TermExpr> term, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
 	{
 		return IRTerms::GenTerm(term, context, builder, mod, enforceType);
+	}
+
+	llvm::Value* IRExpressions::GenFunctionCall(const Node::Reference<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
+	{
+		return IRFunctions::GenFunctionCall(funcCall, context, builder, mod);
 	}
 
 }

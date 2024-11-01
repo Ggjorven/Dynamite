@@ -59,14 +59,21 @@ namespace Dynamite
 			m_FileContent = contentBuffer.str();
 
 			// Use contents
-			m_State = State::Tokenizing;
-			m_Tokens = tokenizer.Tokenize();
-
-			m_State = State::Parsing;
-			m_Program = parser.GetProgram();
-
-			m_State = State::Generating;
-			generator.Generate(m_Options.OutputDir / file.filename());
+			if (m_ErrorCount == 0)
+			{
+				m_State = State::Tokenizing;
+				m_Tokens = tokenizer.Tokenize();
+			}
+			if (m_ErrorCount == 0)
+			{
+				m_State = State::Parsing;
+				m_Program = parser.GetProgram();
+			}
+			if (m_ErrorCount == 0)
+			{
+				m_State = State::Generating;
+				generator.Generate(m_Options.OutputDir / file.filename());
+			}
 
 			// Log extra info when verbosity is enabled
 			if (m_Options.Contains(CompilerFlag::Verbose))
@@ -95,13 +102,15 @@ namespace Dynamite
 		auto endTime = std::chrono::steady_clock::now();
 		DY_LOG_TRACE("Compilation took {0}ms.", std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
 
-		std::vector<std::filesystem::path> objectPaths = m_Options.Files;
-		for (auto& path : objectPaths)
-			path = m_Options.OutputDir / CompilerOptions::IntermediateDirectory / path.filename().replace_extension(".o");
+		if (m_ErrorCount == 0)
+		{
+			std::vector<std::filesystem::path> objectPaths = m_Options.Files;
+			for (auto& path : objectPaths)
+				path = m_Options.OutputDir / CompilerOptions::IntermediateDirectory / path.filename().replace_extension(".o");
 
-		Linker::Link(m_Options.OutputDir, objectPaths);
-
-		DY_LOG_TRACE("Linking took {0}ms.", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - endTime).count());
+			Linker::Link(m_Options.OutputDir, objectPaths);
+			DY_LOG_TRACE("Linking took {0}ms.", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - endTime).count());
+		}
 	}
 
 	Compiler& Compiler::Get()

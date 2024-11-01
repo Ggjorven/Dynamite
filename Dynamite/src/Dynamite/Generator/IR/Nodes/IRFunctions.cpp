@@ -126,7 +126,7 @@ namespace Dynamite
 		}
 	}
 
-	void IRFunctions::GenFunctionCall(const Node::Reference<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
+	llvm::Value* IRFunctions::GenFunctionCall(const Node::Reference<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
 		auto& func = IRFunctionCollection::GetFunction(funcCall->Function.Value, funcCall->OverloadIndex);
 
@@ -141,7 +141,7 @@ namespace Dynamite
 			arguments.emplace_back(value);
 		}
 
-		builder.CreateCall(func.Callee, arguments);
+		return builder.CreateCall(func.Callee, arguments);
 	}
 
 }

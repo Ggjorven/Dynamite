@@ -3,6 +3,8 @@
 
 #include "Dynamite/Core/Logging.hpp"
 
+#include "Dynamite/Parser/Systems/TypeSystem.hpp"
+
 #include <llvm/IR/Constants.h>
 
 namespace Dynamite
@@ -146,7 +148,7 @@ namespace Dynamite
 			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt8Ty(context), static_cast<uint8_t>(value[0]));
 			break;
 
-			// Note: Handle other types as necessary
+		// Note: Handle other types as necessary
 		default:
 			DY_ASSERT(0, "Unknown type specifier for value conversion.");
 			break;
@@ -155,10 +157,68 @@ namespace Dynamite
 		return returnValue;
 	}
 
-	llvm::Value* GeneratorTypes::Cast(llvm::IRBuilder<>& builder, llvm::Value* value, llvm::Type* to)
+	llvm::Value* GeneratorTypes::Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to)
 	{
-		DY_ASSERT(0, "TODO");
-		return value;
+		llvm::Type* fromLLVM = GeneratorTypes::GetType(builder.getContext(), from).LLVMType;
+		llvm::Type* toLLVM = GeneratorTypes::GetType(builder.getContext(), to).LLVMType;
+
+		// Integers
+		if (TypeSystem::IsIntegral(from) && TypeSystem::IsIntegral(to))
+		{
+			// Convert to smaller integer
+			if (TypeSystem::GetLargest(from, to) == from)
+			{
+				return builder.CreateTrunc(value, toLLVM);
+			}
+			// Convert to larger integer
+			{
+				if (from.IsUnsigned())
+					return builder.CreateZExt(value, toLLVM);
+				else
+					return builder.CreateSExt(value, toLLVM);
+			}
+		}
+
+		// Floats
+		else if (TypeSystem::IsFloat(from) && TypeSystem::IsFloat(to))
+		{
+			// Convert to smaller float
+			if (TypeSystem::GetLargest(from, to) == from)
+			{
+				return builder.CreateFPTrunc(value, toLLVM);
+			}
+			else
+			{
+				return builder.CreateFPExt(value, toLLVM);
+			}
+		}
+
+		// Int -> float
+		else if (TypeSystem::IsIntegral(from) && TypeSystem::IsFloat(to))
+		{
+			if (from.IsUnsigned())
+				return builder.CreateUIToFP(value, toLLVM);
+			else
+				return builder.CreateSIToFP(value, toLLVM);
+		}
+
+		// Float -> int
+		else if (TypeSystem::IsFloat(from) && TypeSystem::IsIntegral(to))
+		{
+			if (to.IsUnsigned())
+				return builder.CreateFPToUI(value, toLLVM);
+			else
+				return builder.CreateFPToSI(value, toLLVM);
+		}
+
+		// Pointers
+		else if (from.IsPointer() && to.IsPointer())
+		{
+			return builder.CreateBitCast(value, toLLVM);
+		}
+
+		DY_ASSERT(0, "[Internal Compiler Error] - Casting for these types has not been implemented.");
+		return nullptr;
 	}
 
 
