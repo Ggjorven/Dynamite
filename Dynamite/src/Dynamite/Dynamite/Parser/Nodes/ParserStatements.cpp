@@ -288,31 +288,12 @@ namespace Dynamite
 
 			if (auto expr = ParseExpression())
 			{
-				/////////////////////////////////////////////////////////////////
-				// Non-Reference
-				/////////////////////////////////////////////////////////////////
-				if (!type.Value().IsReference())
+				if (!TypeCollection::ImplicitCastable(expr.Value()->GetType(), type.Value()))
 				{
-					if (!TypeCollection::ImplicitCastable(expr.Value()->GetType(), type.Value()))
-					{
-						Compiler::Error(Peek(0).Value().LineNumber, "Variable assignment of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", assignment->Variable, TypeCollection::ToString(type.Value()), TypeCollection::ToString(expr.Value()->GetType()));
+					Compiler::Error(Peek(0).Value().LineNumber, "Variable assignment of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", assignment->Variable, TypeCollection::ToString(type.Value()), TypeCollection::ToString(expr.Value()->GetType()));
 
-						CheckConsume(TokenType::Semicolon, "Expected `;`.");
-						return m_Tracker.Return<Node::Statement>();
-					}
-				}
-				/////////////////////////////////////////////////////////////////
-				// Reference
-				/////////////////////////////////////////////////////////////////
-				else
-				{
-					if (!TypeCollection::ImplicitCastable(expr.Value()->GetType(), type.Value()) && !TypeCollection::ImplicitCastable(expr.Value()->GetType(), type.Value().RemoveReference()))
-					{
-						Compiler::Error(Peek(0).Value().LineNumber, "Variable assignment of reference \"{0}\" expects expression of type: {1} or {2}, but got {3}, {3} is not castable to {1} or {2}.", assignment->Variable, TypeCollection::ToString(type.Value()), TypeCollection::ToString(type.Value().RemoveReference()), TypeCollection::ToString(expr.Value()->GetType()));
-
-						CheckConsume(TokenType::Semicolon, "Expected `;`.");
-						return m_Tracker.Return<Node::Statement>();
-					}
+					CheckConsume(TokenType::Semicolon, "Expected `;`.");
+					return m_Tracker.Return<Node::Statement>();
 				}
 
 				assignment->Expr = expr.Value();

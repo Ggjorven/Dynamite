@@ -88,6 +88,20 @@ namespace Dynamite::Language
 		
 		if (var->Expr)
 		{
+
+			/*
+			llvm::Type* type = GenTypes::GetType(context, identifier->GetType()).LLVMType;
+
+			if (enforceType.HasValue() && (identifier->GetType() != enforceType.Value()))
+			{
+				llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
+	
+				return GenTypes::Cast(builder, nonCastValue, identifier->GetType(), enforceType.Value());
+			}
+
+			return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
+			*/
+
 			llvm::Value* expr = IRExpressions::GenExpression(var->Expr, context, builder, mod, var->GetType());
 			builder.CreateStore(expr, variable);
 		}

@@ -12,8 +12,35 @@
 
 #include "Dynamite/Language/Types/Type.hpp"
 
+#include <string>
+
 namespace Dynamite::Language::Node
 {
+
+    /////////////////////////////////////////////////////////////////
+    // Helper
+    /////////////////////////////////////////////////////////////////
+    namespace Helper
+    {
+
+        // Note: Will always be an LValue
+        struct ResolvableTarget 
+        {
+        public:
+            // Note: We store an identifier seperate from an expression,
+            // because an identifier is not an LValue in our implementation.
+            using VariantType = Variant<Ref<IdentifierTerm>, Ref<Expression>>;
+        public:
+            ResolvableTarget(VariantType target = {});
+
+        public:
+            VariantType Target;
+
+            Type GetType() const;
+        };
+
+        std::string ResolvableTargetToString(const ResolvableTarget& target, size_t indentLevel = 0);
+    }
 
     /////////////////////////////////////////////////////////////////
     // Expressions
@@ -54,10 +81,10 @@ namespace Dynamite::Language::Node
     private:
         friend class Pulse::Memory::Control;
     private:
-        ReferenceExpr(Ref<Expression> expression = (Ref<Expression>)NullRef);
+        ReferenceExpr(const Helper::ResolvableTarget& target = {});
 
     public:
-        Ref<Expression> Expr;
+        Helper::ResolvableTarget Target;
 
         Type GetType() const;
     };
@@ -67,10 +94,10 @@ namespace Dynamite::Language::Node
     private:
         friend class Pulse::Memory::Control;
     private:
-        AddressExpr(Ref<Expression> expression = (Ref<Expression>)NullRef);
+        AddressExpr(const Helper::ResolvableTarget& target = {});
 
     public:
-        Ref<Expression> Expr;
+        Helper::ResolvableTarget Target;
 
         Type GetType() const;
     };
@@ -80,10 +107,10 @@ namespace Dynamite::Language::Node
     private:
         friend class Pulse::Memory::Control;
     private:
-        DereferenceExpr(Ref<Expression> expression = (Ref<Expression>)NullRef);
+        DereferenceExpr(const Helper::ResolvableTarget& target = {});
 
     public:
-        Ref<Expression> Expr;
+        Helper::ResolvableTarget Target;
 
         Type GetType() const;
     };

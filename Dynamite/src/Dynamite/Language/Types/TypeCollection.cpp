@@ -21,25 +21,28 @@ namespace Dynamite::Language
 
 	bool TypeCollection::ImplicitCastable(const Type& from, const Type& to)
 	{
+		Type localFrom = from;
+		Type localTo = to;
+		
 		// Checks
 		{
-			if (from == to)
+			if (localFrom == localTo)
 				return true;
 
-			if (from.IsPointer() && to.IsPointer())
+			if (localFrom.IsPointer() && localTo.IsPointer())
 				return true;
 
-			if ((!from.IsPointer() && to.IsPointer()) || (from.IsPointer() && !to.IsPointer()))
+			if (localFrom == TypeSpecifier::Void && localTo != TypeSpecifier::Void)
 				return false;
 
-			if ((!from.IsReference() && to.IsReference()) || (from.IsReference() && !to.IsReference()))
-				return false;
-
-			if (from == TypeSpecifier::Void && to != TypeSpecifier::Void)
-				return false;
-
-			if (from.Information.Specifier == to.Information.Specifier)
+			if (localFrom.Information.Specifier == localTo.Information.Specifier)
 				return true;
+
+			//if (localFrom.IsReference() && !localTo.IsReference())
+			//	localFrom.RemoveReference();
+
+			if ((!localFrom.IsPointer() && localTo.IsPointer()) || (localFrom.IsPointer() && !localTo.IsPointer()))
+				return false;
 		}
 
 		using namespace Pulse::Enum;

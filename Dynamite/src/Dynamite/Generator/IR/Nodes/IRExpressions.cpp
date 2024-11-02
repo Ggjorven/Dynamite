@@ -74,40 +74,84 @@ namespace Dynamite::Language
 
 	llvm::Value* IRExpressions::GenReference(const Node::Ref<Node::ReferenceExpr> reference, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		DY_ASSERT(0, "TODO");
-		return nullptr;
+		struct TargetVisitor
+		{
+			llvm::LLVMContext& Context;
+			llvm::IRBuilder<>& Builder;
+			llvm::Module& Module;
+
+			llvm::Value* operator () (const Node::Ref<Node::IdentifierTerm> obj)
+			{
+				return IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue;
+			}
+			llvm::Value* operator () (const Node::Ref<Node::Expression> obj)
+			{
+				DY_ASSERT(0, "TODO");
+				return nullptr;
+			}
+		};
+
+		return std::visit(TargetVisitor(context, builder, mod), reference->Target.Target);
 	}
 
 	llvm::Value* IRExpressions::GenAddress(const Node::Ref<Node::AddressExpr> address, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		// First, generate the expression to get the base pointer
-		llvm::Value* basePointer = IRExpressions::GenExpression(address->Expr, context, builder, mod);
+		struct TargetVisitor
+		{
+			llvm::LLVMContext& Context;
+			llvm::IRBuilder<>& Builder;
+			llvm::Module& Module;
 
-		// You might want to handle different cases, such as if the basePointer is actually a pointer type.
-		if (!basePointer->getType()->isPointerTy()) {
-			// Handle the error case: the expression does not evaluate to a pointer
-			DY_ASSERT(0, "Expression does not evaluate to a pointer");
-			return nullptr;
-		}
+			llvm::Value* operator () (const Node::Ref<Node::IdentifierTerm> obj)
+			{
+				return IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue;
+			}
+			llvm::Value* operator () (const Node::Ref<Node::Expression> obj)
+			{
+				DY_ASSERT(0, "TODO");
+				return nullptr;
+			}
+		};
 
-		// Optional: You might want to handle the case where you add an offset to the pointer
-		// For example, if you want to add sizeof(uint32_t) to the base pointer
-		unsigned offsetBytes = sizeof(uint32_t); // Example offset
-
-		// Create a GEP instruction to compute the address with the offset
-		//llvm::Value* offsetIndex = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), offsetBytes / llvm::PointerType::get(basePointer->getType()->getPointerElementType(), 0)-//>getPrimitiveSizeInBits() / 8);
-		//llvm::Value* addressValue = builder.CreateGEP(basePointer->getType(), basePointer, offsetIndex, "address_offset");
-
-		//return addressValue; // Return the computed address
-
-		return nullptr;
+		return std::visit(TargetVisitor(context, builder, mod), address->Target.Target);
 	}
 
 
 	llvm::Value* IRExpressions::GenDereference(const Node::Ref<Node::DereferenceExpr> dereference, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		DY_ASSERT(0, "TODO");
-		return nullptr;
+		struct TargetVisitor
+		{
+			llvm::LLVMContext& Context;
+			llvm::IRBuilder<>& Builder;
+			llvm::Module& Module;
+
+			llvm::Value* operator () (const Node::Ref<Node::IdentifierTerm> obj)
+			{
+				// Pointer -> Reference, does nothing basically
+				if (obj->GetType().IsPointer())
+				{
+					// Gives the value of the pointer to the reference
+					// Since pointers and references are internally the same.
+					llvm::Type* type = GenTypes::GetType(Context, obj->GetType()).LLVMType;
+					return Builder.CreateLoad(type, IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue);
+				}
+				else
+				{
+					llvm::Type* ptrType = GenTypes::GetType(Context, obj->GetType()).LLVMType;
+					llvm::Value* ptr = Builder.CreateLoad(ptrType, IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue);
+
+					llvm::Type* valType = GenTypes::GetType(Context, obj->GetType().RemoveReference()).LLVMType;
+					return Builder.CreateLoad(valType, ptr);
+				}
+			}
+			llvm::Value* operator () (const Node::Ref<Node::Expression> obj)
+			{
+				DY_ASSERT(0, "TODO");
+				return nullptr;
+			}
+		};
+
+		return std::visit(TargetVisitor(context, builder, mod), dereference->Target.Target);
 	}
 
 }

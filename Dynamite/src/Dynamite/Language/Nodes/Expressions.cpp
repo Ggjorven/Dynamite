@@ -15,6 +15,72 @@ namespace Dynamite::Language::Node
 {
 
 	/////////////////////////////////////////////////////////////////
+	// Helper functions
+	/////////////////////////////////////////////////////////////////
+	namespace Helper
+	{
+
+		ResolvableTarget::ResolvableTarget(VariantType target)
+			: Target(target)
+		{
+			struct TargetVisitor
+			{
+				bool operator () (const Ref<IdentifierTerm> obj)
+				{
+					return true;
+				}
+				bool operator () (const Ref<Expression> obj)
+				{
+					return obj->IsLValue();
+				}
+			};
+
+			if (!std::visit(TargetVisitor(), Target))
+			{
+				DY_LOG_ERROR("[Internal Compiler Error] Tried to create a ResolvableTarget with a non-lvalue.");
+				return;
+			}
+		}
+
+		Type ResolvableTarget::GetType() const
+		{
+			struct TargetVisitor
+			{
+				Type operator () (const Ref<IdentifierTerm> obj)
+				{
+					return obj->GetType();
+				}
+				Type operator () (const Ref<Expression> obj)
+				{
+					return obj->GetType();
+				}
+			};
+
+			return std::visit(TargetVisitor(), Target);
+		}
+
+		std::string ResolvableTargetToString(const ResolvableTarget& target, size_t indentLevel)
+		{
+			struct TargetVisitor
+			{
+				size_t Indent;
+
+				std::string operator () (const Ref<IdentifierTerm> obj)
+				{
+					return IdentifierTermToString(obj, Indent);
+				}
+				std::string operator () (const Ref<Expression> obj)
+				{
+					return ExpressionToString(obj, Indent);
+				}
+			};
+
+			return std::visit(TargetVisitor(indentLevel), target.Target);
+		}
+
+	}
+
+	/////////////////////////////////////////////////////////////////
 	// Constructors
 	/////////////////////////////////////////////////////////////////
 	TermExpr::TermExpr(VariantType term)
@@ -74,18 +140,18 @@ namespace Dynamite::Language::Node
 		}
 	}
 
-	ReferenceExpr::ReferenceExpr(Ref<Expression> expression)
-		: Expr(expression)
+	ReferenceExpr::ReferenceExpr(const Helper::ResolvableTarget& target)
+		: Target(target)
 	{
 	}
 
-	AddressExpr::AddressExpr(Ref<Expression> expression)
-		: Expr(expression)
+	AddressExpr::AddressExpr(const Helper::ResolvableTarget& target)
+		: Target(target)
 	{
 	}
 
-	DereferenceExpr::DereferenceExpr(Ref<Expression> expression)
-		: Expr(expression)
+	DereferenceExpr::DereferenceExpr(const Helper::ResolvableTarget& target)
+		: Target(target)
 	{
 	}
 
@@ -128,7 +194,8 @@ namespace Dynamite::Language::Node
 			}
 			bool operator () (const Ref<IdentifierTerm>) const
 			{
-				return true;
+				// Note: This is false, since when an identifier is passed it's passed by value.
+				return false; 
 			}
 			bool operator () (const Ref<ParenthesisTerm> obj) const
 			{
@@ -179,7 +246,7 @@ namespace Dynamite::Language::Node
 
 	Type ReferenceExpr::GetType() const
 	{
-		Type ptrType = Expr->GetType().Copy();
+		Type ptrType = Target.GetType().Copy();
 		ptrType.AddReference();
 
 		return ptrType;
@@ -187,7 +254,7 @@ namespace Dynamite::Language::Node
 
 	Type AddressExpr::GetType() const
 	{
-		Type ptrType = Expr->GetType().Copy();
+		Type ptrType = Target.GetType().Copy();
 		ptrType.AddPointer();
 
 		return ptrType;
@@ -195,7 +262,7 @@ namespace Dynamite::Language::Node
 
 	Type DereferenceExpr::GetType() const
 	{
-		Type noPtrType = Expr->GetType().Copy();
+		Type noPtrType = Target.GetType().Copy();
 		if (!noPtrType.IsPointer() && !noPtrType.IsReference())
 		{
 			DY_LOG_WARN("Trying to get the dereferenced type of a non-pointer || non-reference type.");
@@ -413,7 +480,7 @@ namespace Dynamite::Language::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+		std::string exprStr = Helper::ResolvableTargetToString(obj->Target, indentLevel + 1);
 
 		str += Pulse::Text::Format("([ReferenceExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 
@@ -424,7 +491,7 @@ namespace Dynamite::Language::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+		std::string exprStr = Helper::ResolvableTargetToString(obj->Target, indentLevel + 1);
 
 		str += Pulse::Text::Format("([AddressExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 
@@ -435,7 +502,7 @@ namespace Dynamite::Language::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+		std::string exprStr = Helper::ResolvableTargetToString(obj->Target, indentLevel + 1);
 
 		str += Pulse::Text::Format("([DereferenceExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 

@@ -169,9 +169,33 @@ namespace Dynamite
 
 			Consume(); // '&' token
 
-			if (auto referenceExpr = ParseExpression(GetOperationPrecedence(OperationType::Reference)))
+			if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier))
 			{
-				reference->Expr = referenceExpr.Value();
+				auto consumed = Consume();
+
+				Optional<Type> identifierType = m_Scopes.GetVariableType(consumed.Value);
+				if (!identifierType.HasValue())
+				{
+					Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", consumed.Value);
+					m_Tracker.Pop<Node::TermExpr>();
+					return {};
+				}
+
+				auto identifierTerm = Node::New<Node::IdentifierTerm>();
+				identifierTerm->IdentifierType = identifierType.Value();
+				identifierTerm->Identifier = consumed.Value;
+
+				reference->Target = Node::Helper::ResolvableTarget(identifierTerm);
+
+				// Note: This is either a binary expression or just a normal expression.
+				// The function accounts for both
+				HandleBinaryOperators(expr, minimumPrecedence);
+
+				return m_Tracker.Return<Node::Expression>();
+			}
+			else if (auto referenceExpr = ParseExpression(GetOperationPrecedence(OperationType::Reference)))
+			{
+				reference->Target = Node::Helper::ResolvableTarget(referenceExpr.Value());
 
 				if (!referenceExpr.Value()->IsLValue())
 				{
@@ -203,9 +227,33 @@ namespace Dynamite
 
 			Consume(); // '#' token
 
-			if (auto addressExpr = ParseExpression(GetOperationPrecedence(OperationType::Address)))
+			if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier))
 			{
-				address->Expr = addressExpr.Value();
+				auto consumed = Consume();
+
+				Optional<Type> identifierType = m_Scopes.GetVariableType(consumed.Value);
+				if (!identifierType.HasValue())
+				{
+					Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", consumed.Value);
+					m_Tracker.Pop<Node::TermExpr>();
+					return {};
+				}
+
+				auto identifierTerm = Node::New<Node::IdentifierTerm>();
+				identifierTerm->IdentifierType = identifierType.Value();
+				identifierTerm->Identifier = consumed.Value;
+
+				address->Target = Node::Helper::ResolvableTarget(identifierTerm);
+
+				// Note: This is either a binary expression or just a normal expression.
+				// The function accounts for both
+				HandleBinaryOperators(expr, minimumPrecedence);
+
+				return m_Tracker.Return<Node::Expression>();
+			}
+			else if (auto addressExpr = ParseExpression(GetOperationPrecedence(OperationType::Address)))
+			{
+				address->Target = Node::Helper::ResolvableTarget(addressExpr.Value());
 
 				if (!addressExpr.Value()->IsLValue())
 				{
@@ -237,19 +285,43 @@ namespace Dynamite
 
 			Consume(); // '*' token
 
-			if (auto deRefExpr = ParseExpression(GetOperationPrecedence(OperationType::Dereference)))
+			if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier))
 			{
-				dereference->Expr = deRefExpr.Value();
+				auto consumed = Consume();
+
+				Optional<Type> identifierType = m_Scopes.GetVariableType(consumed.Value);
+				if (!identifierType.HasValue())
+				{
+					Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", consumed.Value);
+					m_Tracker.Pop<Node::TermExpr>();
+					return {};
+				}
+
+				auto identifierTerm = Node::New<Node::IdentifierTerm>();
+				identifierTerm->IdentifierType = identifierType.Value();
+				identifierTerm->Identifier = consumed.Value;
+
+				dereference->Target = Node::Helper::ResolvableTarget(identifierTerm);
+
+				// Note: This is either a binary expression or just a normal expression.
+				// The function accounts for both
+				HandleBinaryOperators(expr, minimumPrecedence);
+
+				return m_Tracker.Return<Node::Expression>();
+			}
+			else if (auto deRefExpr = ParseExpression(GetOperationPrecedence(OperationType::Dereference)))
+			{
+				dereference->Target = Node::Helper::ResolvableTarget(deRefExpr.Value());
 				
 				if (!deRefExpr.Value()->IsLValue())
 				{
-					Compiler::Error(Peek(-1).Value().LineNumber, "Can't deRef an RValue.");
+					Compiler::Error(Peek(-1).Value().LineNumber, "Can't dereference an RValue.");
 					m_Tracker.Pop<Node::Expression>();
 					return {};
 				}
 				else if (!deRefExpr.Value()->GetType().IsPointer())
 				{
-					Compiler::Error(Peek(-1).Value().LineNumber, "Can't deRef an non-pointer.");
+					Compiler::Error(Peek(-1).Value().LineNumber, "Can't dereference an non-pointer.");
 					m_Tracker.Pop<Node::Expression>();
 					return {};
 				}
