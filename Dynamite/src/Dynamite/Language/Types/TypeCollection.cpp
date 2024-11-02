@@ -32,6 +32,9 @@ namespace Dynamite::Language
 			if ((!from.IsPointer() && to.IsPointer()) || (from.IsPointer() && !to.IsPointer()))
 				return false;
 
+			if ((!from.IsReference() && to.IsReference()) || (from.IsReference() && !to.IsReference()))
+				return false;
+
 			if (from == TypeSpecifier::Void && to != TypeSpecifier::Void)
 				return false;
 

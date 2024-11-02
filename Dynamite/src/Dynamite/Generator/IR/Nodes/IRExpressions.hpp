@@ -19,6 +19,9 @@ namespace Dynamite::Language
 
 		static llvm::Value* GenTerm(const Node::Ref<Node::TermExpr> term, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType = {});
 		static llvm::Value* GenFunctionCall(const Node::Ref<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
+		static llvm::Value* GenReference(const Node::Ref<Node::ReferenceExpr> reference, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
+		static llvm::Value* GenAddress(const Node::Ref<Node::AddressExpr> address, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
+		static llvm::Value* GenDereference(const Node::Ref<Node::DereferenceExpr> dereference, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 	};
 
 }

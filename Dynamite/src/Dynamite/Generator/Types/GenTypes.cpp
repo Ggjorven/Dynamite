@@ -83,6 +83,10 @@ namespace Dynamite::Language
 			{
 				returnType.LLVMType = llvm::PointerType::get(returnType.LLVMType, 0);
 			}
+			else if (qualifier == TypeQualifier::Reference)
+			{
+				returnType.LLVMType = llvm::PointerType::get(returnType.LLVMType, 0);
+			}
 			else if (qualifier == TypeQualifier::Array)
 			{
 				uint64_t arraySize = std::stoull(originalType.GetArraySize());

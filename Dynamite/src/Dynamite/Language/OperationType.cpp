@@ -37,8 +37,9 @@ namespace Dynamite::Language
 		case OperationType::OR:
 			return 4;
 
-		case OperationType::Dereference:
+		case OperationType::Reference:
 		case OperationType::Address:
+		case OperationType::Dereference:
 			return 5;
 
 		default:

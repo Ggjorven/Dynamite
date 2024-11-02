@@ -74,6 +74,11 @@ namespace Dynamite::Language::Node
 		}
 	}
 
+	ReferenceExpr::ReferenceExpr(Ref<Expression> expression)
+		: Expr(expression)
+	{
+	}
+
 	AddressExpr::AddressExpr(Ref<Expression> expression)
 		: Expr(expression)
 	{
@@ -172,6 +177,14 @@ namespace Dynamite::Language::Node
 		return std::visit(OperationVisitor(), Operation);
 	}
 
+	Type ReferenceExpr::GetType() const
+	{
+		Type ptrType = Expr->GetType().Copy();
+		ptrType.AddReference();
+
+		return ptrType;
+	}
+
 	Type AddressExpr::GetType() const
 	{
 		Type ptrType = Expr->GetType().Copy();
@@ -183,13 +196,23 @@ namespace Dynamite::Language::Node
 	Type DereferenceExpr::GetType() const
 	{
 		Type noPtrType = Expr->GetType().Copy();
-		if (!noPtrType.IsPointer())
+		if (!noPtrType.IsPointer() && !noPtrType.IsReference())
 		{
-			DY_LOG_WARN("Trying to get the deRefd type of a non-pointer type.");
+			DY_LOG_WARN("Trying to get the dereferenced type of a non-pointer || non-reference type.");
 			return noPtrType;
 		}
 
-		noPtrType.BackQualifiers.pop_back();
+		// Pointer
+		if (noPtrType.IsPointer())
+		{
+			noPtrType.BackQualifiers.pop_back();
+			noPtrType.BackQualifiers.emplace_back(TypeQualifier::Reference);
+		}
+		// Reference
+		else
+		{
+			noPtrType.BackQualifiers.pop_back();
+		}
 
 		return noPtrType;
 	}
@@ -207,6 +230,10 @@ namespace Dynamite::Language::Node
 				return obj->GetType();
 			}
 			Type operator () (const Ref<FunctionCall> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Ref<ReferenceExpr> obj) const
 			{
 				return obj->GetType();
 			}
@@ -238,6 +265,10 @@ namespace Dynamite::Language::Node
 			bool operator () (const Ref<FunctionCall> obj) const
 			{
 				return obj->GetType().IsPointer();
+			}
+			bool operator () (const Ref<ReferenceExpr> obj) const
+			{
+				return true;
 			}
 			bool operator () (const Ref<AddressExpr> obj) const
 			{
@@ -378,6 +409,17 @@ namespace Dynamite::Language::Node
 		return std::visit(BinaryExprVisitor(indentLevel), obj->Operation);
 	}
 
+	std::string ReferenceExprToString(const Ref<ReferenceExpr> obj, size_t indentLevel)
+	{
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+
+		str += Pulse::Text::Format("([ReferenceExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
 	std::string AddressExprToString(const Ref<AddressExpr> obj, size_t indentLevel)
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
@@ -433,6 +475,16 @@ namespace Dynamite::Language::Node
 				std::string functionCall = FunctionCallToString(obj, Indent + 1);
 
 				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", functionCall, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<ReferenceExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string referenceStr = ReferenceExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", referenceStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}

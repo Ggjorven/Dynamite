@@ -83,7 +83,7 @@ namespace Dynamite
 			if (m_Options.Contains(CompilerFlag::Verbose))
 			{
 				DY_LOG_TRACE("---------------------------------------");
-				DY_LOG_TRACE("-- Tokens generated.");
+				DY_LOG_TRACE("-- Generated tokens");
 				DY_LOG_TRACE("---------------------------------------");
 
 				for (const auto& token : m_Tokens)
@@ -92,7 +92,7 @@ namespace Dynamite
 				DY_LOG_TRACE("");
 
 				DY_LOG_TRACE("---------------------------------------");
-				DY_LOG_TRACE("-- Tree generated.");
+				DY_LOG_TRACE("-- Generated nodes");
 				DY_LOG_TRACE("---------------------------------------");
 
 				for (const auto& definition : m_Program.Definitions)

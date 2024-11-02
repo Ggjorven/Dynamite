@@ -67,9 +67,11 @@ namespace Dynamite
 		case TokenType::Star:					return "*";
 		case TokenType::ForwardSlash:			return "/";
 		
-		case TokenType::Pipe:					return "|";			
-		case TokenType::And:					return "&";			
-		case TokenType::UpArrow:				return "^";			
+		case TokenType::Pipe:					return "|";
+		case TokenType::And:					return "&";
+		case TokenType::UpArrow:				return "^";
+
+		case TokenType::TakeAddress:			return "#";
 
 		/////////////////////////////////////////////////////////////////
 		// Literals
@@ -212,6 +214,7 @@ namespace Dynamite
 		case TokenType::Volatile:			return Language::TypeQualifier::Volatile;
 
 		case TokenType::Pointer:			return Language::TypeQualifier::Pointer;
+		case TokenType::Reference:			return Language::TypeQualifier::Reference;
 
 		default:
 			break;

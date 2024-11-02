@@ -301,11 +301,13 @@ namespace Dynamite
         else if (handleOperator(TokenType::Plus))               return true;
         else if (handleOperator(TokenType::Minus))              return true;
         else if (handleOperator(TokenType::Star))               return true;
-        else if (handleOperator(TokenType::Divide))             return true;
+        else if (handleOperator(TokenType::ForwardSlash))       return true;
 
-        else if (handleOperator(TokenType::Or))                 return true;
+        else if (handleOperator(TokenType::Pipe))               return true;
         else if (handleOperator(TokenType::And))                return true;
-        else if (handleOperator(TokenType::Xor))                return true;
+        else if (handleOperator(TokenType::UpArrow))            return true;
+
+        else if (handleOperator(TokenType::TakeAddress))        return true;
 
         // Newline (for incrementing)
         else if (Utils::OptCheck(Peek(0), '\n') || Utils::OptCheck(Peek(0), '\r'))

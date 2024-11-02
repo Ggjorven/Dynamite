@@ -39,6 +39,7 @@ namespace Dynamite
 
 		std::vector<Language::Node::Ref<Language::Node::TermExpr>> m_TermExprs = {};
 		std::vector<Language::Node::Ref<Language::Node::BinaryExpr>> m_BinaryExprs = {};
+		std::vector<Language::Node::Ref<Language::Node::AddressExpr>> m_ReferenceExprs = {};
 		std::vector<Language::Node::Ref<Language::Node::AddressExpr>> m_AddressExprs = {};
 		std::vector<Language::Node::Ref<Language::Node::DereferenceExpr>> m_DereferenceExprs = {};
 
@@ -110,6 +111,7 @@ namespace Dynamite
 
 		TRACKER_TRACK(TermExpr);
 		TRACKER_TRACK(BinaryExpr);
+		TRACKER_TRACK(ReferenceExpr);
 		TRACKER_TRACK(AddressExpr);
 		TRACKER_TRACK(DereferenceExpr);
 
@@ -154,6 +156,7 @@ namespace Dynamite
 
 		TRACKER_POP(TermExpr);
 		TRACKER_POP(BinaryExpr);
+		TRACKER_POP(ReferenceExpr);
 		TRACKER_POP(AddressExpr);
 		TRACKER_POP(DereferenceExpr);
 
@@ -192,6 +195,7 @@ namespace Dynamite
 
 		TRACKER_GET(TermExpr);
 		TRACKER_GET(BinaryExpr);
+		TRACKER_GET(ReferenceExpr);
 		TRACKER_GET(AddressExpr);
 		TRACKER_GET(DereferenceExpr);
 

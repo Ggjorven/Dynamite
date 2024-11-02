@@ -60,6 +60,11 @@ namespace Dynamite
 		Xor,					// '^' 
 		UpArrow,				// '^', same as above.
 
+		// Note: These are not really operators
+		Dereferece = Star,				// '*'
+		TakeReference = And,			// '&'
+		TakeAddress = (UpArrow + 1),	// '#' // Note: Continue counting form UpArrow
+
 		/////////////////////////////////////////////////////////////////
 		// Literals
 		/////////////////////////////////////////////////////////////////
@@ -81,7 +86,7 @@ namespace Dynamite
 		// Specifiers
 		/////////////////////////////////////////////////////////////////
 		Pointer = Star,			// '*'
-		//Ref = And,		// '&'
+		Reference = And,		// '&'
 
 		Mut = (Return + 1),	// Note: Continue counting form return
 		Volatile,
@@ -177,6 +182,7 @@ namespace Dynamite
 	{
 		return {
 			TokenType::Pointer,
+			TokenType::Reference,
 
 			TokenType::Mut,
 			TokenType::Volatile,

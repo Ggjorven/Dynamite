@@ -49,6 +49,19 @@ namespace Dynamite::Language::Node
         Type GetType() const;
     };
 
+    struct ReferenceExpr
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        ReferenceExpr(Ref<Expression> expression = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> Expr;
+
+        Type GetType() const;
+    };
+
     struct AddressExpr
     {
     private:
@@ -62,7 +75,7 @@ namespace Dynamite::Language::Node
         Type GetType() const;
     };
 
-    struct DereferenceExpr
+    struct DereferenceExpr // Note: Dereferences references & pointers.
     {
     private:
         friend class Pulse::Memory::Control;
@@ -78,7 +91,7 @@ namespace Dynamite::Language::Node
     struct Expression
     {
     private:
-        using VariantType = Variant<Ref<TermExpr>, Ref<BinaryExpr>, Ref<FunctionCall>, Ref<AddressExpr>, Ref<DereferenceExpr>>;
+        using VariantType = Variant<Ref<TermExpr>, Ref<BinaryExpr>, Ref<FunctionCall>, Ref<ReferenceExpr>, Ref<AddressExpr>, Ref<DereferenceExpr>>;
         friend class Pulse::Memory::Control;
     private:
         Expression(VariantType expr = {});
@@ -96,6 +109,7 @@ namespace Dynamite::Language::Node
     /////////////////////////////////////////////////////////////////
     std::string TermExprToString(const Ref<TermExpr> obj, size_t indentLevel = 0);
     std::string BinaryExprToString(const Ref<BinaryExpr> obj, size_t indentLevel = 0);
+    std::string ReferenceExprToString(const Ref<ReferenceExpr> obj, size_t indentLevel = 0);
     std::string AddressExprToString(const Ref<AddressExpr> obj, size_t indentLevel = 0);
     std::string DereferenceExprToString(const Ref<DereferenceExpr> obj, size_t indentLevel = 0);
     std::string ExpressionToString(const Ref<Expression> obj, size_t indentLevel = 0);

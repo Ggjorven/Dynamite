@@ -158,16 +158,50 @@ namespace Dynamite
 		}
 
 		/////////////////////////////////////////////////////////////////
+		// Reference
+		/////////////////////////////////////////////////////////////////
+		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::TakeReference))
+		{
+			Node::Ref<Node::Expression> expr = m_Tracker.New<Node::Expression>();
+			Node::Ref<Node::ReferenceExpr> reference = Node::New<Node::ReferenceExpr>();
+
+			expr->Expr = reference;
+
+			Consume(); // '&' token
+
+			if (auto referenceExpr = ParseExpression(GetOperationPrecedence(OperationType::Reference)))
+			{
+				reference->Expr = referenceExpr.Value();
+
+				if (!referenceExpr.Value()->IsLValue())
+				{
+					Compiler::Error(Peek(-1).Value().LineNumber, "Can't take reference of an RValue.");
+					m_Tracker.Pop<Node::Expression>();
+					return {};
+				}
+
+				// Note: This is either a binary expression or just a normal expression.
+				// The function accounts for both
+				HandleBinaryOperators(expr, minimumPrecedence);
+
+				return m_Tracker.Return<Node::Expression>();
+			}
+
+			Compiler::Error(Peek(-1).Value().LineNumber, "Expected expression.");
+			return m_Tracker.Return<Node::Expression>();
+		}
+
+		/////////////////////////////////////////////////////////////////
 		// Address
 		/////////////////////////////////////////////////////////////////
-		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::And))
+		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::TakeAddress))
 		{
 			Node::Ref<Node::Expression> expr = m_Tracker.New<Node::Expression>();
 			Node::Ref<Node::AddressExpr> address = Node::New<Node::AddressExpr>();
 
 			expr->Expr = address;
 
-			Consume(); // '&' token
+			Consume(); // '#' token
 
 			if (auto addressExpr = ParseExpression(GetOperationPrecedence(OperationType::Address)))
 			{
@@ -192,7 +226,7 @@ namespace Dynamite
 		}
 
 		/////////////////////////////////////////////////////////////////
-		// DeRef
+		// Dereference
 		/////////////////////////////////////////////////////////////////
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Pointer))
 		{

@@ -67,8 +67,23 @@ namespace Dynamite::Language
 	{
 		llvm::Type* varType = GenTypes::GetType(context, var->GetType()).LLVMType;
 
-		// TODO: Support arrays
-		llvm::Value* variable = builder.CreateAlloca(varType, nullptr, var->Variable);
+		llvm::Value* variable = nullptr;
+		if (var->GetType().IsArray())
+		{
+			if (var->GetType().GetArraySize().empty())
+			{
+				variable = builder.CreateAlloca(varType, 0, nullptr, var->Variable);
+			}
+			else
+			{
+				llvm::Value* arraySize = GenTypes::GetValue(context, Type(TypeSpecifier::UInt64), var->GetType().GetArraySize()).LLVMValue;
+				variable = builder.CreateAlloca(varType, 0, arraySize, var->Variable);
+			}
+		}
+		else
+		{
+			variable = builder.CreateAlloca(varType, 0, nullptr, var->Variable);
+		}
 		variable->setName(var->Variable);
 		
 		if (var->Expr)
@@ -93,8 +108,15 @@ namespace Dynamite::Language
 
 	void IRStatements::GenReturn(const Node::Ref<Node::ReturnStatement> ret, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		llvm::Value* val = IRExpressions::GenExpression(ret->Expr, context, builder, mod, IRState::CurrentFunction->GetType());
-		builder.CreateRet(val);
+		if (ret->Expr)
+		{
+			llvm::Value* val = IRExpressions::GenExpression(ret->Expr, context, builder, mod, IRState::CurrentFunction->GetType());
+			builder.CreateRet(val);
+		}
+		else
+		{
+			builder.CreateRetVoid();
+		}
 	}
 
 	void IRStatements::GenFunctionCall(const Node::Ref<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)

@@ -47,6 +47,7 @@ namespace Dynamite::Language
 		Volatile,
 
 		Pointer,
+		Reference,
 
 		Array 
 	};
@@ -125,6 +126,7 @@ namespace Dynamite::Language
 		bool IsVolatile() const;
 
 		bool IsPointer() const;
+		bool IsReference() const;
 
 		bool IsArray() const;
 
@@ -143,6 +145,7 @@ namespace Dynamite::Language
 		void AddVolatile();
 
 		void AddPointer();
+		void AddReference();
 
 		void AddArray(const std::string& size);
 
@@ -150,6 +153,9 @@ namespace Dynamite::Language
 		void SetArraySize(const std::string& value);
 
 		// Utils
+		Type RemoveReference() const;
+		Type RemovePointer() const;
+
 		// Note: Removes mut & volatile, but not pointers.
 		Type Clean() const;
 		Type Copy() const;

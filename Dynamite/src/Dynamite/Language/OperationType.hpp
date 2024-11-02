@@ -25,8 +25,9 @@ namespace Dynamite::Language
 		AND,
 		XOR,
 
-		Dereference,
+		Reference,
 		Address,
+		Dereference,
 	};
 
 	/////////////////////////////////////////////////////////////////

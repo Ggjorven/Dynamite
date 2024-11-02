@@ -158,6 +158,11 @@ namespace Dynamite::Language
 		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Pointer));
 	}
 
+	bool Type::IsReference() const
+	{
+		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Reference));
+	}
+
 	bool Type::IsArray() const
 	{
 		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Array));
@@ -264,6 +269,11 @@ namespace Dynamite::Language
 		BackQualifiers.emplace_back(TypeQualifier::Pointer);
 	}
 
+	void Type::AddReference()
+	{
+		BackQualifiers.emplace_back(TypeQualifier::Reference);
+	}
+
 	void Type::AddArray(const std::string& size)
 	{
 		BackQualifiers.emplace_back(TypeQualifier::Array, size);
@@ -289,6 +299,26 @@ namespace Dynamite::Language
 	}
 
 	// Utils
+	Type Type::RemoveReference() const
+	{
+		Type ret = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
+
+		if (IsReference())
+			ret.BackQualifiers.pop_back();
+
+		return ret;
+	}
+
+	Type Type::RemovePointer() const
+	{
+		Type ret = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
+
+		if (IsPointer())
+			ret.BackQualifiers.pop_back();
+
+		return ret;
+	}
+
 	Type Type::Clean() const
 	{
 		return Type({}, this->Information, this->BackQualifiers);
@@ -343,6 +373,7 @@ namespace Dynamite::Language
 		case TypeQualifier::Mut:		return "mut";
 		case TypeQualifier::Volatile:	return "volatile";
 
+		case TypeQualifier::Reference:	return "&";
 		case TypeQualifier::Pointer:	return "*";
 
 		case TypeQualifier::Array:		return "[" + value + "]";
