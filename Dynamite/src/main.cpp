@@ -1,9 +1,9 @@
 #include "dypch.h"
 
-#include "Core/Logging.hpp"
+#include "Dynamite/Core/Logging.hpp"
 
-#include "Compiler/Compiler.hpp"
-#include "Compiler/CompilerOptions.hpp"
+#include "Dynamite/Compiler/Compiler.hpp"
+#include "Dynamite/Compiler/CompilerOptions.hpp"
 
 using namespace Dynamite;
 

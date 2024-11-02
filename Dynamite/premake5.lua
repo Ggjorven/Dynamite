@@ -11,14 +11,14 @@ project "Dynamite"
 	architecture "x86_64"
 
 	debugdir ("%{wks.location}")
-	debugargs { "--debug Dynamite/dynamite/main.dy --I=IncludeDir1 --verbose" }
+	debugargs { "--debug Dynamite/dynamite/main.dy --verbose" }
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
 	-- Note: VS2022/Make only need the pchheader filename
 	pchheader "dypch.h"
-	pchsource "src/dypch.cpp"
+	pchsource "src/Dynamite/dypch.cpp"
 
 	--------------------------------------
 	-- Files & Options
@@ -111,7 +111,7 @@ project "Dynamite"
 
 	filter "action:xcode*"
 		-- Note: XCode needs the full pch header path
-		pchheader "src/dypch.h"
+		pchheader "src/Dynamite/dypch.h"
 
 		-- Note: If we don't add the header files to the externalincludedirs
 		-- we can't use <angled> brackets to include files.

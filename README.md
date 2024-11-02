@@ -1,6 +1,6 @@
 # Dynamite Programming Language
 
-Dynamite is a new programming language based on C++, designed for creating powerful and efficient applications. This is an ongoing project that currently only supports Linux systems.
+Dynamite is a new programming language based on C++, designed for creating powerful and efficient applications. This is an ongoing project that currently only supports a very limited set of features.
 
 ## Features
 
@@ -11,7 +11,7 @@ Dynamite is a new programming language based on C++, designed for creating power
 ### Prerequisites
 
 - C++20 compatible compiler
-- LLVM (bin directory must be in PATH)
+- LLVM 19.0+ (bin directory must be in PATH)
 - Python3 (optional)
 
 ### Building
