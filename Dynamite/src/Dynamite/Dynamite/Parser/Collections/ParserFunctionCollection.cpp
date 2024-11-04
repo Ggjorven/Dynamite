@@ -46,17 +46,17 @@ namespace Dynamite
 		m_Functions.clear();
 	}
 
-	void ParserFunctionCollection::Add(const std::string& name, Type returnType, const std::vector<std::pair<Type, bool>>& parameters)
+	void ParserFunctionCollection::Add(const std::string& name, Type returnType, const std::vector<std::pair<Type, bool>>& parameters, bool hasVardiadicArguments)
 	{
 		auto it = std::ranges::find_if(m_Functions, [&](const ParserFunction& func) { return func.Name == name; });
 		if (it == m_Functions.cend())
 		{
-			m_Functions.emplace_back(name, std::vector({ ParserFunction::Overload(returnType, parameters) }));
+			m_Functions.emplace_back(name, std::vector({ ParserFunction::Overload(returnType, parameters, hasVardiadicArguments) }));
 		}
 		else
 		{
 			ParserFunction& func = *it;
-			func.Overloads.emplace_back(returnType, parameters);
+			func.Overloads.emplace_back(returnType, parameters, hasVardiadicArguments);
 		}
 	}
 
@@ -148,7 +148,7 @@ namespace Dynamite
 		return (it != m_Functions.cend());
 	}
 
-	bool ParserFunctionCollection::Exists(const std::string& name, const Type& returnType, const std::vector<Type>& parameters)
+	bool ParserFunctionCollection::Exists(const std::string& name, const Type& returnType, const std::vector<Type>& parameters, bool hasVardiadicArguments)
 	{
 		const auto it = std::ranges::find_if(std::as_const(m_Functions), [&](const ParserFunction& func) { return func.Name == name; });
 		if (it == m_Functions.cend()) return false;
@@ -159,7 +159,7 @@ namespace Dynamite
 
 		for (const auto& overload : func.Overloads)
 		{
-			if ((returnType == overload.ReturnType) && (parameters.size() == overload.Parameters.size()))
+			if ((returnType == overload.ReturnType) && (parameters.size() == overload.Parameters.size()) && (hasVardiadicArguments == overload.VardiadicArguments))
 			{
 				bool failed = false;
 				for (size_t i = 0; i < parameters.size(); i++)

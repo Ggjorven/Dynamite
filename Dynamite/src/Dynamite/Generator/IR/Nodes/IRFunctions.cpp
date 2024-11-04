@@ -37,9 +37,10 @@ namespace Dynamite::Language
 			for (const auto& parameter : declaration->Parameters)
 				parameters.push_back(GenTypes::GetType(context, parameter->GetType()).LLVMType);
 
-			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, false);
+			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, declaration->VardiadicArguments);
 
 			func.Callee = mod.getOrInsertFunction(declaration->Name, funcType);
+			func.HasVardiadicArguments = declaration->VardiadicArguments;
 		}
 
 		// Assign names to the function arguments
@@ -77,9 +78,10 @@ namespace Dynamite::Language
 			for (const auto& parameter : definition->Parameters)
 				parameters.push_back(GenTypes::GetType(context, parameter->GetType()).LLVMType);
 
-			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, false);
+			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, definition->VardiadicArguments);
 
 			func.Callee = mod.getOrInsertFunction(definition->Name, funcType);
+			func.HasVardiadicArguments = definition->VardiadicArguments;
 		}
 
 		// Assign names to the function arguments
@@ -118,14 +120,7 @@ namespace Dynamite::Language
 				// Push parameters to the scope, so they are available
 				for (size_t argIndex = 0; argIndex < func.Arguments.size(); argIndex++)
 				{
-					if (definition->Name == "main") // TODO: Make this clean
-					{
-						IRScopeCollection::PushVar(definition->Parameters[argIndex]->Variable, definition->Parameters[argIndex]->GetType(), func.Arguments[argIndex].Value);
-					}
-					else
-					{
-						IRStatements::GenVariable(definition->Parameters[argIndex], context, builder, mod, func.Arguments[argIndex].Value);
-					}
+					IRStatements::GenVariable(definition->Parameters[argIndex], context, builder, mod, func.Arguments[argIndex].Value);
 				}
 
 				IRStatements::GenScope(definition->Body, context, builder, mod, false, true);
@@ -143,12 +138,19 @@ namespace Dynamite::Language
 		std::vector<llvm::Value*> arguments;
 		arguments.reserve(func.Arguments.size());
 
-		for (size_t argIndex = 0; argIndex < func.Arguments.size(); argIndex++)
+		for (size_t argIndex = 0; argIndex < funcCall->Arguments.size(); argIndex++)
 		{
 			auto argExpr = funcCall->Arguments[argIndex];
-			llvm::Value* value = IRExpressions::GenExpression(argExpr, context, builder, mod, func.Arguments[argIndex].VariableType);
-
-			arguments.emplace_back(value);
+			if (argIndex < func.Arguments.size()) // Signature args
+			{
+				llvm::Value* value = IRExpressions::GenExpression(argExpr, context, builder, mod, func.Arguments[argIndex].VariableType);
+				arguments.emplace_back(value);
+			}
+			else // Vardiadic args
+			{
+				llvm::Value* value = IRExpressions::GenExpression(argExpr, context, builder, mod);
+				arguments.emplace_back(value);
+			}
 		}
 
 		return builder.CreateCall(func.Callee, arguments);

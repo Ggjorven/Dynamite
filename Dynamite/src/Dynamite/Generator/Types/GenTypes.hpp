@@ -3,6 +3,7 @@
 #include "Dynamite/Core/Core.hpp"
 
 #include "Dynamite/Language/Types/Type.hpp"
+#include "Dynamite/Language/LiteralType.hpp"
 
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
@@ -37,7 +38,7 @@ namespace Dynamite::Language
 	public:
 		// Get functions
 		static GeneratorType GetType(llvm::LLVMContext& context, const Type& originalType);
-		static GeneratorValue GetValue(llvm::LLVMContext& context, const Type& type, const std::string& value);
+		static GeneratorValue GetLiteralValue(llvm::LLVMContext& context, llvm::Module& mod, const Type& type, LiteralType literalType, const std::string& value);
 
 	public:
 		// Casting

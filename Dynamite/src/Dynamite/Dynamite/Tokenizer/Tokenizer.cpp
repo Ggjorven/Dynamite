@@ -90,7 +90,7 @@ namespace Dynamite
                 continue;
             }
 
-            // Character array // Note: Buffer keeps \ and adds \0 character
+            // Character array // Note: Buffer keeps \ 
             else if (Utils::OptCheck(Peek(0), '"'))
             {
                 Consume(); // '"' Start array
@@ -106,7 +106,7 @@ namespace Dynamite
 
                 Consume(); // '"' End array
                 
-                buffer.push_back('\0');
+                //buffer.push_back('\0');
 
                 tokens.emplace_back(TokenType::CharArrayLiteral, buffer, lineNumber);
                 buffer.clear();

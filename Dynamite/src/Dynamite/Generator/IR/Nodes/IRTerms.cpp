@@ -8,6 +8,7 @@
 #include "Dynamite/Generator/Types/GenTypes.hpp"
 
 #include "Dynamite/Generator/IR/Nodes/IRStatements.hpp"
+#include "Dynamite/Generator/IR/Nodes/IRExpressions.hpp"
 
 #include "Dynamite/Generator/IR/Collections/IRScopeCollection.hpp"
 #include "Dynamite/Generator/IR/Collections/IRFunctionCollection.hpp"
@@ -41,8 +42,7 @@ namespace Dynamite::Language
 			}
 			llvm::Value* operator () (const Node::Ref<Node::ParenthesisTerm> obj) const
 			{
-				DY_ASSERT(0, "TODO");
-				return nullptr;
+				return IRExpressions::GenExpression(obj->Expr, Context, Builder, Module, EnforceType);
 			}
 		};
 
@@ -52,9 +52,9 @@ namespace Dynamite::Language
 	llvm::Value* IRTerms::GenLiteral(const Node::Ref<Node::LiteralTerm> lit, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
 	{
 		if (enforceType.HasValue())
-			return GenTypes::GetValue(context, enforceType.Value(), lit->Literal).LLVMValue;
+			return GenTypes::GetLiteralValue(context, mod, enforceType.Value(), lit->LitType, lit->Literal).LLVMValue;
 		
-		return GenTypes::GetValue(context, lit->GetType(), lit->Literal).LLVMValue;
+		return GenTypes::GetLiteralValue(context, mod, lit->GetType(), lit->LitType, lit->Literal).LLVMValue;
 	}
 
 	llvm::Value* IRTerms::GenIdentifier(const Node::Ref<Node::IdentifierTerm> identifier, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)

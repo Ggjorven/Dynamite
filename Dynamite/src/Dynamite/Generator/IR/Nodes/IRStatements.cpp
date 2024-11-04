@@ -77,7 +77,7 @@ namespace Dynamite::Language
 			}
 			else
 			{
-				llvm::Value* arraySize = GenTypes::GetValue(context, Type(TypeSpecifier::UInt64), var->GetType().GetArraySize()).LLVMValue;
+				llvm::Value* arraySize = GenTypes::GetLiteralValue(context, mod, Type(TypeSpecifier::UInt64), LiteralType::IntegerLiteral, var->GetType().GetArraySize()).LLVMValue;
 				variable = builder.CreateAlloca(varType, 0, arraySize);
 			}
 		}

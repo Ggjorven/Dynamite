@@ -97,64 +97,92 @@ namespace Dynamite::Language
 		return returnType;
 	}
 
-	GeneratorValue GenTypes::GetValue(llvm::LLVMContext& context, const Type& type, const std::string& value)
+	GeneratorValue GenTypes::GetLiteralValue(llvm::LLVMContext& context, llvm::Module& mod, const Type& type, LiteralType literalType, const std::string& value)
 	{
 		GeneratorValue returnValue = {};
 
-		switch (type.Information.Specifier)
+		switch (literalType)
 		{
-		case TypeSpecifier::Bool:
-			// Convert string to bool
+		case LiteralType::BoolLiteral:
+		{
 			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt1Ty(context), value == "1" ? 1 : 0);
 			break;
+		}
+		case LiteralType::IntegerLiteral:
+		{
+			switch (type.Information.Specifier)
+			{
+			case TypeSpecifier::Int8:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt8Ty(context), std::stoi(value));
+				break;
+			case TypeSpecifier::Int16:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), std::stoi(value));
+				break;
+			case TypeSpecifier::Int32:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), std::stoi(value));
+				break;
+			case TypeSpecifier::Int64:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), std::stoll(value));
+				break;
 
-		case TypeSpecifier::Int8:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt8Ty(context), std::stoi(value));
+			case TypeSpecifier::UInt8:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt8Ty(context), static_cast<uint8_t>(std::stoi(value)));
+				break;
+			case TypeSpecifier::UInt16:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), static_cast<uint16_t>(std::stoi(value)));
+				break;
+			case TypeSpecifier::UInt32:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), static_cast<uint32_t>(std::stoul(value)));
+				break;
+			case TypeSpecifier::UInt64:
+				returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), std::stoull(value));
+				break;
+			}
+
 			break;
+		}
+		case LiteralType::FloatLiteral:
+		{
+			switch (type.Information.Specifier)
+			{
+			case TypeSpecifier::Float32:
+				returnValue.LLVMValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(context), std::stof(value));
+				break;
 
-		case TypeSpecifier::Int16:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), std::stoi(value));
+			case TypeSpecifier::Float64:
+				returnValue.LLVMValue = llvm::ConstantFP::get(llvm::Type::getDoubleTy(context), std::stod(value));
+				break;
+			}
+
 			break;
-
-		case TypeSpecifier::Int32:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), std::stoi(value));
-			break;
-
-		case TypeSpecifier::Int64:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), std::stoll(value));
-			break;
-
-		case TypeSpecifier::UInt8:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt8Ty(context), static_cast<uint8_t>(std::stoi(value)));
-			break;
-
-		case TypeSpecifier::UInt16:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), static_cast<uint16_t>(std::stoi(value)));
-			break;
-
-		case TypeSpecifier::UInt32:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), static_cast<uint32_t>(std::stoul(value)));
-			break;
-
-		case TypeSpecifier::UInt64:
-			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), std::stoull(value));
-			break;
-
-		case TypeSpecifier::Float32:
-			returnValue.LLVMValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(context), std::stof(value));
-			break;
-
-		case TypeSpecifier::Float64:
-			returnValue.LLVMValue = llvm::ConstantFP::get(llvm::Type::getDoubleTy(context), std::stod(value));
-			break;
-
-		case TypeSpecifier::Char:
+		}
+		case LiteralType::CharLiteral:
+		{
 			returnValue.LLVMValue = llvm::ConstantInt::get(llvm::Type::getInt8Ty(context), static_cast<uint8_t>(value[0]));
 			break;
+		}
+		case LiteralType::CharArrayLiteral:
+		{
+			// Create a constant data array from the string
+			llvm::Constant* charArrayConstant = llvm::ConstantDataArray::getString(context, value, true);
 
-		// Note: Handle other types as necessary
+			// Define the global variable
+			auto globalVar = new llvm::GlobalVariable( // Note: We purposefully leak memory :) // TODO: Switch to another approach
+				mod,
+				charArrayConstant->getType(),
+				true,
+				llvm::GlobalValue::PrivateLinkage,
+				charArrayConstant
+			);
+
+			// Set the return value to the global variable
+			returnValue.LLVMValue = globalVar;
+			break;
+		}
+
+
 		default:
-			DY_ASSERT(0, "Unknown type specifier for value conversion.");
+			DY_ASSERT(0, "Unknown literaltype for literal value conversion.");
 			break;
 		}
 

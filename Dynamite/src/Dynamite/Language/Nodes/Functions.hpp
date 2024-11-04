@@ -29,6 +29,8 @@ namespace Dynamite::Language::Node
         // arguments has a default value.
         std::vector<Ref<VariableStatement>> Parameters;
 
+        bool VardiadicArguments = false;
+
         Type GetType() const;
     };
 
@@ -46,6 +48,8 @@ namespace Dynamite::Language::Node
         // Note: The expression can be a NullRef, since not every
         // arguments has a default value.
         std::vector<Ref<VariableStatement>> Parameters;
+
+        bool VardiadicArguments = false;
 
         Ref<ScopeStatement> Body;
 

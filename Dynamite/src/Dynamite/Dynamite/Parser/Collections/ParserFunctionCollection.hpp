@@ -23,6 +23,7 @@ namespace Dynamite
 		public:
 			Language::Type ReturnType;
 			std::vector<std::pair<Language::Type, bool>> Parameters; // Type & required bool
+			bool VardiadicArguments;
 
 		public:
 			bool operator == (const Overload& other);
@@ -41,7 +42,7 @@ namespace Dynamite
 	public:
 		void Reset();
 
-		void Add(const std::string& name, Language::Type returnType, const std::vector<std::pair<Language::Type, bool>>& parameters = { });
+		void Add(const std::string& name, Language::Type returnType, const std::vector<std::pair<Language::Type, bool>>& parameters = { }, bool hasVardiadicArguments = false);
 
 		std::vector<Language::Type> GetReturnTypes(const std::string& functionName);
 		std::vector<Language::Type> GetArgumentTypes(const std::string& functionName, size_t index);
@@ -50,7 +51,7 @@ namespace Dynamite
 		std::vector<size_t> GetRequiredArgCounts(const std::string& functionName);
 
 		bool Exists(const std::string& name);
-		bool Exists(const std::string& name, const Language::Type& returnType, const std::vector<Language::Type>& parameters = { });
+		bool Exists(const std::string& name, const Language::Type& returnType, const std::vector<Language::Type>& parameters = { }, bool hasVardiadicArguments = false);
 
 		ParserFunction* GetFunction(const std::string& name);
 		ParserFunction::Overload* GetOverload(const std::string& name, size_t overloadIndex = 0);

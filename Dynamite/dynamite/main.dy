@@ -1,17 +1,9 @@
-void func(mut i32& x) // TODO: Fix
-{
-	x = 30;
-	return;
-}
+i32 printf(char* fmt, ...);
 
 i32 main(i32 argc, char** argv)
 {
-	mut i32 a = 20;
-	mut i32& b = &a;
+	i32 x = 10;
+	printf("Test %d", x);
 
-	b = 10;
-
-	func(&a);
-
-	return a;
+	return argc;
 }

@@ -63,7 +63,6 @@ namespace Dynamite
 					if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Comma))
 					{
 						Consume(); // ',' token
-						continue;
 					}
 					index++;
 				}
@@ -79,17 +78,22 @@ namespace Dynamite
 				const auto& overload = functionDefinitions.Overloads[overloadIndex];
 
 				if ((overload.Parameters.size() < m_Functions.GetRequiredArgCounts(function->Function)[overloadIndex]) ||
-					(overload.Parameters.size() > m_Functions.GetArgCounts(function->Function)[overloadIndex]))
+					((overload.Parameters.size() > m_Functions.GetArgCounts(function->Function)[overloadIndex] && !overload.VardiadicArguments)))
 					continue;
 
 				bool continueLoop = false;
 				for (size_t parameterIndex = 0; parameterIndex < overload.Parameters.size(); parameterIndex++)
 				{
-					if (function->Arguments.size() <= parameterIndex || !TypeCollection::ImplicitCastable(function->Arguments[parameterIndex]->GetType(), overload.Parameters[parameterIndex].first))
+					if (function->Arguments.size() < parameterIndex)
 					{
-						continueLoop = true;
-						break;
+						if (!TypeCollection::ImplicitCastable(function->Arguments[parameterIndex]->GetType(), overload.Parameters[parameterIndex].first))
+						{
+							continueLoop = true;
+							break;
+						}
 					}
+					else // Found proper overload
+						break;
 				}
 
 				if (continueLoop)
@@ -144,13 +148,12 @@ namespace Dynamite
 			Consume(); // '(' token
 
 			bool hasDefaultArguments = false;
+			bool hasVardiadicArguments = false;
 			std::vector<Type> parameterTypes = { };
 			std::vector<std::pair<Type, bool>> parameterTypesAndDefault = { };
 			while (true)
 			{
 				size_t parameterOffset = 0;
-
-				size_t a = m_Index;
 
 				if (PeekIsType(parameterOffset) &&
 					Utils::OptMemberIs(Peek(parameterOffset++), &Token::Type, TokenType::Identifier))
@@ -188,8 +191,15 @@ namespace Dynamite
 					if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Comma))
 					{
 						Consume(); // ',' token
-						continue;
 					}
+				}
+				else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Dot) &&
+					Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::Dot) &&
+					Utils::OptMemberIs(Peek(2), &Token::Type, TokenType::Dot))
+				{
+					Consume(); Consume(); Consume();
+					hasVardiadicArguments = true;
+					break;
 				}
 				else
 					break;
@@ -197,8 +207,8 @@ namespace Dynamite
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
-			if (!m_Functions.Exists(name.Value, returnType.Value(), parameterTypes))
-				m_Functions.Add(name.Value, returnType.Value(), parameterTypesAndDefault);
+			if (!m_Functions.Exists(name.Value, returnType.Value(), parameterTypes, hasVardiadicArguments))
+				m_Functions.Add(name.Value, returnType.Value(), parameterTypesAndDefault, hasVardiadicArguments);
 
 			/////////////////////////////////////////////////////////////////
 			// Declaration
@@ -211,6 +221,7 @@ namespace Dynamite
 				declaration->ReturnType = returnType.Value();
 				declaration->Name = name.Value;
 				declaration->Parameters = parameters;
+				declaration->VardiadicArguments = hasVardiadicArguments;
 
 				func->Func = declaration;
 
@@ -225,14 +236,13 @@ namespace Dynamite
 				definition->ReturnType = returnType.Value();
 				definition->Name = name.Value;
 				definition->Parameters = parameters;
+				definition->VardiadicArguments = hasVardiadicArguments;
 
 				// Check if the declaration matches the definition
-				if (m_Functions.Exists(definition->Name, definition->ReturnType, parameterTypes))
+				if (m_Functions.Exists(definition->Name, definition->ReturnType, parameterTypes, hasVardiadicArguments))
 				{
 					if (hasDefaultArguments)
-					{
 						Compiler::Error(Peek(-1).Value().LineNumber, "Cannot redefine default arguments.");
-					}
 				}
 
 				// Note: We begin the scope here so we can 
@@ -253,7 +263,7 @@ namespace Dynamite
 				if (!returnType.Value().IsVoid())
 				{
 					if (definition->Body->Statements.empty() || !std::holds_alternative<Node::Ref<Node::ReturnStatement>>(definition->Body->Statements.back()->StatementObj))
-						Compiler::Warn(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");;
+						Compiler::Error(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");;
 				}
 
 				func->Func = definition;
