@@ -117,7 +117,16 @@ namespace Dynamite::Language
 
 				// Push parameters to the scope, so they are available
 				for (size_t argIndex = 0; argIndex < func.Arguments.size(); argIndex++)
-					IRScopeCollection::PushVar(definition->Parameters[argIndex]->Variable, definition->Parameters[argIndex]->GetType(), func.Arguments[argIndex].Value);
+				{
+					if (definition->Name == "main") // TODO: Make this clean
+					{
+						IRScopeCollection::PushVar(definition->Parameters[argIndex]->Variable, definition->Parameters[argIndex]->GetType(), func.Arguments[argIndex].Value);
+					}
+					else
+					{
+						IRStatements::GenVariable(definition->Parameters[argIndex], context, builder, mod, func.Arguments[argIndex].Value);
+					}
+				}
 
 				IRStatements::GenScope(definition->Body, context, builder, mod, false, true);
 			}

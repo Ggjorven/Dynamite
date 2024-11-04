@@ -11,7 +11,7 @@ i32 main(i32 argc, char** argv)
 
 	b = 10;
 
-	//func(&a);
+	func(&a);
 
 	return a;
 }

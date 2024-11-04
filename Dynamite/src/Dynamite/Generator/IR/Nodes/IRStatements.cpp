@@ -63,7 +63,7 @@ namespace Dynamite::Language
 		std::visit(StatementVisitor(context, builder, mod), statement->StatementObj);
 	}
 
-	void IRStatements::GenVariable(const Node::Ref<Node::VariableStatement> var, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
+	void IRStatements::GenVariable(const Node::Ref<Node::VariableStatement> var, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<GeneratorValue> enforceValue)
 	{
 		llvm::Type* varType = GenTypes::GetType(context, var->GetType()).LLVMType;
 		std::string allocName = var->Variable;
@@ -73,21 +73,25 @@ namespace Dynamite::Language
 		{
 			if (var->GetType().GetArraySize().empty())
 			{
-				variable = builder.CreateAlloca(varType, 0, nullptr, allocName);
+				variable = builder.CreateAlloca(varType, 0, nullptr);
 			}
 			else
 			{
 				llvm::Value* arraySize = GenTypes::GetValue(context, Type(TypeSpecifier::UInt64), var->GetType().GetArraySize()).LLVMValue;
-				variable = builder.CreateAlloca(varType, 0, arraySize, allocName);
+				variable = builder.CreateAlloca(varType, 0, arraySize);
 			}
 		}
 		else
 		{
-			variable = builder.CreateAlloca(varType, 0, nullptr, allocName);
+			variable = builder.CreateAlloca(varType, 0, nullptr);
 		}
 		variable->setName(allocName);
 		
-		if (var->Expr)
+		if (enforceValue.HasValue())
+		{
+			builder.CreateStore(enforceValue.Value().LLVMValue, variable);
+		}
+		else if (var->Expr)
 		{
 			llvm::Value* expr = IRExpressions::GenExpression(var->Expr, context, builder, mod, var->GetType());
 			builder.CreateStore(expr, variable);
