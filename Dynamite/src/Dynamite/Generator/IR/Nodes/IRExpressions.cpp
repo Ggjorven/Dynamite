@@ -135,7 +135,7 @@ namespace Dynamite::Language
 					llvm::Type* type = GenTypes::GetType(Context, obj->GetType()).LLVMType;
 					return Builder.CreateLoad(type, IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue);
 				}
-				else
+				else // Reference -> Value
 				{
 					llvm::Type* ptrType = GenTypes::GetType(Context, obj->GetType()).LLVMType;
 					llvm::Value* ptr = Builder.CreateLoad(ptrType, IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue);

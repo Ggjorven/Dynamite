@@ -5,7 +5,8 @@
 
 #include "Dynamite/Compiler/Compiler.hpp"
 
-#include "Dynamite/Generator/IR/IRPass.hpp"
+#include "Dynamite/Generator/IR/Passes/IRPass.hpp"
+#include "Dynamite/Generator/IR/Passes/OptimizationPass.hpp"
 
 #include <llvm/ADT/StringMap.h>
 #include <llvm/IR/Module.h>
@@ -24,6 +25,16 @@ namespace Dynamite
 {
 
     using namespace Language;
+
+    namespace
+    {
+        void GetIRString(llvm::Module& mod, std::string& str)
+        {
+            llvm::raw_string_ostream irStream(str);
+            mod.print(irStream, nullptr, false, true);
+            irStream.flush();
+        }
+    }
 
 	/////////////////////////////////////////////////////////////////
 	// Object pass
@@ -106,12 +117,21 @@ namespace Dynamite
 
 		llvm::LLVMContext context;
 		llvm::Module mod(outputPath.filename().string(), context);
-		//mod.addModuleFlag(llvm::Module::Warning, "Debug Info Version", llvm::DEBUG_METADATA_VERSION);
 
-		// Generate IR
+		// Generate IR & Optimize
         {
-		    IRPass irPass(m_GeneratedIR);
-            irPass.Generate(m_Program, context, mod);
+		    IRPass irPass;
+            irPass.Run(m_Program, context, mod);
+
+            if (!Compiler::GetOptions().Contains(CompilerFlag::Debug) && Compiler::GetErrorCount() == 0)
+            {
+                DY_LOG_TRACE("Optimizing IR...");
+
+                OptimizationPass optPass;
+                optPass.Run(mod);
+            }
+
+            GetIRString(mod, m_GeneratedIR);
         }
 
 		// Initialize Target specific functionality.

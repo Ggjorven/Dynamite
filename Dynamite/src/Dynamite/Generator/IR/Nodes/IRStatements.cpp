@@ -48,7 +48,7 @@ namespace Dynamite::Language
 			}
 			void operator () (const Node::Ref<Node::AssignmentStatement> obj) const
 			{
-				DY_ASSERT(0, "TODO");
+				GenAssignment(obj, Context, Builder, Module);
 			}
 			void operator () (const Node::Ref<Node::ReturnStatement> obj) const
 			{
@@ -66,42 +66,29 @@ namespace Dynamite::Language
 	void IRStatements::GenVariable(const Node::Ref<Node::VariableStatement> var, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
 		llvm::Type* varType = GenTypes::GetType(context, var->GetType()).LLVMType;
+		std::string allocName = var->Variable;
 
 		llvm::Value* variable = nullptr;
 		if (var->GetType().IsArray())
 		{
 			if (var->GetType().GetArraySize().empty())
 			{
-				variable = builder.CreateAlloca(varType, 0, nullptr, var->Variable);
+				variable = builder.CreateAlloca(varType, 0, nullptr, allocName);
 			}
 			else
 			{
 				llvm::Value* arraySize = GenTypes::GetValue(context, Type(TypeSpecifier::UInt64), var->GetType().GetArraySize()).LLVMValue;
-				variable = builder.CreateAlloca(varType, 0, arraySize, var->Variable);
+				variable = builder.CreateAlloca(varType, 0, arraySize, allocName);
 			}
 		}
 		else
 		{
-			variable = builder.CreateAlloca(varType, 0, nullptr, var->Variable);
+			variable = builder.CreateAlloca(varType, 0, nullptr, allocName);
 		}
-		variable->setName(var->Variable);
+		variable->setName(allocName);
 		
 		if (var->Expr)
 		{
-
-			/*
-			llvm::Type* type = GenTypes::GetType(context, identifier->GetType()).LLVMType;
-
-			if (enforceType.HasValue() && (identifier->GetType() != enforceType.Value()))
-			{
-				llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
-	
-				return GenTypes::Cast(builder, nonCastValue, identifier->GetType(), enforceType.Value());
-			}
-
-			return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
-			*/
-
 			llvm::Value* expr = IRExpressions::GenExpression(var->Expr, context, builder, mod, var->GetType());
 			builder.CreateStore(expr, variable);
 		}
@@ -109,7 +96,26 @@ namespace Dynamite::Language
 		IRScopeCollection::PushVar(var->Variable, var->GetType(), GeneratorValue(variable));
 	}
 
-	void IRStatements::GenScope(const Node::Ref<Node::ScopeStatement> scope, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, bool startScope)
+	void IRStatements::GenAssignment(const Node::Ref<Node::AssignmentStatement> assignment, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
+	{
+		llvm::Value* variable = IRScopeCollection::GetVariable(assignment->Variable).Value.LLVMValue;
+		llvm::Type* varType = GenTypes::GetType(context, assignment->VariableType).LLVMType;  // Get the explicit type
+
+		if (assignment->VariableType.IsReference() && !assignment->Expr->GetType().IsReference())
+		{
+			llvm::Value* expr = IRExpressions::GenExpression(assignment->Expr, context, builder, mod, assignment->VariableType.RemoveReference());
+			llvm::Value* ptr = builder.CreateLoad(varType, variable, assignment->Variable);
+
+			builder.CreateStore(expr, ptr);
+		}
+		else
+		{
+			llvm::Value* expr = IRExpressions::GenExpression(assignment->Expr, context, builder, mod, assignment->VariableType);
+			builder.CreateStore(expr, variable);
+		}
+	}
+
+	void IRStatements::GenScope(const Node::Ref<Node::ScopeStatement> scope, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, bool startScope, bool enforceReturn)
 	{
 		if (startScope)
 			IRScopeCollection::BeginScope();
@@ -117,6 +123,15 @@ namespace Dynamite::Language
 		for (const auto& statement : scope->Statements)
 			GenStatement(statement, context, builder, mod);
 		
+		// No return statement at the end
+		if (enforceReturn && !scope->Statements.empty() && !std::holds_alternative<Node::Ref<Node::ReturnStatement>>(scope->Statements.back()->StatementObj))
+		{
+			if (IRState::CurrentFunction->GetType() == Type(TypeSpecifier::Void))
+				builder.CreateRetVoid();
+			else
+				DY_LOG_ERROR("[Internal Compiler Error] Function '{0}' does not end with return statement and return type != void.", IRState::CurrentFunction->Name);
+		}
+
 		IRScopeCollection::EndScope();
 	}
 

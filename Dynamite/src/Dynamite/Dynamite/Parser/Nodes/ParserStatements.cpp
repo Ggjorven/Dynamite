@@ -224,14 +224,15 @@ namespace Dynamite
 		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Return))
 		{
 			Node::Ref<Node::Statement> statement = m_Tracker.New<Node::Statement>();
+			
+			auto returnStatement = Node::New<Node::ReturnStatement>();
+			statement->StatementObj = returnStatement;
 
 			Consume(); // Return token
 
 			if (auto expr = ParseExpression())
 			{
-				auto returnStatement = Node::New<Node::ReturnStatement>(expr.Value());
-				
-				statement->StatementObj = returnStatement;
+				returnStatement->Expr = expr.Value();
 				
 				// Check if returnStatement matches the returnType of the function
 				// or is castable to the proper returnType.
@@ -243,16 +244,21 @@ namespace Dynamite
 					m_Tracker.Pop<Node::Statement>();
 					return {};
 				}
+			}
+			else if (m_Tracker.Get<Node::FunctionDefinition>() != (Node::Ref<Node::FunctionDefinition>)Node::NullRef &&
+				m_Tracker.Get<Node::FunctionDefinition>()->GetType() != Type(TypeSpecifier::Void))
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Function '{0}' expects type {1} as return type, instead it got void, void is not castable to {1}.", m_Tracker.Get<Node::FunctionDefinition>()->Name, TypeCollection::ToString(m_Tracker.Get<Node::FunctionDefinition>()->GetType()));
 
 				CheckConsume(TokenType::Semicolon, "Expected `;`.");
-				return m_Tracker.Return<Node::Statement>();
+				m_Tracker.Pop<Node::Statement>();
+				return {};
 			}
-
-			Compiler::Error(Peek(-1).Value().LineNumber, "Invalid expression.");
+			// A invalid expression / no expression is valid for void functions
 			
 			CheckConsume(TokenType::Semicolon, "Expected `;`.");
-			m_Tracker.Pop<Node::Statement>();
-			return {};
+
+			return m_Tracker.Return<Node::Statement>();
 		}
 
 		/////////////////////////////////////////////////////////////////

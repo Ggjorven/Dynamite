@@ -119,9 +119,10 @@ namespace Dynamite::Language
 				for (size_t argIndex = 0; argIndex < func.Arguments.size(); argIndex++)
 					IRScopeCollection::PushVar(definition->Parameters[argIndex]->Variable, definition->Parameters[argIndex]->GetType(), func.Arguments[argIndex].Value);
 
-				IRStatements::GenScope(definition->Body, context, builder, mod);
+				IRStatements::GenScope(definition->Body, context, builder, mod, false, true);
 			}
 
+			// Reset parsing state
 			IRState::CurrentFunction = nullptr;
 		}
 	}

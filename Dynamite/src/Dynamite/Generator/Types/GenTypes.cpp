@@ -164,7 +164,7 @@ namespace Dynamite::Language
 	/////////////////////////////////////////////////////////////////
 	// Casting
 	/////////////////////////////////////////////////////////////////
-	llvm::Value* GenTypes::Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to)
+	llvm::Value* GenTypes::Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to, const std::string& name)
 	{
 		llvm::Type* fromLLVM = GenTypes::GetType(builder.getContext(), from).LLVMType;
 		llvm::Type* toLLVM = GenTypes::GetType(builder.getContext(), to).LLVMType;
@@ -175,14 +175,14 @@ namespace Dynamite::Language
 			// Convert to smaller integer
 			if (TypeCollection::GetLargest(from, to) == from)
 			{
-				return builder.CreateTrunc(value, toLLVM);
+				return builder.CreateTrunc(value, toLLVM, name);
 			}
 			// Convert to larger integer
 			{
 				if (from.IsUnsigned())
-					return builder.CreateZExt(value, toLLVM);
+					return builder.CreateZExt(value, toLLVM, name);
 				else
-					return builder.CreateSExt(value, toLLVM);
+					return builder.CreateSExt(value, toLLVM, name);
 			}
 		}
 
@@ -192,11 +192,11 @@ namespace Dynamite::Language
 			// Convert to smaller float
 			if (TypeCollection::GetLargest(from, to) == from)
 			{
-				return builder.CreateFPTrunc(value, toLLVM);
+				return builder.CreateFPTrunc(value, toLLVM, name);
 			}
 			else
 			{
-				return builder.CreateFPExt(value, toLLVM);
+				return builder.CreateFPExt(value, toLLVM, name);
 			}
 		}
 
@@ -204,24 +204,24 @@ namespace Dynamite::Language
 		else if (from.IsIntegral() && to.IsFloat())
 		{
 			if (from.IsUnsigned())
-				return builder.CreateUIToFP(value, toLLVM);
+				return builder.CreateUIToFP(value, toLLVM, name);
 			else
-				return builder.CreateSIToFP(value, toLLVM);
+				return builder.CreateSIToFP(value, toLLVM, name);
 		}
 
 		// Float -> int
 		else if (from.IsFloat() && to.IsIntegral())
 		{
 			if (to.IsUnsigned())
-				return builder.CreateFPToUI(value, toLLVM);
+				return builder.CreateFPToUI(value, toLLVM, name);
 			else
-				return builder.CreateFPToSI(value, toLLVM);
+				return builder.CreateFPToSI(value, toLLVM, name);
 		}
 
 		// Pointers
 		else if (from.IsPointer() && to.IsPointer())
 		{
-			return builder.CreateBitCast(value, toLLVM);
+			return builder.CreateBitCast(value, toLLVM, name);
 		}
 
 		DY_ASSERT(0, "[Internal Compiler Error] - Casting for these types has not been implemented.");

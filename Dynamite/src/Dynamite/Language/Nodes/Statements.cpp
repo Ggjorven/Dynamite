@@ -60,7 +60,10 @@ namespace Dynamite::Language::Node
 
 	Type ReturnStatement::GetType() const
 	{
-		return Expr->GetType();
+		if (Expr)
+			return Expr->GetType();
+		else
+			return Type(TypeSpecifier::Void);
 	}
 
 	/////////////////////////////////////////////////////////////////
@@ -135,8 +138,15 @@ namespace Dynamite::Language::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string returnStr = ExpressionToString(obj->Expr, indentLevel + 1);
-		str += Pulse::Text::Format("([ReturnStatement({0})] = '\n{1}'\n{2})", TypeCollection::ToString(obj->GetType()), returnStr, Utils::StrTimes(Node::TabString, indentLevel));
+		if (obj->Expr)
+		{
+			std::string returnStr = ExpressionToString(obj->Expr, indentLevel + 1);
+			str += Pulse::Text::Format("([ReturnStatement({0})] = '\n{1}'\n{2})", TypeCollection::ToString(obj->GetType()), returnStr, Utils::StrTimes(Node::TabString, indentLevel));
+		}
+		else
+		{
+			str += Pulse::Text::Format("([ReturnStatement({0})])", TypeCollection::ToString(obj->GetType()));
+		}
 
 		return str;
 	}

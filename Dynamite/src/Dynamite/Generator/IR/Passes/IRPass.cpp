@@ -18,25 +18,14 @@
 namespace Dynamite::Language
 {
 
-    namespace
-    {
-        void GetIRString(llvm::Module& mod, std::string& str) 
-        {
-            llvm::raw_string_ostream irStream(str);
-            mod.print(irStream, nullptr, false, true);
-            irStream.flush();
-        }
-    }
-
     /////////////////////////////////////////////////////////////////
     // Main functions
     /////////////////////////////////////////////////////////////////
-    IRPass::IRPass(std::string& generatedIR)
-        : m_GeneratedIR(generatedIR)
+    IRPass::IRPass()
     {
     }
 
-    void IRPass::Generate(Node::Program& program, llvm::LLVMContext& context, llvm::Module& mod)
+    void IRPass::Run(Node::Program& program, llvm::LLVMContext& context, llvm::Module& mod)
     {
         llvm::IRBuilder<> builder(context);
 
@@ -67,9 +56,6 @@ namespace Dynamite::Language
 
             std::visit(DefineVisitor(context, builder, mod), definition);
         }
-
-        // Retrieve IR
-        GetIRString(mod, m_GeneratedIR);
 
         // Verification of module.
         if (llvm::verifyModule(mod, &llvm::errs()))

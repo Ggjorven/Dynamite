@@ -35,6 +35,7 @@ namespace Dynamite
 
 		// Getters & Setters
 		static Compiler& Get();
+		inline static size_t GetErrorCount() { return Get().m_ErrorCount; }
 		inline static CompilerOptions& GetOptions() { return Get().m_Options; }
 
 	public:

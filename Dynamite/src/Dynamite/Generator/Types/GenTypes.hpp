@@ -41,7 +41,7 @@ namespace Dynamite::Language
 
 	public:
 		// Casting
-		static llvm::Value* Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to);
+		static llvm::Value* Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to, const std::string& name = "cast");
 	};
 
 }

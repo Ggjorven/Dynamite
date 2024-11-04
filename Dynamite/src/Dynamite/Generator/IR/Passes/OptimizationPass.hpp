@@ -13,19 +13,16 @@ namespace Dynamite::Language
 {
 
 	/////////////////////////////////////////////////////////////////
-	// Intermediate pass
+	// Optimization pass
 	/////////////////////////////////////////////////////////////////
-	class IRPass
+	class OptimizationPass
 	{
 	public:
 		// Constructors
-		IRPass(std::string& generatedIR);
+		OptimizationPass();
 
 		// Public methods
-		void Generate(Node::Program& program, llvm::LLVMContext& context, llvm::Module& mod);
-
-	private:
-		std::string& m_GeneratedIR;
+		void Run(llvm::Module& mod);
 	};
 
 }

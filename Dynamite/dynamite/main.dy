@@ -1,11 +1,17 @@
+void func(mut i32& x) // TODO: Fix
+{
+	x = 30;
+	return;
+}
+
 i32 main(i32 argc, char** argv)
 {
-	i32 a = 11;
-	i32 b = a;
+	mut i32 a = 20;
+	mut i32& b = &a;
 
-	i32* c = #a;
-	i32& d = *c;
-	i32 e = *d;
+	b = 10;
 
-	return e;
+	//func(&a);
+
+	return a;
 }

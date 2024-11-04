@@ -60,15 +60,16 @@ namespace Dynamite::Language
 	llvm::Value* IRTerms::GenIdentifier(const Node::Ref<Node::IdentifierTerm> identifier, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
 	{
 		llvm::Type* type = GenTypes::GetType(context, identifier->GetType()).LLVMType;
+		std::string loadName = identifier->Identifier;
 
 		if (enforceType.HasValue() && (identifier->GetType() != enforceType.Value()))
 		{
-			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
+			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, loadName);
 			
 			return GenTypes::Cast(builder, nonCastValue, identifier->GetType(), enforceType.Value());
 		}
 
-		return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
+		return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, loadName);
 	}
 
 }
