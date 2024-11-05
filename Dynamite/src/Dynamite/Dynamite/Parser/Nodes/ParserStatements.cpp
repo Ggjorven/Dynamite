@@ -110,6 +110,14 @@ namespace Dynamite
 			variable->VariableType = type.Value();
 			variable->Variable = Consume().Value; // Identifier token
 
+			if (m_Scopes.Exists(variable->Variable))
+			{
+				Compiler::Error(Peek(0).Value().LineNumber, "Cannot redefine a variable.");
+
+				m_Tracker.Pop<Node::VariableStatement>();
+				return {};
+			}
+
 			m_Scopes.PushVar(variable->Variable, type.Value());
 
 			Consume(); // '=' token
@@ -123,6 +131,11 @@ namespace Dynamite
 
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
 					return m_Tracker.Return<Node::VariableStatement>();
+				}
+				// Note: In the future is should set the array sizes recursively for arrays with multiple directions.
+				else if (type.Value().IsArray() && type.Value().GetArraySize().empty() && expr.Value()->GetType().IsArray())
+				{
+					variable->VariableType.SetArraySize(expr.Value()->GetType().GetArraySize());
 				}
 
 				variable->Expr = expr.Value();

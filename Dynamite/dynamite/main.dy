@@ -2,8 +2,10 @@ i32 printf(char* fmt, ...);
 
 i32 main(i32 argc, char** argv)
 {
-	i32 x = 10;
-	printf("Test %d", x);
+	char[4] str = "Hey";
+	char[] str2 = "Hello";
+
+	printf("Test %s", "Wagwan");
 
 	return argc;
 }

@@ -38,6 +38,12 @@ namespace Dynamite
 		m_Variables.emplace_back(name, type);
 	}
 
+	bool ParserScopeCollection::Exists(const std::string& name)
+	{
+		const auto it = std::ranges::find_if(std::as_const(m_Variables), [&](const ParserVariable& var) { return var.Name == name; });
+		return (it != m_Variables.cend());
+	}
+
 	Optional<Type> ParserScopeCollection::GetVariableType(const std::string& name)
 	{
 		const auto it = std::ranges::find_if(std::as_const(m_Variables), [&](const ParserVariable& var) { return var.Name == name; });

@@ -35,14 +35,17 @@ namespace Dynamite::Language
 			if (localFrom == TypeSpecifier::Void && localTo != TypeSpecifier::Void)
 				return false;
 
-			if (localFrom.Information.Specifier == localTo.Information.Specifier)
-				return true;
-
 			//if (localFrom.IsReference() && !localTo.IsReference())
 			//	localFrom.RemoveReference();
 
+			if ((localFrom.IsArray() && !localTo.IsArray()) || (!localFrom.IsArray() && localTo.IsArray()))
+				return false;
+
 			if ((!localFrom.IsPointer() && localTo.IsPointer()) || (localFrom.IsPointer() && !localTo.IsPointer()))
 				return false;
+		
+			if (localFrom.Information.Specifier == localTo.Information.Specifier)
+				return true;
 		}
 
 		using namespace Pulse::Enum;

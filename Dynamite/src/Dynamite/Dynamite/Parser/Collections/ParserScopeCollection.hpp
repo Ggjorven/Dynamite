@@ -34,6 +34,7 @@ namespace Dynamite
 
 		void PushVar(const std::string& name, const Language::Type& type);
 
+		bool Exists(const std::string& name);
 		Optional<Language::Type> GetVariableType(const std::string& name);
 	
 	private:

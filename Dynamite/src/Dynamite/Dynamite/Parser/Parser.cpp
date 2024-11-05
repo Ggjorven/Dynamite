@@ -119,7 +119,21 @@ namespace Dynamite
 
 		// Back Qualifiers
 		while (Utils::OptMemberIs(Peek(offset), &Token::Type, GetAllTokenTypeQualifiers()))
-			offset++;
+		{
+			if (Utils::OptMemberIs(Peek(offset), &Token::Type, TokenType::OpenSquareBracket) &&
+				Utils::OptMemberIs(Peek(offset + 1), &Token::Type, TokenType::IntegerLiteral) &&
+				Utils::OptMemberIs(Peek(offset + 2), &Token::Type, TokenType::CloseSquareBracket))
+			{
+				offset += 3;
+			}
+			else if (Utils::OptMemberIs(Peek(offset), &Token::Type, TokenType::OpenSquareBracket) &&
+				Utils::OptMemberIs(Peek(offset + 1), &Token::Type, TokenType::CloseSquareBracket))
+			{
+				offset += 2;
+			}
+			else
+				offset++;
+		}
 
 		return true;
 	}
