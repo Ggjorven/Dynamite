@@ -2,10 +2,12 @@ i32 printf(char* fmt, ...);
 
 i32 main(i32 argc, char** argv)
 {
-	char[4] str = "Hey";
-	char[] str2 = "Hello";
+	mut i32 x = 10;
+	x = 20;
 
-	printf("Test %s", "Wagwan");
+	mut i32& y = &x;
+	y = 30;
 
-	return argc;
+	printf("Program is ending with exit code: %x\n", x);
+	return x;
 }

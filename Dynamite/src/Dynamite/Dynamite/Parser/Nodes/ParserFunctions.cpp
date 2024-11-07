@@ -78,7 +78,7 @@ namespace Dynamite
 				const auto& overload = functionDefinitions.Overloads[overloadIndex];
 
 				if ((overload.Parameters.size() < m_Functions.GetRequiredArgCounts(function->Function)[overloadIndex]) ||
-					((overload.Parameters.size() > m_Functions.GetArgCounts(function->Function)[overloadIndex] && !overload.VardiadicArguments)))
+					((overload.Parameters.size() > m_Functions.GetArgCounts(function->Function)[overloadIndex] && !overload.CStyleVardiadicArguments)))
 					continue;
 
 				bool continueLoop = false;
@@ -148,7 +148,7 @@ namespace Dynamite
 			Consume(); // '(' token
 
 			bool hasDefaultArguments = false;
-			bool hasVardiadicArguments = false;
+			bool hasCStyleVardiadicArguments = false;
 			std::vector<Type> parameterTypes = { };
 			std::vector<std::pair<Type, bool>> parameterTypesAndDefault = { };
 			while (true)
@@ -198,7 +198,7 @@ namespace Dynamite
 					Utils::OptMemberIs(Peek(2), &Token::Type, TokenType::Dot))
 				{
 					Consume(); Consume(); Consume();
-					hasVardiadicArguments = true;
+					hasCStyleVardiadicArguments = true;
 					break;
 				}
 				else
@@ -207,8 +207,8 @@ namespace Dynamite
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
-			if (!m_Functions.Exists(name.Value, returnType.Value(), parameterTypes, hasVardiadicArguments))
-				m_Functions.Add(name.Value, returnType.Value(), parameterTypesAndDefault, hasVardiadicArguments);
+			if (!m_Functions.Exists(name.Value, returnType.Value(), parameterTypes, hasCStyleVardiadicArguments))
+				m_Functions.Add(name.Value, returnType.Value(), parameterTypesAndDefault, hasCStyleVardiadicArguments);
 
 			/////////////////////////////////////////////////////////////////
 			// Declaration
@@ -221,7 +221,7 @@ namespace Dynamite
 				declaration->ReturnType = returnType.Value();
 				declaration->Name = name.Value;
 				declaration->Parameters = parameters;
-				declaration->VardiadicArguments = hasVardiadicArguments;
+				declaration->CStyleVardiadicArguments = hasCStyleVardiadicArguments;
 
 				func->Func = declaration;
 
@@ -232,14 +232,18 @@ namespace Dynamite
 			/////////////////////////////////////////////////////////////////
 			else
 			{
+				if (hasCStyleVardiadicArguments)
+				{
+					Compiler::Error(Peek(-1).Value().LineNumber, "Cannot define a function with C-Style vardiadic arguments.");
+				}
+
 				Node::Ref<Node::FunctionDefinition> definition = m_Tracker.New<Node::FunctionDefinition>();
 				definition->ReturnType = returnType.Value();
 				definition->Name = name.Value;
 				definition->Parameters = parameters;
-				definition->VardiadicArguments = hasVardiadicArguments;
 
 				// Check if the declaration matches the definition
-				if (m_Functions.Exists(definition->Name, definition->ReturnType, parameterTypes, hasVardiadicArguments))
+				if (m_Functions.Exists(definition->Name, definition->ReturnType, parameterTypes, hasCStyleVardiadicArguments))
 				{
 					if (hasDefaultArguments)
 						Compiler::Error(Peek(-1).Value().LineNumber, "Cannot redefine default arguments.");

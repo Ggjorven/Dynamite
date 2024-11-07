@@ -48,9 +48,19 @@ namespace Dynamite::Language::Node
 		return Expr->GetType();
 	}
 
+	NodeType ParenthesisTerm::GetUnderlyingType() const
+	{
+		return Expr->GetUnderlyingType();
+	}
+
 	bool ParenthesisTerm::IsLValue() const
 	{
 		return Expr->IsLValue();
+	}
+
+	Ref<Base> ParenthesisTerm::GetUnderlying()
+	{
+		return Expr->GetUnderlying();
 	}
 
 	/////////////////////////////////////////////////////////////////

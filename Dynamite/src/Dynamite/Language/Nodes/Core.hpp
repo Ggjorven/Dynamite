@@ -10,6 +10,9 @@
 namespace Dynamite::Language::Node
 {
 
+	// Base node.
+	struct Base {};
+
 	/////////////////////////////////////////////////////////////////
 	// Forward declaration of all node types
 	/////////////////////////////////////////////////////////////////
@@ -31,6 +34,9 @@ namespace Dynamite::Language::Node
 	struct BinarySubtraction;
 	struct BinaryMultiplication;
 	struct BinaryDivision;
+	struct BinaryOR;
+	struct BinaryAND;
+	struct BinaryXOR;
 									
 	struct Statement;
 									
@@ -38,6 +44,7 @@ namespace Dynamite::Language::Node
 	struct VariableStatement;
 	struct AssignmentStatement;
 	struct ScopeStatement;
+	struct ReturnStatement;
 
 	struct ElseIfBranch;
 	struct ElseBranch;
@@ -49,6 +56,51 @@ namespace Dynamite::Language::Node
 	struct Function;
 
 	struct Program;
+
+	/////////////////////////////////////////////////////////////////
+	// Types
+	/////////////////////////////////////////////////////////////////
+	enum class NodeType : uint8_t
+	{
+		Expression = 0,
+
+		TermExpr,
+		BinaryExpr,
+		ReferenceExpr,
+		AddressExpr,
+		DereferenceExpr,
+
+		FunctionCall,
+
+		IdentifierTerm,
+		LiteralTerm,
+		ParenthesisTerm,
+
+		BinaryAddition,
+		BinarySubtraction,
+		BinaryMultiplication,
+		BinaryDivision,
+		BinaryOR,
+		BinaryAND,
+		BinaryXOR,
+
+		Statement,
+
+		IfStatement,
+		VariableStatement,
+		AssignmentStatement,
+		ScopeStatement,
+		ReturnStatement,
+
+		ElseIfBranch,
+		ElseBranch,
+		ConditionBranch,
+
+		FunctionDeclaration,
+		FunctionDefinition,
+
+		Function,
+	};
 
 	/////////////////////////////////////////////////////////////////
 	// Utilities

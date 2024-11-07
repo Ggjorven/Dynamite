@@ -9,6 +9,8 @@
 #include "Dynamite/Utils/Checks.hpp"
 #include "Dynamite/Utils/Optional.hpp"
 
+#include <regex>
+
 namespace Dynamite
 {
 
@@ -81,8 +83,22 @@ namespace Dynamite
             else if (Utils::OptCheck(Peek(0), '\'') && Utils::OptCheck(Peek(2), '\''))
             {
                 Consume();                      // ''' Start char character
-                buffer.push_back(Consume());    // Char character
+
+                bool contin = Peek(0).HasValue() && Peek(0).Value() != '\'';
+                while (contin)
+                {
+                    buffer.push_back(Consume());
+
+                    if (Utils::OptCheck(Peek(0), '\'') && !Utils::OptCheck(Peek(-1), '\\'))
+                        contin = false;
+                }
+
                 Consume();                      // ''' End char character
+
+                HandleSpecialCharacters(buffer);
+
+                if (buffer.size() > 1)
+                    Compiler::Error(lineNumber, "Character literal cannot be more than one character.");
 
                 tokens.emplace_back(TokenType::CharLiteral, buffer, lineNumber);
                 buffer.clear();
@@ -105,9 +121,9 @@ namespace Dynamite
                 }
 
                 Consume(); // '"' End array
-                
-                //buffer.push_back('\0');
 
+                HandleSpecialCharacters(buffer);
+                
                 tokens.emplace_back(TokenType::CharArrayLiteral, buffer, lineNumber);
                 buffer.clear();
 
@@ -324,6 +340,59 @@ namespace Dynamite
         }
 
         return false;
+    }
+
+    void Tokenizer::HandleSpecialCharacters(std::string& str)
+    {
+        std::string result;
+        result.reserve(str.size());  // Reserve enough space to avoid multiple allocations.
+
+        for (size_t i = 0; i < str.size(); i++) 
+        {
+            if (str[i] == '\\' && i + 1 < str.size()) 
+            {
+                switch (str[i + 1]) 
+                {
+                case 'n': 
+                    result += '\n'; 
+                    break;
+                case 't': 
+                    result += '\t'; 
+                    break;
+                case 'r': 
+                    result += '\r'; 
+                    break;
+                case 'f':
+                    result += '\f'; 
+                    break;
+                case 'v':
+                    result += '\v'; 
+                    break;
+                case '\\': 
+                    result += '\\'; 
+                    break;
+                case '"': 
+                    result += '\"'; 
+                    break;
+                case '\'': 
+                    result += '\''; 
+                    break;
+
+                default:
+                    result += '\\';  // Keep the backslash if it's not a special character.
+                    result += str[i + 1];
+                    break;
+                }
+
+                ++i;  // Skip the next character as it's part of the escape sequence.
+            }
+            else 
+            {
+                result += str[i];
+            }
+        }
+
+        str = std::move(result);  // Replace the original string with the result.
     }
 
 }

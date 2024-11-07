@@ -15,72 +15,6 @@ namespace Dynamite::Language::Node
 {
 
 	/////////////////////////////////////////////////////////////////
-	// Helper functions
-	/////////////////////////////////////////////////////////////////
-	namespace Helper
-	{
-
-		ResolvableTarget::ResolvableTarget(VariantType target)
-			: Target(target)
-		{
-			struct TargetVisitor
-			{
-				bool operator () (const Ref<IdentifierTerm> obj)
-				{
-					return true;
-				}
-				bool operator () (const Ref<Expression> obj)
-				{
-					return obj->IsLValue();
-				}
-			};
-
-			if (!std::visit(TargetVisitor(), Target))
-			{
-				DY_LOG_ERROR("[Internal Compiler Error] Tried to create a ResolvableTarget with a non-lvalue.");
-				return;
-			}
-		}
-
-		Type ResolvableTarget::GetType() const
-		{
-			struct TargetVisitor
-			{
-				Type operator () (const Ref<IdentifierTerm> obj)
-				{
-					return obj->GetType();
-				}
-				Type operator () (const Ref<Expression> obj)
-				{
-					return obj->GetType();
-				}
-			};
-
-			return std::visit(TargetVisitor(), Target);
-		}
-
-		std::string ResolvableTargetToString(const ResolvableTarget& target, size_t indentLevel)
-		{
-			struct TargetVisitor
-			{
-				size_t Indent;
-
-				std::string operator () (const Ref<IdentifierTerm> obj)
-				{
-					return IdentifierTermToString(obj, Indent);
-				}
-				std::string operator () (const Ref<Expression> obj)
-				{
-					return ExpressionToString(obj, Indent);
-				}
-			};
-
-			return std::visit(TargetVisitor(indentLevel), target.Target);
-		}
-
-	}
-
-	/////////////////////////////////////////////////////////////////
 	// Constructors
 	/////////////////////////////////////////////////////////////////
 	TermExpr::TermExpr(VariantType term)
@@ -140,18 +74,18 @@ namespace Dynamite::Language::Node
 		}
 	}
 
-	ReferenceExpr::ReferenceExpr(const Helper::ResolvableTarget& target)
-		: Target(target)
+	ReferenceExpr::ReferenceExpr(Ref<Expression> expr)
+		: Expr(expr)
 	{
 	}
 
-	AddressExpr::AddressExpr(const Helper::ResolvableTarget& target)
-		: Target(target)
+	AddressExpr::AddressExpr(Ref<Expression> expr)
+		: Expr(expr)
 	{
 	}
 
-	DereferenceExpr::DereferenceExpr(const Helper::ResolvableTarget& target)
-		: Target(target)
+	DereferenceExpr::DereferenceExpr(Ref<Expression> expr)
+		: Expr(expr)
 	{
 	}
 
@@ -184,6 +118,27 @@ namespace Dynamite::Language::Node
 		return std::visit(TermVisitor(), Term);
 	}
 
+	NodeType TermExpr::GetUnderlyingType() const
+	{
+		struct TermVisitor
+		{
+			NodeType operator () (const Ref<LiteralTerm> obj) const
+			{
+				return NodeType::LiteralTerm;
+			}
+			NodeType operator () (const Ref<IdentifierTerm> obj) const
+			{
+				return NodeType::IdentifierTerm;
+			}
+			NodeType operator () (const Ref<ParenthesisTerm> obj) const
+			{
+				return obj->GetUnderlyingType();
+			}
+		};
+
+		return std::visit(TermVisitor(), Term);
+	}
+
 	bool TermExpr::IsLValue() const
 	{
 		struct TermVisitor
@@ -200,6 +155,27 @@ namespace Dynamite::Language::Node
 			bool operator () (const Ref<ParenthesisTerm> obj) const
 			{
 				return obj->IsLValue();
+			}
+		};
+
+		return std::visit(TermVisitor(), Term);
+	}
+
+	Ref<Base> TermExpr::GetUnderlying()
+	{
+		struct TermVisitor
+		{
+			Ref<Base> operator () (Ref<LiteralTerm> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<IdentifierTerm> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ParenthesisTerm> obj) const
+			{
+				return obj->GetUnderlying();
 			}
 		};
 
@@ -244,25 +220,121 @@ namespace Dynamite::Language::Node
 		return std::visit(OperationVisitor(), Operation);
 	}
 
+	NodeType BinaryExpr::GetUnderlyingType() const
+	{
+		struct OperationVisitor
+		{
+			NodeType operator () (const Ref<BinaryAddition>) const
+			{
+				return NodeType::BinaryAddition;
+			}
+			NodeType operator () (const Ref<BinarySubtraction>) const
+			{
+				return NodeType::BinarySubtraction;
+			}
+			NodeType operator () (const Ref<BinaryMultiplication>) const
+			{
+				return NodeType::BinaryMultiplication;
+			}
+			NodeType operator () (const Ref<BinaryDivision>) const
+			{
+				return NodeType::BinaryDivision;
+			}
+
+			NodeType operator () (const Ref<BinaryOR>) const
+			{
+				return NodeType::BinaryOR;
+			}
+			NodeType operator () (const Ref<BinaryAND>) const
+			{
+				return NodeType::BinaryAND;
+			}
+			NodeType operator () (const Ref<BinaryXOR>) const
+			{
+				return NodeType::BinaryXOR;
+			}
+		};
+
+		return std::visit(OperationVisitor(), Operation);
+	}
+
+	Ref<Base> BinaryExpr::GetUnderlying()
+	{
+		struct OperationVisitor
+		{
+			Ref<Base> operator () (Ref<BinaryAddition> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<BinarySubtraction> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<BinaryMultiplication> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<BinaryDivision> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+
+			Ref<Base> operator () (Ref<BinaryOR> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<BinaryAND> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<BinaryXOR> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+		};
+
+		return std::visit(OperationVisitor(), Operation);
+	}
+
 	Type ReferenceExpr::GetType() const
 	{
-		Type ptrType = Target.GetType().Copy();
+		Type ptrType = Expr->GetType().Copy();
 		ptrType.AddReference();
 
 		return ptrType;
 	}
 
+	NodeType ReferenceExpr::GetUnderlyingType() const
+	{
+		return Expr->GetUnderlyingType();
+	}
+
+	Ref<Base> ReferenceExpr::GetUnderlying()
+	{
+		return Expr->GetUnderlying();
+	}
+
 	Type AddressExpr::GetType() const
 	{
-		Type ptrType = Target.GetType().Copy();
+		Type ptrType = Expr->GetType().Copy();
 		ptrType.AddPointer();
 
 		return ptrType;
 	}
 
+	NodeType AddressExpr::GetUnderlyingType() const
+	{
+		return Expr->GetUnderlyingType();
+	}
+
+	Ref<Base> AddressExpr::GetUnderlying()
+	{
+		return Expr->GetUnderlying();
+	}
+
 	Type DereferenceExpr::GetType() const
 	{
-		Type noPtrType = Target.GetType().Copy();
+		Type noPtrType = Expr->GetType().Copy();
 		if (!noPtrType.IsPointer() && !noPtrType.IsReference())
 		{
 			DY_LOG_WARN("Trying to get the dereferenced type of a non-pointer || non-reference type.");
@@ -282,6 +354,16 @@ namespace Dynamite::Language::Node
 		}
 
 		return noPtrType;
+	}
+
+	NodeType DereferenceExpr::GetUnderlyingType() const
+	{
+		return Expr->GetUnderlyingType();
+	}
+
+	Ref<Base> DereferenceExpr::GetUnderlying()
+	{
+		return Expr->GetUnderlying();
 	}
 
 	Type Expression::GetType() const
@@ -317,6 +399,39 @@ namespace Dynamite::Language::Node
 		return std::visit(ExpressionVisitor(), Expr);
 	}
 
+	NodeType Expression::GetUnderlyingType() const
+	{
+		struct ExpressionVisitor
+		{
+			NodeType operator () (const Ref<TermExpr> obj) const
+			{
+				return obj->GetUnderlyingType();
+			}
+			NodeType operator () (const Ref<BinaryExpr> obj) const
+			{
+				return obj->GetUnderlyingType();
+			}
+			NodeType operator () (const Ref<FunctionCall>) const
+			{
+				return NodeType::FunctionCall;
+			}
+			NodeType operator () (const Ref<ReferenceExpr>) const
+			{
+				return NodeType::ReferenceExpr;
+			}
+			NodeType operator () (const Ref<AddressExpr>) const
+			{
+				return NodeType::AddressExpr;
+			}
+			NodeType operator () (const Ref<DereferenceExpr>) const
+			{
+				return NodeType::DereferenceExpr;
+			}
+		};
+
+		return std::visit(ExpressionVisitor(), Expr);
+	}
+
 	bool Expression::IsLValue() const
 	{
 		struct ExpressionVisitor
@@ -333,17 +448,50 @@ namespace Dynamite::Language::Node
 			{
 				return obj->GetType().IsPointer();
 			}
-			bool operator () (const Ref<ReferenceExpr> obj) const
+			bool operator () (const Ref<ReferenceExpr>) const
 			{
 				return true;
 			}
-			bool operator () (const Ref<AddressExpr> obj) const
+			bool operator () (const Ref<AddressExpr>) const
 			{
 				return true;
 			}
-			bool operator () (const Ref<DereferenceExpr> obj) const
+			bool operator () (const Ref<DereferenceExpr>) const
 			{
 				return true;
+			}
+		};
+
+		return std::visit(ExpressionVisitor(), Expr);
+	}
+
+	Ref<Base> Expression::GetUnderlying()
+	{
+		struct ExpressionVisitor
+		{
+			Ref<Base> operator () (Ref<TermExpr> obj) const
+			{
+				return obj->GetUnderlying();
+			}
+			Ref<Base> operator () (Ref<BinaryExpr> obj) const
+			{
+				return obj->GetUnderlying();
+			}
+			Ref<Base> operator () (Ref<FunctionCall> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ReferenceExpr> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<AddressExpr> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<DereferenceExpr> obj) const
+			{
+				return (Ref<Base>)obj;
 			}
 		};
 
@@ -480,7 +628,7 @@ namespace Dynamite::Language::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string exprStr = Helper::ResolvableTargetToString(obj->Target, indentLevel + 1);
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
 
 		str += Pulse::Text::Format("([ReferenceExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 
@@ -491,7 +639,7 @@ namespace Dynamite::Language::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string exprStr = Helper::ResolvableTargetToString(obj->Target, indentLevel + 1);
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
 
 		str += Pulse::Text::Format("([AddressExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 
@@ -502,7 +650,7 @@ namespace Dynamite::Language::Node
 	{
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string exprStr = Helper::ResolvableTargetToString(obj->Target, indentLevel + 1);
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
 
 		str += Pulse::Text::Format("([DereferenceExpr] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 

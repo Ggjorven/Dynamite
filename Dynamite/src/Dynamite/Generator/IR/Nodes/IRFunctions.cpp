@@ -37,10 +37,10 @@ namespace Dynamite::Language
 			for (const auto& parameter : declaration->Parameters)
 				parameters.push_back(GenTypes::GetType(context, parameter->GetType()).LLVMType);
 
-			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, declaration->VardiadicArguments);
+			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, declaration->CStyleVardiadicArguments);
 
 			func.Callee = mod.getOrInsertFunction(declaration->Name, funcType);
-			func.HasVardiadicArguments = declaration->VardiadicArguments;
+			func.CStyleVardiadicArguments = declaration->CStyleVardiadicArguments;
 		}
 
 		// Assign names to the function arguments
@@ -78,10 +78,10 @@ namespace Dynamite::Language
 			for (const auto& parameter : definition->Parameters)
 				parameters.push_back(GenTypes::GetType(context, parameter->GetType()).LLVMType);
 
-			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, definition->VardiadicArguments);
+			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, false);
 
 			func.Callee = mod.getOrInsertFunction(definition->Name, funcType);
-			func.HasVardiadicArguments = definition->VardiadicArguments;
+			func.CStyleVardiadicArguments = false;
 		}
 
 		// Assign names to the function arguments

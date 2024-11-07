@@ -15,7 +15,7 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	// Terms
 	/////////////////////////////////////////////////////////////////
-    struct LiteralTerm
+    struct LiteralTerm : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -29,9 +29,12 @@ namespace Dynamite::Language::Node
         std::string Literal;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::LiteralTerm; }
     };
 
-    struct IdentifierTerm
+    struct IdentifierTerm : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -43,10 +46,13 @@ namespace Dynamite::Language::Node
         std::string Identifier;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::IdentifierTerm; }
     };
 
     // Note: We have this as a seperate term, to support expressions within parenthesis.
-    struct ParenthesisTerm 
+    struct ParenthesisTerm : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -57,8 +63,14 @@ namespace Dynamite::Language::Node
         Ref<Expression> Expr;
         
         Type GetType() const;
+        NodeType GetUnderlyingType() const;
 
         bool IsLValue() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::ParenthesisTerm; }
     };
 
     /////////////////////////////////////////////////////////////////

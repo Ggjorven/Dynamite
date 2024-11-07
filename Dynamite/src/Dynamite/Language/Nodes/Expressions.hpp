@@ -18,34 +18,9 @@ namespace Dynamite::Language::Node
 {
 
     /////////////////////////////////////////////////////////////////
-    // Helper
-    /////////////////////////////////////////////////////////////////
-    namespace Helper
-    {
-
-        // Note: Will always be an LValue
-        struct ResolvableTarget 
-        {
-        public:
-            // Note: We store an identifier seperate from an expression,
-            // because an identifier is not an LValue in our implementation.
-            using VariantType = Variant<Ref<IdentifierTerm>, Ref<Expression>>;
-        public:
-            ResolvableTarget(VariantType target = {});
-
-        public:
-            VariantType Target;
-
-            Type GetType() const;
-        };
-
-        std::string ResolvableTargetToString(const ResolvableTarget& target, size_t indentLevel = 0);
-    }
-
-    /////////////////////////////////////////////////////////////////
     // Expressions
     /////////////////////////////////////////////////////////////////
-    struct TermExpr
+    struct TermExpr : public Base
     {
     private:
         using VariantType = Variant<Ref<LiteralTerm>, Ref<IdentifierTerm>, Ref<ParenthesisTerm>>;
@@ -57,11 +32,17 @@ namespace Dynamite::Language::Node
         VariantType Term;
 
         Type GetType() const;
+        NodeType GetUnderlyingType() const;
 
         bool IsLValue() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::TermExpr; }
     };
     
-    struct BinaryExpr
+    struct BinaryExpr : public Base
     {
     private:
         using VariantType = Variant<Ref<BinaryAddition>, Ref<BinarySubtraction>, Ref<BinaryMultiplication>, Ref<BinaryDivision>, Ref<BinaryOR>, Ref<BinaryAND>, Ref<BinaryXOR>>;
@@ -74,48 +55,72 @@ namespace Dynamite::Language::Node
         VariantType Operation;
         
         Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinaryExpr; }
     };
 
-    struct ReferenceExpr
+    struct ReferenceExpr : public Base
     {
     private:
         friend class Pulse::Memory::Control;
     private:
-        ReferenceExpr(const Helper::ResolvableTarget& target = {});
+        ReferenceExpr(Ref<Expression> expr = (Ref<Expression>)NullRef);
 
     public:
-        Helper::ResolvableTarget Target;
+        Ref<Expression> Expr;
 
         Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::ReferenceExpr; }
     };
 
-    struct AddressExpr
+    struct AddressExpr : public Base
     {
     private:
         friend class Pulse::Memory::Control;
     private:
-        AddressExpr(const Helper::ResolvableTarget& target = {});
+        AddressExpr(Ref<Expression> expr = (Ref<Expression>)NullRef);
 
     public:
-        Helper::ResolvableTarget Target;
+        Ref<Expression> Expr;
 
         Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::AddressExpr; }
     };
 
-    struct DereferenceExpr // Note: Dereferences references & pointers.
+    struct DereferenceExpr : public Base // Note: Dereferences references & pointers.
     {
     private:
         friend class Pulse::Memory::Control;
     private:
-        DereferenceExpr(const Helper::ResolvableTarget& target = {});
+        DereferenceExpr(Ref<Expression> expr = (Ref<Expression>)NullRef);
 
     public:
-        Helper::ResolvableTarget Target;
+        Ref<Expression> Expr;
 
         Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::DereferenceExpr; }
     };
     
-    struct Expression
+    struct Expression : public Base
     {
     private:
         using VariantType = Variant<Ref<TermExpr>, Ref<BinaryExpr>, Ref<FunctionCall>, Ref<ReferenceExpr>, Ref<AddressExpr>, Ref<DereferenceExpr>>;
@@ -127,8 +132,14 @@ namespace Dynamite::Language::Node
         VariantType Expr;
 
         Type GetType() const;
+        NodeType GetUnderlyingType() const;
 
         bool IsLValue() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::Expression; }
     };
 
     /////////////////////////////////////////////////////////////////

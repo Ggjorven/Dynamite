@@ -74,84 +74,61 @@ namespace Dynamite::Language
 
 	llvm::Value* IRExpressions::GenReference(const Node::Ref<Node::ReferenceExpr> reference, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		struct TargetVisitor
+		// Identifier
+		if (reference->GetUnderlyingType() == Node::NodeType::IdentifierTerm)
 		{
-			llvm::LLVMContext& Context;
-			llvm::IRBuilder<>& Builder;
-			llvm::Module& Module;
+			Node::Ref<Node::IdentifierTerm> identifier = (Node::Ref<Node::IdentifierTerm>)reference->GetUnderlying();
+			return IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue;
+		}
+		// Other expressions
 
-			llvm::Value* operator () (const Node::Ref<Node::IdentifierTerm> obj)
-			{
-				return IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue;
-			}
-			llvm::Value* operator () (const Node::Ref<Node::Expression> obj)
-			{
-				DY_ASSERT(0, "TODO");
-				return nullptr;
-			}
-		};
-
-		return std::visit(TargetVisitor(context, builder, mod), reference->Target.Target);
+		DY_ASSERT(0, "TODO");
+		return nullptr;
 	}
 
 	llvm::Value* IRExpressions::GenAddress(const Node::Ref<Node::AddressExpr> address, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		struct TargetVisitor
+		// Identifier
+		if (address->GetUnderlyingType() == Node::NodeType::IdentifierTerm)
 		{
-			llvm::LLVMContext& Context;
-			llvm::IRBuilder<>& Builder;
-			llvm::Module& Module;
+			Node::Ref<Node::IdentifierTerm> identifier = (Node::Ref<Node::IdentifierTerm>)address->GetUnderlying();
+			return IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue;
+		}
+		// Other expressions
 
-			llvm::Value* operator () (const Node::Ref<Node::IdentifierTerm> obj)
-			{
-				return IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue;
-			}
-			llvm::Value* operator () (const Node::Ref<Node::Expression> obj)
-			{
-				DY_ASSERT(0, "TODO");
-				return nullptr;
-			}
-		};
-
-		return std::visit(TargetVisitor(context, builder, mod), address->Target.Target);
+		DY_ASSERT(0, "TODO");
+		return nullptr;
 	}
 
 
 	llvm::Value* IRExpressions::GenDereference(const Node::Ref<Node::DereferenceExpr> dereference, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		struct TargetVisitor
+		// Identifier
+		if (dereference->GetUnderlyingType() == Node::NodeType::IdentifierTerm)
 		{
-			llvm::LLVMContext& Context;
-			llvm::IRBuilder<>& Builder;
-			llvm::Module& Module;
+			Node::Ref<Node::IdentifierTerm> identifier = (Node::Ref<Node::IdentifierTerm>)dereference->GetUnderlying();
 
-			llvm::Value* operator () (const Node::Ref<Node::IdentifierTerm> obj)
+			// Pointer -> Reference, does nothing internally
+			if (identifier->GetType().IsPointer())
 			{
-				// Pointer -> Reference, does nothing basically
-				if (obj->GetType().IsPointer())
-				{
-					// Gives the value of the pointer to the reference
-					// Since pointers and references are internally the same.
-					llvm::Type* type = GenTypes::GetType(Context, obj->GetType()).LLVMType;
-					return Builder.CreateLoad(type, IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue);
-				}
-				else // Reference -> Value
-				{
-					llvm::Type* ptrType = GenTypes::GetType(Context, obj->GetType()).LLVMType;
-					llvm::Value* ptr = Builder.CreateLoad(ptrType, IRScopeCollection::GetVariable(obj->Identifier).Value.LLVMValue);
-
-					llvm::Type* valType = GenTypes::GetType(Context, obj->GetType().RemoveReference()).LLVMType;
-					return Builder.CreateLoad(valType, ptr);
-				}
+				// Gives the value of the pointer to the reference
+				// Since pointers and references are internally the same.
+				llvm::Type* type = GenTypes::GetType(context, identifier->GetType()).LLVMType;
+				return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
 			}
-			llvm::Value* operator () (const Node::Ref<Node::Expression> obj)
+			else // Reference -> Value
 			{
-				DY_ASSERT(0, "TODO");
-				return nullptr;
-			}
-		};
+				llvm::Type* ptrType = GenTypes::GetType(context, identifier->GetType()).LLVMType;
+				llvm::Value* ptr = builder.CreateLoad(ptrType, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
 
-		return std::visit(TargetVisitor(context, builder, mod), dereference->Target.Target);
+				llvm::Type* valType = GenTypes::GetType(context, identifier->GetType().RemoveReference()).LLVMType;
+				return builder.CreateLoad(valType, ptr);
+			}
+		}
+		// Other expressions
+
+		DY_ASSERT(0, "TODO");
+		return nullptr;
 	}
 
 }

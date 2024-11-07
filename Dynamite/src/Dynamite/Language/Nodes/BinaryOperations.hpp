@@ -12,7 +12,7 @@ namespace Dynamite::Language::Node
     /////////////////////////////////////////////////////////////////
     // Operations
     /////////////////////////////////////////////////////////////////
-    struct BinaryAddition 
+    struct BinaryAddition : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -26,9 +26,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> RHS;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinaryAddition; }
     };
 
-    struct BinarySubtraction
+    struct BinarySubtraction : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -42,9 +45,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> RHS;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinarySubtraction; }
     };
 
-    struct BinaryMultiplication
+    struct BinaryMultiplication : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -58,9 +64,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> RHS;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinaryMultiplication; }
     };
 
-    struct BinaryDivision
+    struct BinaryDivision : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -74,9 +83,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> RHS;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinaryDivision; }
     };
 
-    struct BinaryOR
+    struct BinaryOR : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -90,9 +102,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> RHS;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinaryOR; }
     };
 
-    struct BinaryAND
+    struct BinaryAND : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -106,9 +121,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> RHS;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinaryAND; }
     };
 
-    struct BinaryXOR
+    struct BinaryXOR : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -122,6 +140,9 @@ namespace Dynamite::Language::Node
         Ref<Expression> RHS;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::BinaryXOR; }
     };
 
     /////////////////////////////////////////////////////////////////

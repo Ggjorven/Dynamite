@@ -15,8 +15,8 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	// Constructors
 	/////////////////////////////////////////////////////////////////
-	FunctionDeclaration::FunctionDeclaration(const Type& returnType, const std::string& name, const std::vector<Ref<VariableStatement>>& parameters)
-		: ReturnType(returnType), Name(name), Parameters(parameters)
+	FunctionDeclaration::FunctionDeclaration(const Type& returnType, const std::string& name, const std::vector<Ref<VariableStatement>>& parameters, bool hasCStyleVardiadicArguments)
+		: ReturnType(returnType), Name(name), Parameters(parameters), CStyleVardiadicArguments(hasCStyleVardiadicArguments)
 	{
 	}
 
@@ -68,11 +68,6 @@ namespace Dynamite::Language::Node
 	Type FunctionCall::GetType() const
 	{
 		return ReturnType;
-	}
-
-	void FunctionCall::SetType(const Type& type)
-	{
-		ReturnType = type;
 	}
 
 	/////////////////////////////////////////////////////////////////
