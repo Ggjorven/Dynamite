@@ -246,6 +246,18 @@ namespace Dynamite::Language
 				return builder.CreateFPToSI(value, toLLVM, name);
 		}
 
+		// Int -> bool
+		else if (from.IsIntegral() && to.IsBool())
+		{
+			return builder.CreateICmpNE(value, llvm::ConstantInt::get(value->getType(), 0), name);
+		}
+
+		// Float -> bool
+		else if (from.IsFloat() && to.IsBool())
+		{
+			return builder.CreateFCmpUNE(value, llvm::ConstantFP::get(value->getType(), 0.0), name);
+		}
+
 		// Pointers
 		else if (from.IsPointer() && to.IsPointer())
 		{

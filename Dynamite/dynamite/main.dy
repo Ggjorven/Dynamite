@@ -7,7 +7,23 @@ i32 main(i32 argc, char** argv)
 
 	mut i32& y = &x;
 	y = 30;
+	(y) = 40;
 
-	printf("Program is ending with exit code: %x\n", x);
+	x = 0;
+
+	if (x)
+	{
+		printf("If\n");
+	}
+	else if (false)
+	{
+		printf("Else If\n");
+	}
+	else
+	{
+		printf("Else\n");
+	}
+
+	printf("Program is ending with exit code: %d\n", x);
 	return x;
 }

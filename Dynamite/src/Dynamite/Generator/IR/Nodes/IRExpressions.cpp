@@ -114,15 +114,15 @@ namespace Dynamite::Language
 				// Gives the value of the pointer to the reference
 				// Since pointers and references are internally the same.
 				llvm::Type* type = GenTypes::GetType(context, identifier->GetType()).LLVMType;
-				return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
+				return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, identifier->GetType().IsVolatile());
 			}
 			else // Reference -> Value
 			{
 				llvm::Type* ptrType = GenTypes::GetType(context, identifier->GetType()).LLVMType;
-				llvm::Value* ptr = builder.CreateLoad(ptrType, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue);
+				llvm::Value* ptr = builder.CreateLoad(ptrType, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, identifier->GetType().IsVolatile());
 
 				llvm::Type* valType = GenTypes::GetType(context, identifier->GetType().RemoveReference()).LLVMType;
-				return builder.CreateLoad(valType, ptr);
+				return builder.CreateLoad(valType, ptr, identifier->GetType().RemoveReference().IsVolatile());
 			}
 		}
 		// Other expressions

@@ -64,12 +64,12 @@ namespace Dynamite::Language
 
 		if (enforceType.HasValue() && (identifier->GetType() != enforceType.Value()))
 		{
-			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, loadName);
+			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, identifier->GetType().IsVolatile(), loadName);
 			
 			return GenTypes::Cast(builder, nonCastValue, identifier->GetType(), enforceType.Value());
 		}
 
-		return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, loadName);
+		return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, identifier->GetType().IsVolatile(), loadName);
 	}
 
 }

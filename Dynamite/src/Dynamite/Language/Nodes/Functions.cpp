@@ -75,6 +75,9 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	std::string FunctionDeclarationToString(const Ref<FunctionDeclaration> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<FunctionDeclaration>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string returnType = TypeCollection::ToString(obj->ReturnType);
@@ -97,6 +100,9 @@ namespace Dynamite::Language::Node
 
 	std::string FunctionDefinitionToString(const Ref<FunctionDefinition> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<FunctionDefinition>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string returnType = TypeCollection::ToString(obj->ReturnType);
@@ -121,6 +127,9 @@ namespace Dynamite::Language::Node
 
 	std::string FunctionCallToString(const Ref<FunctionCall> obj, size_t indentLevel) 
 	{
+		if (obj == (Ref<FunctionCall>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string returnType = TypeCollection::ToString(obj->ReturnType);

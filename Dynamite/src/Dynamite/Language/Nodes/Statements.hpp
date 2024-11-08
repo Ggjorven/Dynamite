@@ -75,12 +75,10 @@ namespace Dynamite::Language::Node
     private:
         friend class Pulse::Memory::Control;
     private:
-        AssignmentStatement(const Type& variableType = {}, const std::string& variable = {}, Ref<Expression> expr = (Ref<Expression>)NullRef);
+        AssignmentStatement(Ref<Expression> variable = (Ref<Expression>)NullRef, Ref<Expression> expr = (Ref<Expression>)NullRef);
 
     public:
-        Type VariableType;
-        std::string Variable;
-
+        Ref<Expression> Variable;
         Ref<Expression> Expr;
 
         Type GetType() const;

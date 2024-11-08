@@ -23,6 +23,7 @@ namespace Dynamite::Language
 		static void GenScope(const Node::Ref<Node::ScopeStatement> scope, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, bool startScope = true, bool enforceReturn = false);
 		static void GenReturn(const Node::Ref<Node::ReturnStatement> ret, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 		static void GenFunctionCall(const Node::Ref<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
+		static void GenIf(const Node::Ref<Node::IfStatement> ifStatement, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod);
 	};
 
 }

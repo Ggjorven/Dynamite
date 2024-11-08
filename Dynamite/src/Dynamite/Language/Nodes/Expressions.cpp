@@ -503,6 +503,9 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	std::string TermExprToString(const Ref<TermExpr> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<TermExpr>)NullRef)
+			return {};
+
 		struct TermExprVisitor
 		{
 			size_t Indent;
@@ -544,6 +547,9 @@ namespace Dynamite::Language::Node
 
 	std::string BinaryExprToString(const Ref<BinaryExpr> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinaryExpr>)NullRef)
+			return {};
+
 		struct BinaryExprVisitor
 		{
 			size_t Indent;
@@ -626,6 +632,9 @@ namespace Dynamite::Language::Node
 
 	std::string ReferenceExprToString(const Ref<ReferenceExpr> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<ReferenceExpr>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
@@ -637,6 +646,9 @@ namespace Dynamite::Language::Node
 
 	std::string AddressExprToString(const Ref<AddressExpr> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<AddressExpr>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
@@ -648,6 +660,9 @@ namespace Dynamite::Language::Node
 
 	std::string DereferenceExprToString(const Ref<DereferenceExpr> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<DereferenceExpr>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
@@ -659,6 +674,9 @@ namespace Dynamite::Language::Node
 
 	std::string ExpressionToString(const Ref<Expression> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<Expression>)NullRef)
+			return {};
+
 		struct ExpressionVisitor
 		{
 			size_t Indent;

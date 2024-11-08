@@ -36,6 +36,9 @@ namespace Dynamite
 
 			if (auto expr = ParseExpression())
 			{
+				if (!TypeCollection::ImplicitCastable(expr.Value()->GetType(), Type(TypeSpecifier::Bool)))
+					Compiler::Error(Peek(-1).Value().LineNumber, "Condition branch's expression must be a boolean type.");
+
 				ifStatement->Expr = expr.Value();
 
 				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
@@ -110,17 +113,20 @@ namespace Dynamite
 			variable->VariableType = type.Value();
 			variable->Variable = Consume().Value; // Identifier token
 
+			Consume(); // '=' token
+			
 			if (m_Scopes.Exists(variable->Variable))
 			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Cannot redefine a variable.");
+
+				ParseExpression(); // Parse the upcoming expression so we continue properly
+				CheckConsume(TokenType::Semicolon, "Expected `;`.");
 
 				m_Tracker.Pop<Node::VariableStatement>();
 				return {};
 			}
 
 			m_Scopes.PushVar(variable->Variable, type.Value());
-
-			Consume(); // '=' token
 
 			// Expression resolution
 			if (auto expr = ParseExpression())
@@ -162,7 +168,14 @@ namespace Dynamite
 			if (!type.HasValue())
 			{
 				Compiler::Error(Peek(0).Value().LineNumber, "Invalid type for variable.");
+
+				CheckConsume(TokenType::Semicolon, "Expected `;`.");
+				m_Tracker.Pop<Node::VariableStatement>();
 				return {};
+			}
+			else if (!type.Value().IsMut())
+			{
+				Compiler::Warn(Peek(0).Value().LineNumber, "Initializing immutable variable with default value.");
 			}
 
 			variable->VariableType = type.Value();
@@ -277,39 +290,34 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		// Variable assignment
 		/////////////////////////////////////////////////////////////////
-		else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Identifier) && 
-			Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::Equals))
+		else if (auto variable = ParseExpression())
 		{
+			// If it's not an assignment, I don't know what to do.
+			if (!Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::Equals))
+				return {};
+
 			Node::Ref<Node::Statement> statement = m_Tracker.New<Node::Statement>();
 			auto assignment = Node::New<Node::AssignmentStatement>();
 
 			statement->StatementObj = assignment;
 
-			assignment->Variable = Consume().Value; // Identifier token
-
-			Optional<Type> type = m_Scopes.GetVariableType(assignment->Variable);
-			if (!type.HasValue())
-			{
-				Compiler::Error(Peek(0).Value().LineNumber, "Undeclared identifier: {0}", assignment->Variable);
-				m_Tracker.Pop<Node::Statement>();
-				return {};
-			}
-			else if (!type.Value().IsMut())
-			{
-				Compiler::Error(Peek(0).Value().LineNumber, "Cannot assign value to an immutable variable.");
-				m_Tracker.Pop<Node::Statement>();
-				return {};
-			}
-
-			assignment->VariableType = type.Value();
+			assignment->Variable = variable.Value(); 
 
 			Consume(); // '=' token
 
+			// Checks
+			{
+				if (!variable.Value()->IsLValue() && variable.Value()->GetUnderlyingType() != Node::NodeType::IdentifierTerm)
+					Compiler::Error(Peek(0).Value().LineNumber, "Cannot assign value to an RValue.");
+				if (!assignment->Variable->GetType().IsMut())
+					Compiler::Error(Peek(0).Value().LineNumber, "Cannot assign value to an immutable variable.");
+			}
+
 			if (auto expr = ParseExpression())
 			{
-				if (!TypeCollection::ImplicitCastable(expr.Value()->GetType(), type.Value()))
+				if (!TypeCollection::ImplicitCastable(expr.Value()->GetType(), assignment->Variable->GetType()))
 				{
-					Compiler::Error(Peek(0).Value().LineNumber, "Variable assignment of \"{0}\" expects expression of type: {1}, but got {2}, {2} is not castable to {1}.", assignment->Variable, TypeCollection::ToString(type.Value()), TypeCollection::ToString(expr.Value()->GetType()));
+					Compiler::Error(Peek(0).Value().LineNumber, "Cannot assign type {0} to {1}.", TypeCollection::ToString(expr.Value()->GetType()), TypeCollection::ToString(assignment->Variable->GetType()));
 
 					CheckConsume(TokenType::Semicolon, "Expected `;`.");
 					return m_Tracker.Return<Node::Statement>();
