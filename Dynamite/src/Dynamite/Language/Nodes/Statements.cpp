@@ -66,6 +66,83 @@ namespace Dynamite::Language::Node
 			return Type(TypeSpecifier::Void);
 	}
 
+	Optional<size_t> ScopeStatement::GetReturnStatementIndex()
+	{
+		for (size_t i = 0; i < Statements.size(); i++)
+		{
+			if (Statements.at(i)->GetUnderlyingType() == NodeType::ReturnStatement)
+				return i;
+		}
+
+		return {};
+	}
+
+	NodeType Statement::GetUnderlyingType() const
+	{
+		struct StatementVisitor
+		{
+			NodeType operator () (const Ref<VariableStatement>)
+			{
+				return NodeType::VariableStatement;
+			}
+			NodeType operator () (const Ref<ScopeStatement>)
+			{
+				return NodeType::ScopeStatement;
+			}
+			NodeType operator () (const Ref<IfStatement>)
+			{
+				return NodeType::IfStatement;
+			}
+			NodeType operator () (const Ref<AssignmentStatement>)
+			{
+				return NodeType::AssignmentStatement;
+			}
+			NodeType operator () (const Ref<ReturnStatement>)
+			{
+				return NodeType::ReturnStatement;
+			}
+			NodeType operator () (const Ref<FunctionCall>)
+			{
+				return NodeType::FunctionCall;
+			}
+		};
+
+		return std::visit(StatementVisitor(), StatementObj);
+	}
+
+	Ref<Base> Statement::GetUnderlying()
+	{
+		struct StatementVisitor
+		{
+			Ref<Base> operator () (Ref<VariableStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ScopeStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<IfStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<AssignmentStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ReturnStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<FunctionCall> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+		};
+
+		return std::visit(StatementVisitor(), StatementObj);
+	}
+
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////

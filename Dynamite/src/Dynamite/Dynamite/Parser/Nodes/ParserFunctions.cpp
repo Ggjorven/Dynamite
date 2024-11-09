@@ -35,11 +35,11 @@ namespace Dynamite
 			
 			Consume(); // '(' token
 
+			bool error = false;
 			if (!m_Functions.Exists(function->Function))
 			{
 				Compiler::Error(Peek(-2).Value().LineNumber, "Undefined symbol: {0}", function->Function);
-				m_Tracker.Pop<Node::FunctionCall>();
-				return {};
+				error = true;
 			}
 
 			// Parse arguments
@@ -53,8 +53,7 @@ namespace Dynamite
 					if (symbolArgTypes.empty())
 					{
 						Compiler::Error(Peek(0).Value().LineNumber, "Passed in {0} arguments, when the symbol for '{1}' doesn't match.", index + 1, function->Function);
-						m_Tracker.Pop<Node::FunctionCall>();
-						return {};
+						error = true;
 					}
 
 					function->Arguments.push_back(argument.Value());
@@ -68,6 +67,12 @@ namespace Dynamite
 				}
 				else
 					break;
+			}
+
+			if (error)
+			{
+				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+				return m_Tracker.Return<Node::FunctionCall>();
 			}
 
 			const ParserFunction& functionDefinitions = *m_Functions.GetFunction(function->Function);
@@ -263,11 +268,11 @@ namespace Dynamite
 				else
 					Compiler::Error(Peek(0).Value().LineNumber, "Expected function body.");
 
-				// Check for ending return statement
-				if (!returnType.Value().IsVoid())
+				// Check for return statement
+				Optional<size_t> returnIndex = definition->Body->GetReturnStatementIndex();
+				if (!returnType.Value().IsVoid() && !returnIndex.HasValue())
 				{
-					if (definition->Body->Statements.empty() || !std::holds_alternative<Node::Ref<Node::ReturnStatement>>(definition->Body->Statements.back()->StatementObj))
-						Compiler::Error(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");;
+					Compiler::Error(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");
 				}
 
 				func->Func = definition;

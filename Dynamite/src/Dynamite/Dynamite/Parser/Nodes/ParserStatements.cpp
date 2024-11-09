@@ -79,6 +79,15 @@ namespace Dynamite
 			while (auto statement = ParseStatement())
 				scope->Statements.push_back(statement.Value());
 
+			{
+				Optional<size_t> returnIndex = scope->GetReturnStatementIndex();
+				if (returnIndex.HasValue() && (returnIndex.Value() + 1) != scope->Statements.size()) // Remove trailing code after a return statement
+				{
+					Compiler::Warn(Peek(-1).Value().LineNumber, "Found redundant code after return statement. Code will never be reached.");
+					scope->Statements.resize(returnIndex.Value());
+				}
+			}
+
 			m_Scopes.EndScope();
 
 			CheckConsume(TokenType::CloseCurlyBrace, "Expected `}}`");

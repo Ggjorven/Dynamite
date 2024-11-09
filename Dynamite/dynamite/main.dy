@@ -1,5 +1,20 @@
 i32 printf(char* fmt, ...);
 
+void abort();
+void exit(i32 code);
+
+void assert(bool condition, char* msg)
+{
+	if (condition) { return ;}
+
+	printf("Assertion failed... Message: %s\n", msg);
+	abort();
+
+	return;
+
+	printf("Unreachable");
+}
+
 i32 main(i32 argc, char** argv)
 {
 	mut i32 x = 10;
@@ -9,11 +24,12 @@ i32 main(i32 argc, char** argv)
 	y = 30;
 	(y) = 40;
 
-	x = 0;
+	x = 1;
 
 	if (x)
 	{
 		printf("If\n");
+		exit(10);
 	}
 	else if (false)
 	{

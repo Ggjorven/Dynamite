@@ -2,6 +2,8 @@
 
 #include "Dynamite/Core/Core.hpp"
 
+#include "Dynamite/Language/Types/Type.hpp"
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -25,5 +27,10 @@ namespace Dynamite::Language
 		CharLiteral,
 		CharArrayLiteral,
 	};
+
+	/////////////////////////////////////////////////////////////////
+	// Helper functions
+	/////////////////////////////////////////////////////////////////
+	LiteralType GetLiteralTypeFromType(const Type& type);
 
 }

@@ -236,6 +236,8 @@ namespace Dynamite
 		{
 		case TokenType::Void:				return Language::TypeSpecifier::Void;
 
+		case TokenType::Bool:				return Language::TypeSpecifier::Bool;
+
 		case TokenType::Int8:				return Language::TypeSpecifier::Int8;
 		case TokenType::Int16:				return Language::TypeSpecifier::Int16;
 		case TokenType::Int32:				return Language::TypeSpecifier::Int32;

@@ -62,7 +62,9 @@ namespace Dynamite::Language
 		// Populate the "else if" block
 		builder.SetInsertPoint(implBlock);
 		IRStatements::GenScope(elseIfBranch->Scope, context, builder, mod);
-		builder.CreateBr(mergeBlock);
+
+		if (!elseIfBranch->Scope->GetReturnStatementIndex().HasValue())
+			builder.CreateBr(mergeBlock);
 
 		// Generate following branches if any
 		if (elseIfBranch->Next.HasValue()) 
@@ -73,7 +75,9 @@ namespace Dynamite::Language
 	{
 		builder.SetInsertPoint(elseBlock);
 		IRStatements::GenScope(elseBranch->Scope, context, builder, mod);
-		builder.CreateBr(mergeBlock);
+
+		if (!elseBranch->Scope->GetReturnStatementIndex().HasValue())
+			builder.CreateBr(mergeBlock);
 	}
 
 }

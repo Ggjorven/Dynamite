@@ -52,7 +52,7 @@ namespace Dynamite::Language
 	llvm::Value* IRTerms::GenLiteral(const Node::Ref<Node::LiteralTerm> lit, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
 	{
 		if (enforceType.HasValue())
-			return GenTypes::GetLiteralValue(context, mod, enforceType.Value(), lit->LitType, lit->Literal).LLVMValue;
+			return GenTypes::GetLiteralValue(context, mod, enforceType.Value(), GetLiteralTypeFromType(enforceType.Value()), lit->Literal).LLVMValue;
 		
 		return GenTypes::GetLiteralValue(context, mod, lit->GetType(), lit->LitType, lit->Literal).LLVMValue;
 	}

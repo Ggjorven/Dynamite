@@ -121,21 +121,27 @@ namespace Dynamite
 		{
 			bool broke = false;
 
-			// Reverse iterate through the parameters
-			for (size_t i = (overload.Parameters.size() - 1); i > 0; i--)
+			// Handle the case when there are no parameters
+			if (overload.Parameters.empty())
 			{
-				auto& [type, required] = overload.Parameters[i];
+				result.push_back(0);
+				continue;
+			}
+
+			// Reverse iterate through the parameters
+			for (size_t i = overload.Parameters.size(); i > 0; --i)
+			{
+				auto& [type, required] = overload.Parameters[i - 1];
 				if (required)
 				{
-					result.push_back(i + 1);
-
+					result.push_back(i);
 					broke = true;
 					break;
 				}
 			}
 
 			if (!broke)
-				result.push_back((overload.Parameters.size()));
+				result.push_back(overload.Parameters.size());
 		}
 
 		return result;

@@ -66,6 +66,9 @@ namespace Dynamite::Language::Node
     public:
         std::vector<Ref<Statement>> Statements;
 
+        // Returns the index of the current scope level's return statement.
+        Optional<size_t> GetReturnStatementIndex();
+
     public:
         inline static NodeType GetStaticType() { return NodeType::ScopeStatement; }
     };
@@ -113,6 +116,10 @@ namespace Dynamite::Language::Node
 
     public:
         VariantType StatementObj;
+
+        NodeType GetUnderlyingType() const;
+        
+        Ref<Base> GetUnderlying();
 
     public:
         inline static NodeType GetStaticType() { return NodeType::Statement; }

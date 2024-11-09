@@ -197,7 +197,9 @@ namespace Dynamite::Language
 		// Generate the "if" branch
 		builder.SetInsertPoint(ifBlock);
 		IRStatements::GenScope(ifStatement->Scope, context, builder, mod);
-		builder.CreateBr(mergeBlock);
+
+		if (!ifStatement->Scope->GetReturnStatementIndex().HasValue())
+			builder.CreateBr(mergeBlock);
 
 		// Generate the "else if" or "else" branch, if present
 		if (ifStatement->Next.HasValue()) 
