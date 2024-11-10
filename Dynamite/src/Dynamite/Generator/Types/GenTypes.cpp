@@ -194,6 +194,9 @@ namespace Dynamite::Language
 	/////////////////////////////////////////////////////////////////
 	llvm::Value* GenTypes::Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to, const std::string& name)
 	{
+		if (from == to)
+			return value;
+		
 		llvm::Type* fromLLVM = GenTypes::GetType(builder.getContext(), from).LLVMType;
 		llvm::Type* toLLVM = GenTypes::GetType(builder.getContext(), to).LLVMType;
 

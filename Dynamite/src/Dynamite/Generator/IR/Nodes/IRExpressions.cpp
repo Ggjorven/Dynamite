@@ -8,6 +8,7 @@
 #include "Dynamite/Generator/Types/GenTypes.hpp"
 
 #include "Dynamite/Generator/IR/Nodes/IRTerms.hpp"
+#include "Dynamite/Generator/IR/Nodes/IROperations.hpp"
 #include "Dynamite/Generator/IR/Nodes/IRStatements.hpp"
 #include "Dynamite/Generator/IR/Nodes/IRFunctions.hpp"
 
@@ -38,8 +39,7 @@ namespace Dynamite::Language
 			}
 			llvm::Value* operator () (const Node::Ref<Node::BinaryExpr> obj) const
 			{
-				DY_ASSERT(0, "TODO");
-				return nullptr;
+				return GenBinary(obj, Context, Builder, Module, EnforceType);
 			}
 			llvm::Value* operator () (const Node::Ref<Node::FunctionCall> obj) const
 			{
@@ -65,6 +65,16 @@ namespace Dynamite::Language
 	llvm::Value* IRExpressions::GenTerm(const Node::Ref<Node::TermExpr> term, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
 	{
 		return IRTerms::GenTerm(term, context, builder, mod, enforceType);
+	}
+
+	llvm::Value* IRExpressions::GenBinary(const Node::Ref<Node::BinaryExpr> binary, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
+	{
+		llvm::Value* value = IROperations::GenOperation(binary, context, builder, mod);
+
+		if (enforceType.HasValue())
+			return GenTypes::Cast(builder, value, binary->GetType(), enforceType.Value());
+
+		return value;
 	}
 
 	llvm::Value* IRExpressions::GenFunctionCall(const Node::Ref<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)

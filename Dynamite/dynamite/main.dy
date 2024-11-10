@@ -26,10 +26,10 @@ i32 main(i32 argc, char** argv)
 
 	x = 1;
 
-	if (x)
+	if (argc - 1)
 	{
 		printf("If\n");
-		exit(10);
+		//exit(10);
 	}
 	else if (false)
 	{
@@ -39,6 +39,8 @@ i32 main(i32 argc, char** argv)
 	{
 		printf("Else\n");
 	}
+
+	x = 1 + 1;
 
 	printf("Program is ending with exit code: %d\n", x);
 	return x;
