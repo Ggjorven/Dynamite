@@ -16,7 +16,11 @@ namespace Dynamite
 		
 		Help = 1 << 0, 
 		Verbose = 1 << 1, 
-		Debug = 1 << 2 
+		Debug = 1 << 2,
+
+		NoParsing = 1 << 3,
+		NoGenerating = 1 << 4,
+		NoLinking = 1 << 5,
 	};
 
 	struct CompilerOptions

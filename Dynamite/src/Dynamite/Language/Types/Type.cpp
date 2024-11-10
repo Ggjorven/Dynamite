@@ -13,6 +13,8 @@
 namespace Dynamite::Language
 {
 
+	using namespace Pulse::Enum::Bitwise;
+
 	/////////////////////////////////////////////////////////////////
 	// Information structs
 	/////////////////////////////////////////////////////////////////
@@ -41,35 +43,74 @@ namespace Dynamite::Language
 		return !(*this == other);
 	}
 
+	/////////////////////////////////////////////////////////////////
+	// QualifierGroup
+	/////////////////////////////////////////////////////////////////
 	// Constructors
-	QualifierInfo::QualifierInfo(TypeQualifier qualifier, const std::string& value)
-		: Qualifier(qualifier), Value(value)
+	QualifierGroup::QualifierGroup(TypeQualifier qualifiers, size_t arraySize)
+		: Qualifiers(qualifiers), ArraySize(arraySize)
 	{
 	}
 
 	// Operators
-	bool QualifierInfo::operator == (const TypeQualifier& qualifier) const
+	bool QualifierGroup::operator == (const QualifierGroup& other) const
 	{
-		return (this->Qualifier == qualifier);
+		return ((this->Qualifiers == other.Qualifiers) && this->ArraySize == other.ArraySize);
 	}
 
-	bool QualifierInfo::operator != (const TypeQualifier& qualifier) const
-	{
-		return !(*this == qualifier);
-	}
-
-	bool QualifierInfo::operator == (const QualifierInfo& other) const
-	{
-		if ((this->Value == other.Value) &&
-			(this->Qualifier == other.Qualifier))
-			return true;
-
-		return false;
-	}
-
-	bool QualifierInfo::operator != (const QualifierInfo& other) const
+	bool QualifierGroup::operator != (const QualifierGroup& other) const
 	{
 		return !(*this == other);
+	}
+
+	// Functions
+	void QualifierGroup::Add(TypeQualifier qualifier)
+	{
+		Qualifiers |= qualifier;
+	}
+
+	bool QualifierGroup::Contains(TypeQualifier qualifier) const
+	{
+		return (bool)(Qualifiers & qualifier);
+	}
+
+	// Qualifier checks
+	bool QualifierGroup::IsMut() const
+	{
+		return Contains(TypeQualifier::Mut);
+	}
+
+	bool QualifierGroup::IsVolatile() const
+	{
+		return Contains(TypeQualifier::Volatile);
+	}
+
+	bool QualifierGroup::IsPointer() const
+	{
+		return Contains(TypeQualifier::Pointer);
+	}
+
+	bool QualifierGroup::IsReference() const
+	{
+		return Contains(TypeQualifier::Reference);
+	}
+
+	bool QualifierGroup::IsArray() const
+	{
+		return Contains(TypeQualifier::Array);
+	}
+
+	std::vector<TypeQualifier> QualifierGroup::SplitQualifiers() const
+	{
+		std::vector<TypeQualifier> result;
+
+		if (IsMut())		result.emplace_back(TypeQualifier::Mut);
+		if (IsVolatile())	result.emplace_back(TypeQualifier::Volatile);
+		if (IsPointer())	result.emplace_back(TypeQualifier::Pointer);
+		if (IsReference())	result.emplace_back(TypeQualifier::Reference);
+		if (IsArray())		result.emplace_back(TypeQualifier::Array);
+
+		return result;
 	}
 
 	/////////////////////////////////////////////////////////////////
@@ -81,7 +122,7 @@ namespace Dynamite::Language
 	{
 	}
 
-	Type::Type(const std::vector<QualifierInfo>& front, const TypeInfo& info, const std::vector<QualifierInfo>& back)
+	Type::Type(QualifierGroup front, const TypeInfo& info, const std::vector<QualifierGroup>& back)
 		: FrontQualifiers(front), Information(info), BackQualifiers(back)
 	{
 	}
@@ -90,8 +131,7 @@ namespace Dynamite::Language
 	bool Type::operator == (const Type& other) const
 	{
 		// Check if the qualifier counts are the same.
-		if ((this->FrontQualifiers.size() != other.FrontQualifiers.size()) 
-			|| (this->BackQualifiers.size() != other.BackQualifiers.size()))
+		if ((this->BackQualifiers.size() != other.BackQualifiers.size()))
 			return false;
 
 		// Type information
@@ -99,11 +139,8 @@ namespace Dynamite::Language
 			return false;
 
 		// Front Qualifiers
-		for (size_t i = 0; i < this->FrontQualifiers.size(); i++)
-		{
-			if (this->FrontQualifiers[i] != other.FrontQualifiers[i])
-				return false;
-		}
+		if (this->FrontQualifiers != other.FrontQualifiers)
+			return false;
 
 		// Back Qualifiers
 		for (size_t i = 0; i < this->BackQualifiers.size(); i++)
@@ -133,39 +170,27 @@ namespace Dynamite::Language
 	// Checks
 	bool Type::IsMut() const
 	{
-		for (const auto& qualifier : FrontQualifiers)
-		{
-			if (qualifier == TypeQualifier::Mut)
-				return true;
-		}
-
-		return false;
+		return FrontQualifiers.IsMut();
 	}
 
 	bool Type::IsVolatile() const
 	{
-		for (const auto& qualifier : FrontQualifiers)
-		{
-			if (qualifier == TypeQualifier::Volatile)
-				return true;
-		}
-
-		return false;
+		return FrontQualifiers.IsVolatile();
 	}
 
 	bool Type::IsPointer() const
 	{
-		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Pointer));
+		return ((!BackQualifiers.empty()) && (BackQualifiers.back().IsPointer()));
 	}
 
 	bool Type::IsReference() const
 	{
-		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Reference));
+		return ((!BackQualifiers.empty()) && (BackQualifiers.back().IsReference()));
 	}
 
 	bool Type::IsArray() const
 	{
-		return ((!BackQualifiers.empty()) && (BackQualifiers.back() == TypeQualifier::Array));
+		return ((!BackQualifiers.empty()) && (BackQualifiers.back().IsArray()));
 	}
 
 	bool Type::IsUnsigned() const
@@ -179,6 +204,11 @@ namespace Dynamite::Language
 		}
 
 		return false;
+	}
+
+	bool Type::IsSigned() const
+	{
+		return !(IsUnsigned());
 	}
 
 	// Type checks
@@ -251,51 +281,31 @@ namespace Dynamite::Language
 		return false;
 	}
 
-	// Adds
-	void Type::AddMut()
-	{
-		if (!IsMut())
-			FrontQualifiers.emplace_back(TypeQualifier::Mut);
-	}
-
-	void Type::AddVolatile()
-	{
-		if (!IsVolatile())
-			FrontQualifiers.emplace_back(TypeQualifier::Mut);
-	}
-
-	void Type::AddPointer()
-	{
-		BackQualifiers.emplace_back(TypeQualifier::Pointer);
-	}
-
-	void Type::AddReference()
-	{
-		BackQualifiers.emplace_back(TypeQualifier::Reference);
-	}
-
-	void Type::AddArray(const std::string& size)
-	{
-		BackQualifiers.emplace_back(TypeQualifier::Array, size);
-	}
-
-	std::string Type::GetArraySize() const
+	size_t Type::GetArraySize() const
 	{
 		if (!IsArray())
-			return {};
+			return 0;
 
-		return BackQualifiers.back().Value;
+		return BackQualifiers.back().GetArraySize();
 	}
 
-	void Type::SetArraySize(const std::string& value)
+	void Type::SetArraySize(size_t size)
 	{
 		if (!IsArray())
-		{
-			DY_LOG_WARN("Trying to set array size, when Type is not an array.");
 			return;
-		}
 
-		BackQualifiers.back().Value = value;
+		BackQualifiers.back().SetArraySize(size);
+	}
+
+	void Type::AddToBack(TypeQualifier qualifier, Optional<size_t> arraySize)
+	{
+		if (BackQualifiers.empty())
+			BackQualifiers.emplace_back();
+
+		BackQualifiers.back().Add(qualifier);
+
+		if (arraySize.HasValue())
+			BackQualifiers.back().SetArraySize(arraySize.Value());
 	}
 
 	// Utils
@@ -322,11 +332,6 @@ namespace Dynamite::Language
 	Type Type::Clean() const
 	{
 		return Type({}, this->Information, this->BackQualifiers);
-	}
-
-	Type Type::Copy() const
-	{
-		return Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
 	}
 
 	/////////////////////////////////////////////////////////////////
@@ -366,7 +371,7 @@ namespace Dynamite::Language
 
 	}
 
-	std::string TypeQualifierToString(TypeQualifier qualifier, const std::string& value)
+	std::string TypeQualifierToString(TypeQualifier qualifier, size_t arraySize)
 	{
 		switch (qualifier)
 		{
@@ -376,7 +381,7 @@ namespace Dynamite::Language
 		case TypeQualifier::Reference:	return "&";
 		case TypeQualifier::Pointer:	return "*";
 
-		case TypeQualifier::Array:		return "[" + value + "]";
+		case TypeQualifier::Array:		return "[" + std::to_string(arraySize) + "]";
 
 		default:
 			break;

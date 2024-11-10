@@ -85,10 +85,24 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		// Keywords
 		/////////////////////////////////////////////////////////////////
+		case TokenType::Struct:					return "struct";
+		case TokenType::Class:					return "class";
+
+		case TokenType::Enum:					return "enum";
+		case TokenType::Type:					return "type";
+
 		case TokenType::If:						return "if";
 		case TokenType::Else:					return "else";
 
+		case TokenType::While:					return "while";
+		case TokenType::For:					return "for";
+
 		case TokenType::Return:					return "return";
+
+		case TokenType::Pub:					return "pub";
+		case TokenType::Priv:					return "priv";
+
+		case TokenType::As:						return "as";
 
 		/////////////////////////////////////////////////////////////////
 		// Qualifiers

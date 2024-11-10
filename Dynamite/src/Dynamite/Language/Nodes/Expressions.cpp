@@ -8,6 +8,8 @@
 
 #include "Dynamite/Language/Nodes/Functions.hpp"
 
+#include "Dynamite/Language/Types/TypeCollection.hpp"
+
 #undef FMT_VERSION
 #include <Pulse/Enum/Enum.hpp>
 
@@ -298,8 +300,8 @@ namespace Dynamite::Language::Node
 
 	Type ReferenceExpr::GetType() const
 	{
-		Type ptrType = Expr->GetType().Copy();
-		ptrType.AddReference();
+		Type ptrType = Expr->GetType();
+		ptrType.AddToBack(TypeQualifier::Reference);
 
 		return ptrType;
 	}
@@ -316,8 +318,8 @@ namespace Dynamite::Language::Node
 
 	Type AddressExpr::GetType() const
 	{
-		Type ptrType = Expr->GetType().Copy();
-		ptrType.AddPointer();
+		Type ptrType = Expr->GetType();
+		ptrType.AddToBack(TypeQualifier::Pointer);
 
 		return ptrType;
 	}
@@ -334,10 +336,10 @@ namespace Dynamite::Language::Node
 
 	Type DereferenceExpr::GetType() const
 	{
-		Type noPtrType = Expr->GetType().Copy();
+		Type noPtrType = Expr->GetType();
 		if (!noPtrType.IsPointer() && !noPtrType.IsReference())
 		{
-			DY_LOG_WARN("Trying to get the dereferenced type of a non-pointer || non-reference type.");
+			DY_LOG_WARN("Trying to get the dereferenced type of a non-pointer && non-reference type.");
 			return noPtrType;
 		}
 
@@ -362,6 +364,21 @@ namespace Dynamite::Language::Node
 	}
 
 	Ref<Base> DereferenceExpr::GetUnderlying()
+	{
+		return Expr->GetUnderlying();
+	}
+
+	Type CastExpr::GetType() const
+	{
+		return ToType;
+	}
+
+	NodeType CastExpr::GetUnderlyingType() const
+	{
+		return Expr->GetUnderlyingType();
+	}
+
+	Ref<Base> CastExpr::GetUnderlying()
 	{
 		return Expr->GetUnderlying();
 	}
@@ -391,6 +408,10 @@ namespace Dynamite::Language::Node
 				return obj->GetType();
 			}
 			Type operator () (const Ref<DereferenceExpr> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Ref<CastExpr> obj) const
 			{
 				return obj->GetType();
 			}
@@ -427,6 +448,10 @@ namespace Dynamite::Language::Node
 			{
 				return NodeType::DereferenceExpr;
 			}
+			NodeType operator () (const Ref<CastExpr>) const
+			{
+				return NodeType::CastExpr;
+			}
 		};
 
 		return std::visit(ExpressionVisitor(), Expr);
@@ -446,7 +471,7 @@ namespace Dynamite::Language::Node
 			}
 			bool operator () (const Ref<FunctionCall> obj) const
 			{
-				return obj->GetType().IsPointer();
+				return obj->GetType().IsPointer() || obj->GetType().IsReference();
 			}
 			bool operator () (const Ref<ReferenceExpr>) const
 			{
@@ -459,6 +484,10 @@ namespace Dynamite::Language::Node
 			bool operator () (const Ref<DereferenceExpr>) const
 			{
 				return true;
+			}
+			bool operator () (const Ref<CastExpr> obj) const
+			{
+				return obj->GetType().IsPointer() || obj->GetType().IsReference();;
 			}
 		};
 
@@ -490,6 +519,10 @@ namespace Dynamite::Language::Node
 				return (Ref<Base>)obj;
 			}
 			Ref<Base> operator () (Ref<DereferenceExpr> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<CastExpr> obj) const
 			{
 				return (Ref<Base>)obj;
 			}
@@ -672,6 +705,20 @@ namespace Dynamite::Language::Node
 		return str;
 	}
 
+	std::string CastExprToString(const Ref<CastExpr> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<CastExpr>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+
+		str += Pulse::Text::Format("([CastExpr{0}] = '\n{1}'\n{2})", TypeCollection::ToString(obj->GetType()), exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
 	std::string ExpressionToString(const Ref<Expression> obj, size_t indentLevel)
 	{
 		if (obj == (Ref<Expression>)NullRef)
@@ -735,9 +782,19 @@ namespace Dynamite::Language::Node
 			{
 				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
-				std::string deRefStr = DereferenceExprToString(obj, Indent + 1);
+				std::string dereferenceStr = DereferenceExprToString(obj, Indent + 1);
 
-				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", deRefStr, Utils::StrTimes(Node::TabString, Indent));
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", dereferenceStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<CastExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string castStr = CastExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", castStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}

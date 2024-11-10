@@ -29,6 +29,7 @@ namespace Dynamite::Language::Node
         // arguments has a default value.
         std::vector<Ref<VariableStatement>> Parameters;
 
+        // Note: Still exists for LibC function support.
         bool CStyleVardiadicArguments = false;
 
         Type GetType() const;

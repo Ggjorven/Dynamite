@@ -41,33 +41,11 @@ namespace Dynamite
 		// Parse statements
 		while (Peek(0).HasValue())
 		{
-			if (auto variableStatement = ParseVariableStatement())
-				program.Definitions.emplace_back(variableStatement.Value());
-			else if (auto function = ParseFunction())
-			{
-				struct FunctionVisitor
-				{
-					Node::Program& Prog;
-
-					void operator () (const Node::Ref<Node::FunctionDeclaration> obj)
-					{
-						Prog.Definitions.emplace_back(obj);
-					}
-					void operator () (const Node::Ref<Node::FunctionDefinition> obj)
-					{
-						Prog.Definitions.emplace_back(obj);
-					}
-				};
-
-				std::visit(FunctionVisitor(program), function.Value()->Func);
-			}
-			else
-			{
-				Compiler::Error(Peek(0).Value().LineNumber, "Failed to retrieve a valid variable or function definition.");
-				Consume(); // Consume a token, just to keep going.
-			}
+			// TODO: ...
+			break;
 		}
 
+		DY_LOG_ERROR("Parser is currently disabled.");
 		return program;
 	}
 
@@ -141,10 +119,13 @@ namespace Dynamite
 	Optional<Type> Parser::GetType() 
 	{
 		Type result = {};
+		
+		// TODO: ...
+		/*
 
 		// Front Qualifiers
 		while (Utils::OptMemberIs(Peek(0), &Token::Type, GetAllTokenTypeQualifiers()))
-			result.FrontQualifiers.emplace_back(TokenTypeToTypeQualifier(Consume().Type));
+			result.FrontQualifiers.Add(TokenTypeToTypeQualifier(Consume().Type));
 
 		// Type
 		{
@@ -185,6 +166,7 @@ namespace Dynamite
 			else
 				result.BackQualifiers.emplace_back(TokenTypeToTypeQualifier(Consume().Type));
 		}
+		*/
 
 		return result;
 	}

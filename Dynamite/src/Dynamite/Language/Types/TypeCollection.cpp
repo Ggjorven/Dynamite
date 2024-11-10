@@ -230,7 +230,7 @@ namespace Dynamite::Language
 		}
 		case LiteralType::CharArrayLiteral:
 		{
-			return Type({}, TypeSpecifier::Char, { { TypeQualifier::Array, std::to_string(value.size() + 1) }}); // + 1, for the \0 character
+			return Type({}, TypeSpecifier::Char, { { TypeQualifier::Array, value.size() + 1 }}); // + 1, for the \0 character
 		}
 
 		default:
@@ -369,18 +369,46 @@ namespace Dynamite::Language
 	/////////////////////////////////////////////////////////////////
 	std::string TypeCollection::ToString(const Type& type)
 	{
+		constexpr const auto requiresSpace = [](TypeQualifier qualifier) -> bool
+		{
+			switch (qualifier)
+			{
+			case TypeQualifier::Mut:		return true;
+			case TypeQualifier::Volatile:	return true;
+
+			case TypeQualifier::Pointer:	return false;
+			case TypeQualifier::Reference:	return false;
+
+			case TypeQualifier::Array:		return false;
+
+			default:
+				break;
+			}
+
+			DY_LOG_ERROR("[Internal Compiler Error] - TypeQualifier passed in was not defined for requiresSpace.");
+			return false;
+		};
+
 		std::string str = {};
 
-		for (const auto& [qualifier, value] : type.FrontQualifiers)
-			str += TypeQualifierToString(qualifier, value) + ' ';
+		for (const auto& qualifier : type.FrontQualifiers.SplitQualifiers())
+			str += TypeQualifierToString(qualifier, {}) + ' ';
 
 		if (type.Information.Specifier == TypeSpecifier::Identifier)
 			str += type.Information.Value;
 		else
 			str += TypeSpecifierToString(type.Information.Specifier);
 
-		for (const auto& [qualifier, value] : type.BackQualifiers)
-			str += TypeQualifierToString(qualifier, value);
+		for (const auto& [qualifiers, arraySize] : type.BackQualifiers)
+		{
+			for (const auto& qualifier : type.FrontQualifiers.SplitQualifiers())
+			{
+				if (requiresSpace(qualifier))
+					str += ' ';
+				str += TypeQualifierToString(qualifier, arraySize);
+
+			}
+		}
 
 		return str;
 	}

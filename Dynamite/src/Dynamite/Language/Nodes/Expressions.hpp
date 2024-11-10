@@ -119,11 +119,31 @@ namespace Dynamite::Language::Node
     public:
         inline static NodeType GetStaticType() { return NodeType::DereferenceExpr; }
     };
+
+    struct CastExpr : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        CastExpr(Ref<Expression> expr = (Ref<Expression>)NullRef, const Type& type = {});
+
+    public:
+        Type ToType;
+        Ref<Expression> Expr;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::CastExpr; }
+    };
     
     struct Expression : public Base
     {
     private:
-        using VariantType = Variant<Ref<TermExpr>, Ref<BinaryExpr>, Ref<FunctionCall>, Ref<ReferenceExpr>, Ref<AddressExpr>, Ref<DereferenceExpr>>;
+        using VariantType = Variant<Ref<TermExpr>, Ref<BinaryExpr>, Ref<FunctionCall>, Ref<ReferenceExpr>, Ref<AddressExpr>, Ref<DereferenceExpr>, Ref<CastExpr>>;
         friend class Pulse::Memory::Control;
     private:
         Expression(VariantType expr = {});
@@ -150,6 +170,7 @@ namespace Dynamite::Language::Node
     std::string ReferenceExprToString(const Ref<ReferenceExpr> obj, size_t indentLevel = 0);
     std::string AddressExprToString(const Ref<AddressExpr> obj, size_t indentLevel = 0);
     std::string DereferenceExprToString(const Ref<DereferenceExpr> obj, size_t indentLevel = 0);
+    std::string CastExprToString(const Ref<CastExpr> obj, size_t indentLevel = 0);
     std::string ExpressionToString(const Ref<Expression> obj, size_t indentLevel = 0);
 
 }

@@ -43,13 +43,13 @@ namespace Dynamite::Language
 	{
 		None = 0,
 
-		Mut, 
-		Volatile,
+		Mut = 1 << 0, 
+		Volatile = 1 << 1,
 
-		Pointer,
-		Reference,
+		Pointer = 1 << 2,
+		Reference = 1 << 3,
 
-		Array 
+		Array = 1 << 4,
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -73,25 +73,43 @@ namespace Dynamite::Language
 		bool operator != (const TypeInfo& other) const;
 	};
 
-	struct QualifierInfo
+	struct QualifierGroup
 	{
 	public:
-		TypeQualifier Qualifier;
-
-		// Note: Check if has value with .empty(), it will
-		// only contain a value when Qualifier == TypeQualifier::Array
-		std::string Value; // ex. Array size, so '5'
+		TypeQualifier Qualifiers = TypeQualifier::None;
+		size_t ArraySize = 0;
 
 	public:
 		// Constructors
-		QualifierInfo(TypeQualifier qualifier = TypeQualifier::None, const std::string& value = {});
+		QualifierGroup() = default;
+		QualifierGroup(TypeQualifier qualifiers, size_t arraySize = 0);
 
 		// Operators
-		bool operator == (const TypeQualifier& qualifier) const;
-		bool operator != (const TypeQualifier& qualifier) const;
+		bool operator == (const QualifierGroup& other) const;
+		bool operator != (const QualifierGroup& other) const;
 
-		bool operator == (const QualifierInfo& other) const;
-		bool operator != (const QualifierInfo& other) const;
+	public:
+		// Functions
+		void Add(TypeQualifier qualifier);
+
+		// Qualifier checks
+		bool Contains(TypeQualifier qualifier) const;
+
+		bool IsMut() const;
+		bool IsVolatile() const;
+
+		bool IsPointer() const;
+		bool IsReference() const;
+
+		bool IsArray() const;
+
+		// Array functions
+		inline size_t GetArraySize() const { return ArraySize; }
+		inline void SetArraySize(size_t size) { ArraySize = size; }
+
+		// Other
+		// Note: Splits the single TypeQualifier value into all typequalifiers seperately.
+		std::vector<TypeQualifier> SplitQualifiers() const;
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -101,18 +119,18 @@ namespace Dynamite::Language
 	{
 	public:
 		// Ex. mut, volatile
-		std::vector<QualifierInfo> FrontQualifiers = { };
+		QualifierGroup FrontQualifiers;
 
 		TypeInfo Information = {};
 		
 		// Ex. *, &, []
-		std::vector<QualifierInfo> BackQualifiers = { };
+		std::vector<QualifierGroup> BackQualifiers = { };
 
 	public:
 		// Constructors
 		Type() = default;
 		Type(const TypeInfo& info);
-		Type(const std::vector<QualifierInfo>& front, const TypeInfo& info, const std::vector<QualifierInfo>& back = {});
+		Type(QualifierGroup front, const TypeInfo& info, const std::vector<QualifierGroup>& back = {});
 
 		// Operators
 		bool operator == (const Type& other) const;
@@ -121,7 +139,7 @@ namespace Dynamite::Language
 		bool operator == (const TypeInfo& info) const;
 		bool operator != (const TypeInfo& info) const;
 
-		// Checks
+		// Checks for the latest back qualifiers
 		bool IsMut() const;
 		bool IsVolatile() const;
 
@@ -131,6 +149,7 @@ namespace Dynamite::Language
 		bool IsArray() const;
 
 		bool IsUnsigned() const;
+		bool IsSigned() const;
 
 		// Type checks
 		bool IsVoid() const;
@@ -140,31 +159,25 @@ namespace Dynamite::Language
 		bool IsFloat() const;
 		bool IsChar() const;
 
-		// Adds
-		void AddMut();
-		void AddVolatile();
+		// Array
+		size_t GetArraySize() const;
+		void SetArraySize(size_t size);
 
-		void AddPointer();
-		void AddReference();
-
-		void AddArray(const std::string& size);
-
-		std::string GetArraySize() const;
-		void SetArraySize(const std::string& value);
+		// Add
+		void AddToBack(TypeQualifier qualifier, Optional<size_t> arraySize = {});
 
 		// Utils
 		Type RemoveReference() const;
 		Type RemovePointer() const;
 
-		// Note: Removes mut & volatile, but not pointers.
+		// Note: Removes front mut & volatile.
 		Type Clean() const;
-		Type Copy() const;
 	};
 
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string TypeSpecifierToString(TypeSpecifier specifier);
-	std::string TypeQualifierToString(TypeQualifier qualifier, const std::string& value = {});
+	std::string TypeQualifierToString(TypeQualifier qualifier, size_t arraySize = 0);
 
 }

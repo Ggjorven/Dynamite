@@ -98,6 +98,15 @@ namespace Dynamite
 			else if (Utils::StrLower(flagName) == "debug")
 				Flags |= CompilerFlag::Debug;
 
+			else if (Utils::StrLower(flagName) == "no-parsing")
+				Flags |= CompilerFlag::NoParsing;
+
+			else if (Utils::StrLower(flagName) == "no-generating")
+				Flags |= CompilerFlag::NoGenerating;
+
+			else if (Utils::StrLower(flagName) == "no-linking")
+				Flags |= CompilerFlag::NoLinking;
+
 			///////////////////////////////////
 			// Other
 			///////////////////////////////////

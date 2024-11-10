@@ -65,6 +65,8 @@ namespace Dynamite
 		TakeReference = And,			// '&'
 		TakeAddress = (UpArrow + 1),	// '#' // Note: Continue counting form UpArrow
 
+		At,								// '@'
+
 		/////////////////////////////////////////////////////////////////
 		// Literals
 		/////////////////////////////////////////////////////////////////
@@ -77,10 +79,24 @@ namespace Dynamite
 		/////////////////////////////////////////////////////////////////
 		// Keywords
 		/////////////////////////////////////////////////////////////////
+		Struct,
+		Class,
+
+		Enum,
+		Type,
+
 		If,
 		Else,
 
+		While,
+		For,
+
 		Return,
+
+		Pub,
+		Priv,
+
+		As,
 
 		/////////////////////////////////////////////////////////////////
 		// Specifiers
@@ -88,7 +104,7 @@ namespace Dynamite
 		Pointer = Star,			// '*'
 		Reference = And,		// '&'
 
-		Mut = (Return + 1),	// Note: Continue counting form return
+		Mut = (As + 1),	// Note: Continue counting form return
 		Volatile,
 
 		/////////////////////////////////////////////////////////////////

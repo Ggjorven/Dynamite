@@ -6,10 +6,10 @@
 
 #include "Dynamite/Language/Nodes/Program.hpp"
 
-#include "Dynamite/Dynamite/Parser/Tracker.hpp"
+#include "Dynamite/Dynamite/Parser/Collections/ParserState.hpp"
 
-#include "Dynamite/Dynamite/Parser/Collections/ParserFunctionCollection.hpp"
 #include "Dynamite/Dynamite/Parser/Collections/ParserScopeCollection.hpp"
+#include "Dynamite/Dynamite/Parser/Collections/ParserFunctionCollection.hpp"
 
 namespace Dynamite
 {
@@ -53,9 +53,9 @@ namespace Dynamite
 	private:
 		std::vector<Token>& m_Tokens;
 		size_t m_Index = 0;
-	
-		Tracker m_Tracker;
 
+		ParserState m_State = {};
+	
 		ParserScopeCollection m_Scopes = {};
 		ParserFunctionCollection m_Functions = {};
 	};

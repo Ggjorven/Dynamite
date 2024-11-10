@@ -262,20 +262,33 @@ namespace Dynamite
             return false;
         };
 
-        // If / Else
-        if (handleWord(TokenType::If))                              return true;
-        else if (handleWord(TokenType::Else))                       return true;
-
         // Boolean values
-        else if (handleWord(TokenType::BoolLiteral, "false", "0"))  return true;
+        if (handleWord(TokenType::BoolLiteral, "false", "0"))       return true;
         else if (handleWord(TokenType::BoolLiteral, "true", "1"))   return true;
 
         // Specifiers
         else if (handleWord(TokenType::Mut))                        return true;
         else if (handleWord(TokenType::Volatile))                   return true;
 
-        // Other
+        // Keywords
+        else if (handleWord(TokenType::Struct))                     return true;
+        else if (handleWord(TokenType::Class))                      return true;
+
+        else if (handleWord(TokenType::Enum))                       return true;
+        else if (handleWord(TokenType::Type))                       return true;
+
+        else if (handleWord(TokenType::If))                         return true;
+        else if (handleWord(TokenType::Else))                       return true;
+
+        else if (handleWord(TokenType::While))                      return true;
+        else if (handleWord(TokenType::For))                        return true;
+
         else if (handleWord(TokenType::Return))                     return true;
+
+        else if (handleWord(TokenType::Pub))                        return true;
+        else if (handleWord(TokenType::Priv))                       return true;
+
+        else if (handleWord(TokenType::As))                         return true;
 
         // Else we say its an Identifier
         tokens.emplace_back(TokenType::Identifier, buffer, line);

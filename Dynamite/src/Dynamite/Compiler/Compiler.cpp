@@ -68,12 +68,12 @@ namespace Dynamite
 				m_State = State::Tokenizing;
 				m_Tokens = tokenizer.Tokenize();
 			}
-			if (m_ErrorCount == 0)
+			if (m_ErrorCount == 0 && !m_Options.Contains(CompilerFlag::NoParsing))
 			{
 				m_State = State::Parsing;
 				m_Program = parser.GetProgram();
 			}
-			if (m_ErrorCount == 0)
+			if (m_ErrorCount == 0 && !m_Options.Contains(CompilerFlag::NoParsing) && !m_Options.Contains(CompilerFlag::NoGenerating))
 			{
 				m_State = State::Generating;
 				generator.Generate(m_Options.OutputDir / file.filename());
@@ -112,7 +112,7 @@ namespace Dynamite
 		auto endTime = std::chrono::steady_clock::now();
 		DY_LOG_TRACE("Compilation took {0}ms.", std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
 
-		if (m_ErrorCount == 0)
+		if (m_ErrorCount == 0 && !m_Options.Contains(CompilerFlag::NoParsing) && !m_Options.Contains(CompilerFlag::NoGenerating) && !m_Options.Contains(CompilerFlag::NoLinking))
 		{
 			std::vector<std::filesystem::path> objectPaths = m_Options.Files;
 			for (auto& path : objectPaths)

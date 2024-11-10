@@ -22,6 +22,7 @@ namespace Dynamite::Language::Node
 	struct BinaryExpr;
 	struct AddressExpr;
 	struct DereferenceExpr;
+	struct CastExpr;
 
 	// Note: Can be an expression or statement
 	struct FunctionCall; 
@@ -69,6 +70,7 @@ namespace Dynamite::Language::Node
 		ReferenceExpr,
 		AddressExpr,
 		DereferenceExpr,
+		CastExpr,
 
 		FunctionCall,
 
