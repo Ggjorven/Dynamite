@@ -30,8 +30,8 @@ namespace Dynamite::Language::Node
 	{
 	}
 
-	AssignmentStatement::AssignmentStatement(const Type& type, const std::string& variable, Ref<Expression> expr)
-		: VariableType(type), Variable(variable), Expr(expr)
+	AssignmentStatement::AssignmentStatement(Ref<Expression> variable, Ref<Expression> expr)
+		: Variable(variable), Expr(expr)
 	{
 	}
 
@@ -55,7 +55,7 @@ namespace Dynamite::Language::Node
 
 	Type AssignmentStatement::GetType() const
 	{
-		return VariableType;
+		return Variable->GetType();
 	}
 
 	Type ReturnStatement::GetType() const
@@ -66,11 +66,91 @@ namespace Dynamite::Language::Node
 			return Type(TypeSpecifier::Void);
 	}
 
+	Optional<size_t> ScopeStatement::GetReturnStatementIndex()
+	{
+		for (size_t i = 0; i < Statements.size(); i++)
+		{
+			if (Statements.at(i)->GetUnderlyingType() == NodeType::ReturnStatement)
+				return i;
+		}
+
+		return {};
+	}
+
+	NodeType Statement::GetUnderlyingType() const
+	{
+		struct StatementVisitor
+		{
+			NodeType operator () (const Ref<VariableStatement>)
+			{
+				return NodeType::VariableStatement;
+			}
+			NodeType operator () (const Ref<ScopeStatement>)
+			{
+				return NodeType::ScopeStatement;
+			}
+			NodeType operator () (const Ref<IfStatement>)
+			{
+				return NodeType::IfStatement;
+			}
+			NodeType operator () (const Ref<AssignmentStatement>)
+			{
+				return NodeType::AssignmentStatement;
+			}
+			NodeType operator () (const Ref<ReturnStatement>)
+			{
+				return NodeType::ReturnStatement;
+			}
+			NodeType operator () (const Ref<FunctionCall>)
+			{
+				return NodeType::FunctionCall;
+			}
+		};
+
+		return std::visit(StatementVisitor(), StatementObj);
+	}
+
+	Ref<Base> Statement::GetUnderlying()
+	{
+		struct StatementVisitor
+		{
+			Ref<Base> operator () (Ref<VariableStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ScopeStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<IfStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<AssignmentStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ReturnStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<FunctionCall> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+		};
+
+		return std::visit(StatementVisitor(), StatementObj);
+	}
+
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string IfStatementToString(const Ref<IfStatement> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<IfStatement>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string expressionStr = ExpressionToString(obj->Expr, indentLevel + 1);
@@ -91,6 +171,9 @@ namespace Dynamite::Language::Node
 
 	std::string VariableStatementToString(const Ref<VariableStatement> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<VariableStatement>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		if (obj->Expr)
@@ -108,6 +191,9 @@ namespace Dynamite::Language::Node
 
 	std::string ScopeStatementToString(const Ref<ScopeStatement> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<ScopeStatement>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string statementsStr = {};
@@ -126,16 +212,23 @@ namespace Dynamite::Language::Node
 
 	std::string AssignmentStatementToString(const Ref<AssignmentStatement> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<AssignmentStatement>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
+		std::string varStr = ExpressionToString(obj->Variable, indentLevel + 1);
 		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
-		str += Pulse::Text::Format("([AssignmentStatement({0})] = '{1} = \n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), obj->Variable, exprStr, Utils::StrTimes(Node::TabString, indentLevel));
+		str += Pulse::Text::Format("([AssignmentStatement({0})] = '\n{1}\n{2}=\n{3}'\n{2})", TypeCollection::ToString(obj->GetType()), Utils::StrTimes(Node::TabString, indentLevel), varStr, exprStr);
 
 		return str;
 	}
 
 	std::string ReturnStatementToString(const Ref<ReturnStatement> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<ReturnStatement>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		if (obj->Expr)
@@ -153,6 +246,9 @@ namespace Dynamite::Language::Node
 
 	std::string StatementToString(const Ref<Statement> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<Statement>)NullRef)
+			return {};
+
 		struct StatementVisitor
 		{
 			size_t Ident;

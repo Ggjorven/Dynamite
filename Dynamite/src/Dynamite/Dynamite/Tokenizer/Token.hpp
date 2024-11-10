@@ -198,6 +198,8 @@ namespace Dynamite
 		return {
 			TokenType::Void,
 
+			TokenType::Bool,
+
 			TokenType::Int8,
 			TokenType::Int16,
 			TokenType::Int32,

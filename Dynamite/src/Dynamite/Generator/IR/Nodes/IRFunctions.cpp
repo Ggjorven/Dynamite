@@ -16,6 +16,8 @@
 
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Verifier.h>
 
 namespace Dynamite::Language
 {
@@ -37,10 +39,10 @@ namespace Dynamite::Language
 			for (const auto& parameter : declaration->Parameters)
 				parameters.push_back(GenTypes::GetType(context, parameter->GetType()).LLVMType);
 
-			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, declaration->VardiadicArguments);
+			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, declaration->CStyleVardiadicArguments);
 
 			func.Callee = mod.getOrInsertFunction(declaration->Name, funcType);
-			func.HasVardiadicArguments = declaration->VardiadicArguments;
+			func.CStyleVardiadicArguments = declaration->CStyleVardiadicArguments;
 		}
 
 		// Assign names to the function arguments
@@ -78,10 +80,10 @@ namespace Dynamite::Language
 			for (const auto& parameter : definition->Parameters)
 				parameters.push_back(GenTypes::GetType(context, parameter->GetType()).LLVMType);
 
-			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, definition->VardiadicArguments);
+			llvm::FunctionType* funcType = llvm::FunctionType::get(returnType, parameters, false);
 
 			func.Callee = mod.getOrInsertFunction(definition->Name, funcType);
-			func.HasVardiadicArguments = definition->VardiadicArguments;
+			func.CStyleVardiadicArguments = false;
 		}
 
 		// Assign names to the function arguments
@@ -105,11 +107,11 @@ namespace Dynamite::Language
 		IRFunctionCollection::AddFunction(definition->Name, func);
 		
 		// Generate body
+		llvm::Function* llvmFunc = llvm::cast<llvm::Function>(func.Callee.getCallee());
+		
 		{
 			// Set parsing state
 			IRState::CurrentFunction = definition;
-
-			llvm::Function* llvmFunc = llvm::cast<llvm::Function>(func.Callee.getCallee());
 
 			llvm::BasicBlock* entry = llvm::BasicBlock::Create(context, "entry", llvmFunc);
 			builder.SetInsertPoint(entry);
@@ -128,6 +130,13 @@ namespace Dynamite::Language
 
 			// Reset parsing state
 			IRState::CurrentFunction = nullptr;
+		}
+
+		// Verify function
+		if (llvm::verifyFunction(*llvmFunc, &llvm::errs()))
+		{
+			Compiler::Error("Function verification failed.");
+			llvmFunc->print(llvm::errs(), nullptr);
 		}
 	}
 

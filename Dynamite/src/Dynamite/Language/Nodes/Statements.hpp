@@ -17,7 +17,7 @@ namespace Dynamite::Language::Node
     /////////////////////////////////////////////////////////////////
     // Statements
     /////////////////////////////////////////////////////////////////
-    struct IfStatement
+    struct IfStatement : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -31,9 +31,12 @@ namespace Dynamite::Language::Node
         // Note: Optional next branch, can be else if or else
         // and that branch can contains additional branches.
         Optional<Ref<ConditionBranch>> Next;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::IfStatement; }
     };
 
-    struct VariableStatement
+    struct VariableStatement : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -48,9 +51,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> Expr;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::VariableStatement; }
     };
 
-    struct ScopeStatement
+    struct ScopeStatement : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -59,25 +65,32 @@ namespace Dynamite::Language::Node
 
     public:
         std::vector<Ref<Statement>> Statements;
+
+        // Returns the index of the current scope level's return statement.
+        Optional<size_t> GetReturnStatementIndex();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::ScopeStatement; }
     };
 
-    struct AssignmentStatement
+    struct AssignmentStatement : public Base
     {
     private:
         friend class Pulse::Memory::Control;
     private:
-        AssignmentStatement(const Type& variableType = {}, const std::string& variable = {}, Ref<Expression> expr = (Ref<Expression>)NullRef);
+        AssignmentStatement(Ref<Expression> variable = (Ref<Expression>)NullRef, Ref<Expression> expr = (Ref<Expression>)NullRef);
 
     public:
-        Type VariableType;
-        std::string Variable;
-
+        Ref<Expression> Variable;
         Ref<Expression> Expr;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::AssignmentStatement; }
     };
 
-    struct ReturnStatement
+    struct ReturnStatement : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -88,9 +101,12 @@ namespace Dynamite::Language::Node
         Ref<Expression> Expr;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::ReturnStatement; }
     };
 
-    struct Statement
+    struct Statement : public Base
     {
     private:
         using VariantType = Variant<Ref<VariableStatement>, Ref<ScopeStatement>, Ref<IfStatement>, Ref<AssignmentStatement>, Ref<ReturnStatement>, Ref<FunctionCall>>;
@@ -100,6 +116,13 @@ namespace Dynamite::Language::Node
 
     public:
         VariantType StatementObj;
+
+        NodeType GetUnderlyingType() const;
+        
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::Statement; }
     };
 
     /////////////////////////////////////////////////////////////////

@@ -38,6 +38,9 @@ namespace Dynamite
 
 			if (auto expr = ParseExpression())
 			{
+				if (!TypeCollection::ImplicitCastable(expr.Value()->GetType(), Type(TypeSpecifier::Bool)))
+					Compiler::Error(Peek(-1).Value().LineNumber, "Condition branch's expression must be a boolean type.");
+
 				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
 				auto elif = Node::New<Node::ElseIfBranch>(expr.Value());

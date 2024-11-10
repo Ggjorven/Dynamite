@@ -52,7 +52,7 @@ namespace Dynamite::Language
 	llvm::Value* IRTerms::GenLiteral(const Node::Ref<Node::LiteralTerm> lit, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod, Optional<Type> enforceType)
 	{
 		if (enforceType.HasValue())
-			return GenTypes::GetLiteralValue(context, mod, enforceType.Value(), lit->LitType, lit->Literal).LLVMValue;
+			return GenTypes::GetLiteralValue(context, mod, enforceType.Value(), GetLiteralTypeFromType(enforceType.Value()), lit->Literal).LLVMValue;
 		
 		return GenTypes::GetLiteralValue(context, mod, lit->GetType(), lit->LitType, lit->Literal).LLVMValue;
 	}
@@ -64,12 +64,12 @@ namespace Dynamite::Language
 
 		if (enforceType.HasValue() && (identifier->GetType() != enforceType.Value()))
 		{
-			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, loadName);
+			llvm::Value* nonCastValue = builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, identifier->GetType().IsVolatile(), loadName);
 			
 			return GenTypes::Cast(builder, nonCastValue, identifier->GetType(), enforceType.Value());
 		}
 
-		return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, loadName);
+		return builder.CreateLoad(type, IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue, identifier->GetType().IsVolatile(), loadName);
 	}
 
 }

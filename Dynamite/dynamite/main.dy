@@ -1,11 +1,47 @@
 i32 printf(char* fmt, ...);
 
+void abort();
+void exit(i32 code);
+
+void assert(bool condition, char* msg)
+{
+	if (condition) { return ;}
+
+	printf("Assertion failed... Message: %s\n", msg);
+	abort();
+
+	return;
+
+	printf("Unreachable");
+}
+
 i32 main(i32 argc, char** argv)
 {
-	char[4] str = "Hey";
-	char[] str2 = "Hello";
+	mut i32 x = 10;
+	x = 20;
 
-	printf("Test %s", "Wagwan");
+	mut i32& y = &x;
+	y = 30;
+	(y) = 40;
 
-	return argc;
+	x = 1;
+
+	if (argc - 1)
+	{
+		printf("If\n");
+		//exit(10);
+	}
+	else if (false)
+	{
+		printf("Else If\n");
+	}
+	else
+	{
+		printf("Else\n");
+	}
+
+	x = 1 + 1;
+
+	printf("Program is ending with exit code: %d\n", x);
+	return x;
 }

@@ -26,7 +26,7 @@ namespace Dynamite::Language
 	public:
 		llvm::FunctionCallee Callee;
 		std::vector<GeneratorVariable> Arguments;
-		bool HasVardiadicArguments;
+		bool CStyleVardiadicArguments;
 	};
 
 	/////////////////////////////////////////////////////////////////

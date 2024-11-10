@@ -48,9 +48,19 @@ namespace Dynamite::Language::Node
 		return Expr->GetType();
 	}
 
+	NodeType ParenthesisTerm::GetUnderlyingType() const
+	{
+		return Expr->GetUnderlyingType();
+	}
+
 	bool ParenthesisTerm::IsLValue() const
 	{
 		return Expr->IsLValue();
+	}
+
+	Ref<Base> ParenthesisTerm::GetUnderlying()
+	{
+		return Expr->GetUnderlying();
 	}
 
 	/////////////////////////////////////////////////////////////////
@@ -58,6 +68,9 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	std::string LiteralTermToString(const Ref<LiteralTerm> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<LiteralTerm>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 		
 		std::string type = "<undefined literal name>";
@@ -90,6 +103,9 @@ namespace Dynamite::Language::Node
 
 	std::string IdentifierTermToString(const Ref<IdentifierTerm> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<IdentifierTerm>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		str += Pulse::Text::Format("([IdentifierTerm({0})] = '{1}')", TypeCollection::ToString(obj->GetType()), obj->Identifier);
@@ -99,6 +115,9 @@ namespace Dynamite::Language::Node
 
 	std::string ParenthesisTermToString(const Ref<ParenthesisTerm> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<ParenthesisTerm>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);

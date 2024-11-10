@@ -34,6 +34,8 @@ namespace Dynamite
 		bool HandleKeywords(std::vector<Token>& tokens, std::string& buffer, uint32_t& line);
 		bool HandleOperators(std::vector<Token>& tokens, std::string& buffer, uint32_t& line);
 
+		void HandleSpecialCharacters(std::string& str);
+
 	private:
 		std::string& m_FileContent;
 		size_t m_Index = 0;

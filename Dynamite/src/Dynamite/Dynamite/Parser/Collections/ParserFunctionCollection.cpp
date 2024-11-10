@@ -46,17 +46,17 @@ namespace Dynamite
 		m_Functions.clear();
 	}
 
-	void ParserFunctionCollection::Add(const std::string& name, Type returnType, const std::vector<std::pair<Type, bool>>& parameters, bool hasVardiadicArguments)
+	void ParserFunctionCollection::Add(const std::string& name, Type returnType, const std::vector<std::pair<Type, bool>>& parameters, bool hasCStyleVardiadicArguments)
 	{
 		auto it = std::ranges::find_if(m_Functions, [&](const ParserFunction& func) { return func.Name == name; });
 		if (it == m_Functions.cend())
 		{
-			m_Functions.emplace_back(name, std::vector({ ParserFunction::Overload(returnType, parameters, hasVardiadicArguments) }));
+			m_Functions.emplace_back(name, std::vector({ ParserFunction::Overload(returnType, parameters, hasCStyleVardiadicArguments) }));
 		}
 		else
 		{
 			ParserFunction& func = *it;
-			func.Overloads.emplace_back(returnType, parameters, hasVardiadicArguments);
+			func.Overloads.emplace_back(returnType, parameters, hasCStyleVardiadicArguments);
 		}
 	}
 
@@ -121,21 +121,27 @@ namespace Dynamite
 		{
 			bool broke = false;
 
-			// Reverse iterate through the parameters
-			for (size_t i = (overload.Parameters.size() - 1); i > 0; i--)
+			// Handle the case when there are no parameters
+			if (overload.Parameters.empty())
 			{
-				auto& [type, required] = overload.Parameters[i];
+				result.push_back(0);
+				continue;
+			}
+
+			// Reverse iterate through the parameters
+			for (size_t i = overload.Parameters.size(); i > 0; --i)
+			{
+				auto& [type, required] = overload.Parameters[i - 1];
 				if (required)
 				{
-					result.push_back(i + 1);
-
+					result.push_back(i);
 					broke = true;
 					break;
 				}
 			}
 
 			if (!broke)
-				result.push_back((overload.Parameters.size()));
+				result.push_back(overload.Parameters.size());
 		}
 
 		return result;
@@ -159,7 +165,7 @@ namespace Dynamite
 
 		for (const auto& overload : func.Overloads)
 		{
-			if ((returnType == overload.ReturnType) && (parameters.size() == overload.Parameters.size()) && (hasVardiadicArguments == overload.VardiadicArguments))
+			if ((returnType == overload.ReturnType) && (parameters.size() == overload.Parameters.size()) && (hasVardiadicArguments == overload.CStyleVardiadicArguments))
 			{
 				bool failed = false;
 				for (size_t i = 0; i < parameters.size(); i++)

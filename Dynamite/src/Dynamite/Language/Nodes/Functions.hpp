@@ -14,12 +14,12 @@ namespace Dynamite::Language::Node
     /////////////////////////////////////////////////////////////////
     // Functions
     /////////////////////////////////////////////////////////////////
-    struct FunctionDeclaration
+    struct FunctionDeclaration : public Base
     {
     private:
         friend class Pulse::Memory::Control;
     private:
-        FunctionDeclaration(const Type& returnType = {}, const std::string& name = {}, const std::vector<Ref<VariableStatement>>& parameters = { });
+        FunctionDeclaration(const Type& returnType = {}, const std::string& name = {}, const std::vector<Ref<VariableStatement>>& parameters = { }, bool hasCStyleVardiadicArguments = false);
 
     public:
         Type ReturnType;
@@ -29,12 +29,15 @@ namespace Dynamite::Language::Node
         // arguments has a default value.
         std::vector<Ref<VariableStatement>> Parameters;
 
-        bool VardiadicArguments = false;
+        bool CStyleVardiadicArguments = false;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::FunctionDeclaration; }
     };
 
-    struct FunctionDefinition
+    struct FunctionDefinition : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -49,14 +52,15 @@ namespace Dynamite::Language::Node
         // arguments has a default value.
         std::vector<Ref<VariableStatement>> Parameters;
 
-        bool VardiadicArguments = false;
-
         Ref<ScopeStatement> Body;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::FunctionDefinition; }
     };
 
-    struct Function // Note: Used to simplify function definitions
+    struct Function : public Base // Note: Used to simplify function definitions
     {
     private:
         using VariantType = Variant<Ref<FunctionDeclaration>, Ref<FunctionDefinition>>;
@@ -68,9 +72,12 @@ namespace Dynamite::Language::Node
         VariantType Func;
 
         Type GetType() const;
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::Function; }
     };
 
-    struct FunctionCall
+    struct FunctionCall : public Base
     {
     private:
         friend class Pulse::Memory::Control;
@@ -86,7 +93,9 @@ namespace Dynamite::Language::Node
         size_t OverloadIndex = 0;
 
         Type GetType() const;
-        void SetType(const Type& type);
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::FunctionCall; }
     };
 
     /////////////////////////////////////////////////////////////////

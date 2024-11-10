@@ -59,7 +59,10 @@ namespace Dynamite::Language
 
         // Verification of module.
         if (llvm::verifyModule(mod, &llvm::errs()))
+        {
             Compiler::Error("Module verification failed.");
+            mod.print(llvm::errs(), nullptr);
+        }
     }
 
 }

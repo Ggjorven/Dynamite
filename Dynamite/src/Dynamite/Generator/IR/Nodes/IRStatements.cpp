@@ -8,6 +8,7 @@
 #include "Dynamite/Generator/Types/GenTypes.hpp"
 
 #include "Dynamite/Generator/IR/IRState.hpp"
+#include "Dynamite/Generator/IR/Nodes/IRBranches.hpp"
 #include "Dynamite/Generator/IR/Nodes/IRFunctions.hpp"
 #include "Dynamite/Generator/IR/Nodes/IRExpressions.hpp"
 
@@ -15,7 +16,6 @@
 #include "Dynamite/Generator/IR/Collections/IRFunctionCollection.hpp"
 
 #include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/BasicBlock.h>
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/IntrinsicInst.h>
@@ -36,7 +36,7 @@ namespace Dynamite::Language
 
 			void operator () (const Node::Ref<Node::IfStatement> obj) const
 			{
-				DY_ASSERT(0, "TODO");
+				GenIf(obj, Context, Builder, Module);
 			}
 			void operator () (const Node::Ref<Node::VariableStatement> obj) const
 			{
@@ -102,20 +102,46 @@ namespace Dynamite::Language
 
 	void IRStatements::GenAssignment(const Node::Ref<Node::AssignmentStatement> assignment, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
-		llvm::Value* variable = IRScopeCollection::GetVariable(assignment->Variable).Value.LLVMValue;
-		llvm::Type* varType = GenTypes::GetType(context, assignment->VariableType).LLVMType;  // Get the explicit type
-
-		if (assignment->VariableType.IsReference() && !assignment->Expr->GetType().IsReference())
+		Type variableType = {};
+		Type exprType = {};
+		llvm::Value* variable = nullptr;
+		
+		// Data retrieval
 		{
-			llvm::Value* expr = IRExpressions::GenExpression(assignment->Expr, context, builder, mod, assignment->VariableType.RemoveReference());
-			llvm::Value* ptr = builder.CreateLoad(varType, variable, assignment->Variable);
+			// Identifier
+			if (assignment->Variable->GetUnderlyingType() == Node::NodeType::IdentifierTerm)
+			{
+				Node::Ref<Node::IdentifierTerm> identifier = (Node::Ref<Node::IdentifierTerm>)assignment->Variable->GetUnderlying();
 
-			builder.CreateStore(expr, ptr);
+				variableType = identifier->IdentifierType;
+				exprType = assignment->Expr->GetType();
+				variable = IRScopeCollection::GetVariable(identifier->Identifier).Value.LLVMValue;
+			}
+			// Other expressions
+			else
+			{
+				variableType = assignment->Variable->GetType();
+				exprType = assignment->Expr->GetType();
+				variable = IRExpressions::GenExpression(assignment->Expr, context, builder, mod, assignment->Variable->GetType());
+			}
 		}
-		else
+
+		// Actual logic
 		{
-			llvm::Value* expr = IRExpressions::GenExpression(assignment->Expr, context, builder, mod, assignment->VariableType);
-			builder.CreateStore(expr, variable);
+			llvm::Type* varType = GenTypes::GetType(context, variableType).LLVMType; // Get the explicit type
+
+			if (variableType.IsReference() && !exprType.IsReference())
+			{
+				llvm::Value* expr = IRExpressions::GenExpression(assignment->Expr, context, builder, mod, variableType.RemoveReference());
+				llvm::Value* ptr = builder.CreateLoad(varType, variable, variableType.IsVolatile());
+
+				builder.CreateStore(expr, ptr);
+			}
+			else
+			{
+				llvm::Value* expr = IRExpressions::GenExpression(assignment->Expr, context, builder, mod, variableType);
+				builder.CreateStore(expr, variable);
+			}
 		}
 	}
 
@@ -155,6 +181,32 @@ namespace Dynamite::Language
 	void IRStatements::GenFunctionCall(const Node::Ref<Node::FunctionCall> funcCall, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
 	{
 		IRFunctions::GenFunctionCall(funcCall, context, builder, mod);
+	}
+
+	void IRStatements::GenIf(const Node::Ref<Node::IfStatement> ifStatement, llvm::LLVMContext& context, llvm::IRBuilder<>& builder, llvm::Module& mod)
+	{
+		llvm::Function* parentFunction = builder.GetInsertBlock()->getParent();
+
+		llvm::BasicBlock* ifBlock = llvm::BasicBlock::Create(context, "if.block", parentFunction);
+		llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context, "merge.block", parentFunction);
+		llvm::BasicBlock* nextBlock = ifStatement->Next.HasValue() ? llvm::BasicBlock::Create(context, "next.block", parentFunction) : mergeBlock;
+
+		llvm::Value* expr = IRExpressions::GenExpression(ifStatement->Expr, context, builder, mod, Type(TypeSpecifier::Bool));
+		builder.CreateCondBr(expr, ifBlock, nextBlock);
+
+		// Generate the "if" branch
+		builder.SetInsertPoint(ifBlock);
+		IRStatements::GenScope(ifStatement->Scope, context, builder, mod);
+
+		if (!ifStatement->Scope->GetReturnStatementIndex().HasValue())
+			builder.CreateBr(mergeBlock);
+
+		// Generate the "else if" or "else" branch, if present
+		if (ifStatement->Next.HasValue()) 
+			IRBranches::GenBranch(ifStatement->Next.Value(), context, builder, mod, nextBlock, mergeBlock);
+
+		// Control flow rejoins at the merge block
+		builder.SetInsertPoint(mergeBlock);
 	}
 
 }

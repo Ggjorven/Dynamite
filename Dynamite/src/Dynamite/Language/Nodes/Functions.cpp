@@ -15,8 +15,8 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	// Constructors
 	/////////////////////////////////////////////////////////////////
-	FunctionDeclaration::FunctionDeclaration(const Type& returnType, const std::string& name, const std::vector<Ref<VariableStatement>>& parameters)
-		: ReturnType(returnType), Name(name), Parameters(parameters)
+	FunctionDeclaration::FunctionDeclaration(const Type& returnType, const std::string& name, const std::vector<Ref<VariableStatement>>& parameters, bool hasCStyleVardiadicArguments)
+		: ReturnType(returnType), Name(name), Parameters(parameters), CStyleVardiadicArguments(hasCStyleVardiadicArguments)
 	{
 	}
 
@@ -70,16 +70,14 @@ namespace Dynamite::Language::Node
 		return ReturnType;
 	}
 
-	void FunctionCall::SetType(const Type& type)
-	{
-		ReturnType = type;
-	}
-
 	/////////////////////////////////////////////////////////////////
 	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string FunctionDeclarationToString(const Ref<FunctionDeclaration> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<FunctionDeclaration>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string returnType = TypeCollection::ToString(obj->ReturnType);
@@ -102,6 +100,9 @@ namespace Dynamite::Language::Node
 
 	std::string FunctionDefinitionToString(const Ref<FunctionDefinition> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<FunctionDefinition>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string returnType = TypeCollection::ToString(obj->ReturnType);
@@ -126,6 +127,9 @@ namespace Dynamite::Language::Node
 
 	std::string FunctionCallToString(const Ref<FunctionCall> obj, size_t indentLevel) 
 	{
+		if (obj == (Ref<FunctionCall>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string returnType = TypeCollection::ToString(obj->ReturnType);

@@ -194,6 +194,9 @@ namespace Dynamite::Language
 	/////////////////////////////////////////////////////////////////
 	llvm::Value* GenTypes::Cast(llvm::IRBuilder<>& builder, llvm::Value* value, const Type& from, const Type& to, const std::string& name)
 	{
+		if (from == to)
+			return value;
+		
 		llvm::Type* fromLLVM = GenTypes::GetType(builder.getContext(), from).LLVMType;
 		llvm::Type* toLLVM = GenTypes::GetType(builder.getContext(), to).LLVMType;
 
@@ -244,6 +247,18 @@ namespace Dynamite::Language
 				return builder.CreateFPToUI(value, toLLVM, name);
 			else
 				return builder.CreateFPToSI(value, toLLVM, name);
+		}
+
+		// Int -> bool
+		else if (from.IsIntegral() && to.IsBool())
+		{
+			return builder.CreateICmpNE(value, llvm::ConstantInt::get(value->getType(), 0), name);
+		}
+
+		// Float -> bool
+		else if (from.IsFloat() && to.IsBool())
+		{
+			return builder.CreateFCmpUNE(value, llvm::ConstantFP::get(value->getType(), 0.0), name);
 		}
 
 		// Pointers

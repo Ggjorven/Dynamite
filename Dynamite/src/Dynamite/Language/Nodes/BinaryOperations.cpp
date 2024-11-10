@@ -94,6 +94,9 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	std::string BinaryAdditionToString(const Ref<BinaryAddition> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinaryAddition>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
@@ -108,6 +111,9 @@ namespace Dynamite::Language::Node
 
 	std::string BinarySubtractionToString(const Ref<BinarySubtraction> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinarySubtraction>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
@@ -122,6 +128,9 @@ namespace Dynamite::Language::Node
 
 	std::string BinaryMultiplicationToString(const Ref<BinaryMultiplication> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinaryMultiplication>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
@@ -136,6 +145,9 @@ namespace Dynamite::Language::Node
 
 	std::string BinaryDivisionToString(const Ref<BinaryDivision> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinaryDivision>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
@@ -150,6 +162,9 @@ namespace Dynamite::Language::Node
 
 	std::string BinaryORToString(const Ref<BinaryOR> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinaryOR>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
@@ -164,6 +179,9 @@ namespace Dynamite::Language::Node
 
 	std::string BinaryANDToString(const Ref<BinaryAND> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinaryAND>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
@@ -178,6 +196,9 @@ namespace Dynamite::Language::Node
 
 	std::string BinaryXORToString(const Ref<BinaryXOR> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<BinaryXOR>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);

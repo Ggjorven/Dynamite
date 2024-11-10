@@ -38,6 +38,9 @@ namespace Dynamite::Language::Node
 	/////////////////////////////////////////////////////////////////
 	std::string ElseIfBranchToString(const Ref<ElseIfBranch> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<ElseIfBranch>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string expressionStr = ExpressionToString(obj->Expr, indentLevel + 1);
@@ -58,6 +61,9 @@ namespace Dynamite::Language::Node
 
 	std::string ElseBranchToString(const Ref<ElseBranch> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<ElseBranch>)NullRef)
+			return {};
+
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
 		std::string scope = ScopeStatementToString(obj->Scope, indentLevel);
@@ -69,6 +75,9 @@ namespace Dynamite::Language::Node
 
 	std::string ConditionBranchToString(const Ref<ConditionBranch> obj, size_t indentLevel)
 	{
+		if (obj == (Ref<ConditionBranch>)NullRef)
+			return {};
+
 		struct ConditionVisitor
 		{
 			size_t Indent;

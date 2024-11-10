@@ -35,11 +35,11 @@ namespace Dynamite
 			
 			Consume(); // '(' token
 
+			bool error = false;
 			if (!m_Functions.Exists(function->Function))
 			{
 				Compiler::Error(Peek(-2).Value().LineNumber, "Undefined symbol: {0}", function->Function);
-				m_Tracker.Pop<Node::FunctionCall>();
-				return {};
+				error = true;
 			}
 
 			// Parse arguments
@@ -53,8 +53,7 @@ namespace Dynamite
 					if (symbolArgTypes.empty())
 					{
 						Compiler::Error(Peek(0).Value().LineNumber, "Passed in {0} arguments, when the symbol for '{1}' doesn't match.", index + 1, function->Function);
-						m_Tracker.Pop<Node::FunctionCall>();
-						return {};
+						error = true;
 					}
 
 					function->Arguments.push_back(argument.Value());
@@ -70,6 +69,12 @@ namespace Dynamite
 					break;
 			}
 
+			if (error)
+			{
+				CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
+				return m_Tracker.Return<Node::FunctionCall>();
+			}
+
 			const ParserFunction& functionDefinitions = *m_Functions.GetFunction(function->Function);
 
 			size_t functionOverload = Pulse::Numeric::Max<size_t>();
@@ -78,7 +83,7 @@ namespace Dynamite
 				const auto& overload = functionDefinitions.Overloads[overloadIndex];
 
 				if ((overload.Parameters.size() < m_Functions.GetRequiredArgCounts(function->Function)[overloadIndex]) ||
-					((overload.Parameters.size() > m_Functions.GetArgCounts(function->Function)[overloadIndex] && !overload.VardiadicArguments)))
+					((overload.Parameters.size() > m_Functions.GetArgCounts(function->Function)[overloadIndex] && !overload.CStyleVardiadicArguments)))
 					continue;
 
 				bool continueLoop = false;
@@ -148,7 +153,7 @@ namespace Dynamite
 			Consume(); // '(' token
 
 			bool hasDefaultArguments = false;
-			bool hasVardiadicArguments = false;
+			bool hasCStyleVardiadicArguments = false;
 			std::vector<Type> parameterTypes = { };
 			std::vector<std::pair<Type, bool>> parameterTypesAndDefault = { };
 			while (true)
@@ -198,7 +203,7 @@ namespace Dynamite
 					Utils::OptMemberIs(Peek(2), &Token::Type, TokenType::Dot))
 				{
 					Consume(); Consume(); Consume();
-					hasVardiadicArguments = true;
+					hasCStyleVardiadicArguments = true;
 					break;
 				}
 				else
@@ -207,8 +212,8 @@ namespace Dynamite
 
 			CheckConsume(TokenType::CloseParenthesis, "Expected `)`.");
 
-			if (!m_Functions.Exists(name.Value, returnType.Value(), parameterTypes, hasVardiadicArguments))
-				m_Functions.Add(name.Value, returnType.Value(), parameterTypesAndDefault, hasVardiadicArguments);
+			if (!m_Functions.Exists(name.Value, returnType.Value(), parameterTypes, hasCStyleVardiadicArguments))
+				m_Functions.Add(name.Value, returnType.Value(), parameterTypesAndDefault, hasCStyleVardiadicArguments);
 
 			/////////////////////////////////////////////////////////////////
 			// Declaration
@@ -221,7 +226,7 @@ namespace Dynamite
 				declaration->ReturnType = returnType.Value();
 				declaration->Name = name.Value;
 				declaration->Parameters = parameters;
-				declaration->VardiadicArguments = hasVardiadicArguments;
+				declaration->CStyleVardiadicArguments = hasCStyleVardiadicArguments;
 
 				func->Func = declaration;
 
@@ -232,14 +237,18 @@ namespace Dynamite
 			/////////////////////////////////////////////////////////////////
 			else
 			{
+				if (hasCStyleVardiadicArguments)
+				{
+					Compiler::Error(Peek(-1).Value().LineNumber, "Cannot define a function with C-Style vardiadic arguments.");
+				}
+
 				Node::Ref<Node::FunctionDefinition> definition = m_Tracker.New<Node::FunctionDefinition>();
 				definition->ReturnType = returnType.Value();
 				definition->Name = name.Value;
 				definition->Parameters = parameters;
-				definition->VardiadicArguments = hasVardiadicArguments;
 
 				// Check if the declaration matches the definition
-				if (m_Functions.Exists(definition->Name, definition->ReturnType, parameterTypes, hasVardiadicArguments))
+				if (m_Functions.Exists(definition->Name, definition->ReturnType, parameterTypes, hasCStyleVardiadicArguments))
 				{
 					if (hasDefaultArguments)
 						Compiler::Error(Peek(-1).Value().LineNumber, "Cannot redefine default arguments.");
@@ -259,11 +268,11 @@ namespace Dynamite
 				else
 					Compiler::Error(Peek(0).Value().LineNumber, "Expected function body.");
 
-				// Check for ending return statement
-				if (!returnType.Value().IsVoid())
+				// Check for return statement
+				Optional<size_t> returnIndex = definition->Body->GetReturnStatementIndex();
+				if (!returnType.Value().IsVoid() && !returnIndex.HasValue())
 				{
-					if (definition->Body->Statements.empty() || !std::holds_alternative<Node::Ref<Node::ReturnStatement>>(definition->Body->Statements.back()->StatementObj))
-						Compiler::Error(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");;
+					Compiler::Error(Peek(-2).Value().LineNumber, "Function does not end with return statement and return type != void.");
 				}
 
 				func->Func = definition;
