@@ -73,6 +73,9 @@ namespace Dynamite
 
 		case TokenType::TakeAddress:			return "#";
 
+		case TokenType::At:						return "@";
+		case TokenType::Arrow:					return "->";
+
 		/////////////////////////////////////////////////////////////////
 		// Literals
 		/////////////////////////////////////////////////////////////////

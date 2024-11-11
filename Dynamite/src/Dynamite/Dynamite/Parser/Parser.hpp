@@ -19,20 +19,22 @@ namespace Dynamite
 	public:
 		// Constructors
 		Parser(std::vector<Token>& tokens);
-		~Parser() = default;
+		~Parser();
 
 		// Public methods
 		Language::Node::Program GetProgram();
 
-	public:
-		// Parsing methods
+		static Parser& Get();
+
+	private:
+		// Parsing methods // TODO: Replace
 		Optional<Language::Node::Ref<Language::Node::FunctionCall>>				ParseFunctionCall();
 		Optional<Language::Node::Ref<Language::Node::TermExpr>>					ParseTermExpr();
 		void																	HandleBinaryOperators(Language::Node::Ref<Language::Node::Expression>& expr, size_t minimumPrecedence);
 		Optional<Language::Node::Ref<Language::Node::Expression>>				ParseExpression(size_t minimumPrecedence = 0);
-		
+
 		Optional<Language::Node::Ref<Language::Node::ConditionBranch>>			ParseConditionBrach();
-		
+
 		Optional<Language::Node::Ref<Language::Node::IfStatement>>				ParseIfStatement();
 		Optional<Language::Node::Ref<Language::Node::ScopeStatement>>			ParseScopeStatement(bool startScope = true);
 		Optional<Language::Node::Ref<Language::Node::VariableStatement>>		ParseVariableStatement();

@@ -23,6 +23,10 @@ namespace Dynamite::Language::Node
 	struct AddressExpr;
 	struct DereferenceExpr;
 	struct CastExpr;
+	struct AndAndExpr;
+	struct OrOrExpr;
+	struct IsEqualExpr;
+	struct ArrayAccessExpr;
 
 	// Note: Can be an expression or statement
 	struct FunctionCall; 
@@ -71,6 +75,10 @@ namespace Dynamite::Language::Node
 		AddressExpr,
 		DereferenceExpr,
 		CastExpr,
+		AndAndExpr,
+		OrOrExpr,
+		IsEqualExpr,
+		ArrayAccessExpr,
 
 		FunctionCall,
 

@@ -19,6 +19,11 @@
 namespace Dynamite
 {
 
+	namespace
+	{
+		static Parser* s_Instance = nullptr;
+	}
+
 	using namespace Language;
 
 	/////////////////////////////////////////////////////////////////
@@ -27,6 +32,12 @@ namespace Dynamite
 	Parser::Parser(std::vector<Token>& tokens)
 		: m_Tokens(tokens)
 	{
+		s_Instance = this;
+	}
+
+	Parser::~Parser()
+	{
+		s_Instance = nullptr;
 	}
 
 	Node::Program Parser::GetProgram()
@@ -47,6 +58,11 @@ namespace Dynamite
 
 		DY_LOG_ERROR("Parser is currently disabled.");
 		return program;
+	}
+
+	Parser& Parser::Get()
+	{
+		return *s_Instance;
 	}
 
 	/////////////////////////////////////////////////////////////////

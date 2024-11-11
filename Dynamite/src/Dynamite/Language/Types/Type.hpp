@@ -163,8 +163,9 @@ namespace Dynamite::Language
 		size_t GetArraySize() const;
 		void SetArraySize(size_t size);
 
-		// Add
+		// Modifying
 		void AddToBack(TypeQualifier qualifier, Optional<size_t> arraySize = {});
+		void PopBack();
 
 		// Utils
 		Type RemoveReference() const;

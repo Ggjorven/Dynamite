@@ -14,12 +14,23 @@
 namespace Dynamite
 {
 
+    namespace
+    {
+        static Tokenizer* s_Instance = nullptr;
+    }
+
     /////////////////////////////////////////////////////////////////
     // Main functions
     /////////////////////////////////////////////////////////////////
     Tokenizer::Tokenizer(std::string& fileContent)
         : m_FileContent(fileContent)
     {
+        s_Instance = this;
+    }
+
+    Tokenizer::~Tokenizer()
+    {
+        s_Instance = nullptr;
     }
 
     std::vector<Token> Tokenizer::Tokenize()
@@ -62,7 +73,14 @@ namespace Dynamite
                 // of a number.
                 if (buffer == "-")
                 {
-                    tokens.emplace_back(TokenType::Minus, lineNumber);
+                    if (Peek(0).Value() == '>')
+                    {
+                        Consume();
+                        tokens.emplace_back(TokenType::Arrow, lineNumber);
+                    }
+                    else
+                        tokens.emplace_back(TokenType::Minus, lineNumber);
+
                     buffer.clear();
                 }
                 else if (buffer.find('.') != std::string::npos)
@@ -327,6 +345,13 @@ namespace Dynamite
         else if (handleOperator(TokenType::Comma))              return true;
 
         // Operators
+        else if (Peek(0).Value() == '-' && Peek(1).Value() == '>')
+        {
+            Consume();
+            tokens.emplace_back(TokenType::Arrow, line);
+            return true;
+        }
+
         else if (handleOperator(TokenType::Plus))               return true;
         else if (handleOperator(TokenType::Minus))              return true;
         else if (handleOperator(TokenType::Star))               return true;
@@ -337,6 +362,9 @@ namespace Dynamite
         else if (handleOperator(TokenType::UpArrow))            return true;
 
         else if (handleOperator(TokenType::TakeAddress))        return true;
+
+        else if (handleOperator(TokenType::At))         return true;
+
 
         // Newline (for incrementing)
         else if (Utils::OptCheck(Peek(0), '\n') || Utils::OptCheck(Peek(0), '\r'))

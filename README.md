@@ -18,6 +18,10 @@ Dynamite is a new programming language based on C++, designed for creating power
 
 Build instructions for this project can be found in the [BUILDING.md](BUILDING.md) file. Supported platforms are Windows (vs2022 & make), Linux (make).
 
+### Writing
+
+Writing custom Dynamite code is currently quite tedious. Checkout an example here [SYNTAX.md](SYNTAX.md).
+
 ## License
 This project is licensed under the Apache 2.0 License. See [LICENSE](LICENSE.txt) for details.
 

@@ -308,6 +308,14 @@ namespace Dynamite::Language
 			BackQualifiers.back().SetArraySize(arraySize.Value());
 	}
 
+	void Type::PopBack()
+	{
+		if (BackQualifiers.empty())
+			return;
+
+		BackQualifiers.pop_back();
+	}
+
 	// Utils
 	Type Type::RemoveReference() const
 	{

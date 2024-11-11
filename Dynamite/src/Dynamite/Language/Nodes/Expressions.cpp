@@ -91,6 +91,31 @@ namespace Dynamite::Language::Node
 	{
 	}
 
+	CastExpr::CastExpr(Ref<Expression> expr, const Type& type)
+		: Expr(expr), ToType(type)
+	{
+	}
+
+	AndAndExpr::AndAndExpr(Ref<Expression> lhs, Ref<Expression> rhs)
+		: LHS(lhs), RHS(rhs)
+	{
+	}
+
+	OrOrExpr::OrOrExpr(Ref<Expression> lhs, Ref<Expression> rhs)
+		: LHS(lhs), RHS(rhs)
+	{
+	}
+
+	IsEqualExpr::IsEqualExpr(Ref<Expression> lhs, Ref<Expression> rhs)
+		: LHS(lhs), RHS(rhs)
+	{
+	}
+
+	ArrayAccessExpr::ArrayAccessExpr(Ref<Expression> arrayExpr, Ref<Expression> indexExpr)
+		: Array(arrayExpr), Index(indexExpr)
+	{
+	}
+
 	Expression::Expression(VariantType expr)
 		: Expr(expr)
 	{
@@ -383,6 +408,70 @@ namespace Dynamite::Language::Node
 		return Expr->GetUnderlying();
 	}
 
+	Type AndAndExpr::GetType() const
+	{
+		return Type(TypeSpecifier::Bool);
+	}
+
+	NodeType AndAndExpr::GetUnderlyingType() const
+	{
+		return NodeType::AndAndExpr;
+	}
+
+	Ref<Base> AndAndExpr::GetUnderlying()
+	{
+		return (Ref<Base>)this;
+	}
+
+	Type OrOrExpr::GetType() const
+	{
+		return Type(TypeSpecifier::Bool);
+	}
+
+	NodeType OrOrExpr::GetUnderlyingType() const
+	{
+		return NodeType::OrOrExpr;
+	}
+
+	Ref<Base> OrOrExpr::GetUnderlying()
+	{
+		return (Ref<Base>)this;
+	}
+
+	Type IsEqualExpr::GetType() const
+	{
+		return Type(TypeSpecifier::Bool);
+	}
+
+	NodeType IsEqualExpr::GetUnderlyingType() const
+	{
+		return NodeType::IsEqualExpr;
+	}
+
+	Ref<Base> IsEqualExpr::GetUnderlying()
+	{
+		return (Ref<Base>)this;
+	}
+
+	Type ArrayAccessExpr::GetType() const
+	{
+		// TODO: Check if should be reference?
+		Type nonArrayType = Array->GetType();
+		nonArrayType.PopBack();
+
+		return nonArrayType;
+	}
+
+	NodeType ArrayAccessExpr::GetUnderlyingType() const
+	{
+		return NodeType::ArrayAccessExpr;
+	}
+
+	Ref<Base> ArrayAccessExpr::GetUnderlying()
+	{
+		return (Ref<Base>)this;
+	}
+
 	Type Expression::GetType() const
 	{
 		struct ExpressionVisitor
@@ -412,6 +501,22 @@ namespace Dynamite::Language::Node
 				return obj->GetType();
 			}
 			Type operator () (const Ref<CastExpr> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Ref<AndAndExpr> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Ref<OrOrExpr> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Ref<IsEqualExpr> obj) const
+			{
+				return obj->GetType();
+			}
+			Type operator () (const Ref<ArrayAccessExpr> obj) const
 			{
 				return obj->GetType();
 			}
@@ -452,6 +557,22 @@ namespace Dynamite::Language::Node
 			{
 				return NodeType::CastExpr;
 			}
+			NodeType operator () (const Ref<AndAndExpr>) const
+			{
+				return NodeType::AndAndExpr;
+			}
+			NodeType operator () (const Ref<OrOrExpr>) const
+			{
+				return NodeType::OrOrExpr;
+			}
+			NodeType operator () (const Ref<IsEqualExpr>) const
+			{
+				return NodeType::IsEqualExpr;
+			}
+			NodeType operator () (const Ref<ArrayAccessExpr>) const
+			{
+				return NodeType::ArrayAccessExpr;
+			}
 		};
 
 		return std::visit(ExpressionVisitor(), Expr);
@@ -481,13 +602,29 @@ namespace Dynamite::Language::Node
 			{
 				return true;
 			}
-			bool operator () (const Ref<DereferenceExpr>) const
+			bool operator () (const Ref<DereferenceExpr> obj) const
 			{
-				return true;
+				return obj->GetType().IsPointer() || obj->GetType().IsReference();
 			}
 			bool operator () (const Ref<CastExpr> obj) const
 			{
-				return obj->GetType().IsPointer() || obj->GetType().IsReference();;
+				return obj->GetType().IsPointer() || obj->GetType().IsReference();
+			}
+			bool operator () (const Ref<AndAndExpr>) const
+			{
+				return false;
+			}
+			bool operator () (const Ref<OrOrExpr>) const
+			{
+				return false;
+			}
+			bool operator () (const Ref<IsEqualExpr>) const
+			{
+				return false;
+			}
+			bool operator () (const Ref<ArrayAccessExpr> obj) const
+			{
+				return obj->GetType().IsPointer() || obj->GetType().IsReference();
 			}
 		};
 
@@ -523,6 +660,22 @@ namespace Dynamite::Language::Node
 				return (Ref<Base>)obj;
 			}
 			Ref<Base> operator () (Ref<CastExpr> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<AndAndExpr> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<OrOrExpr> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<IsEqualExpr> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ArrayAccessExpr> obj) const
 			{
 				return (Ref<Base>)obj;
 			}
@@ -719,6 +872,66 @@ namespace Dynamite::Language::Node
 		return str;
 	}
 
+	std::string AndAndExprToString(const Ref<AndAndExpr> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<AndAndExpr>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+
+		str += Pulse::Text::Format("([AndAndExpr{0}] = '\n{1}\n{3}&&\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string OrOrExprToString(const Ref<OrOrExpr> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<OrOrExpr>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+
+		str += Pulse::Text::Format("([OrOrExpr{0}] = '\n{1}\n{3}&&\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string IsEqualExprToString(const Ref<IsEqualExpr> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<IsEqualExpr>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+
+		str += Pulse::Text::Format("([IsEqualExpr{0}] = '\n{1}\n{3}&&\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string ArrayAccessExprToString(const Ref<ArrayAccessExpr> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<ArrayAccessExpr>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string arrayStr = ExpressionToString(obj->Array, indentLevel + 1);
+		std::string indexStr = ExpressionToString(obj->Index, indentLevel + 1);
+
+		str += Pulse::Text::Format("([ArrayAccessExpr{0}] = '\n{1}\n{3}Is being accessed with:\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), arrayStr, indexStr, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
 	std::string ExpressionToString(const Ref<Expression> obj, size_t indentLevel)
 	{
 		if (obj == (Ref<Expression>)NullRef)
@@ -795,6 +1008,46 @@ namespace Dynamite::Language::Node
 				std::string castStr = CastExprToString(obj, Indent + 1);
 
 				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", castStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<AndAndExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string andStr = AndAndExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", andStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<OrOrExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string orStr = OrOrExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", orStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<IsEqualExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string equalStr = IsEqualExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", equalStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<ArrayAccessExpr> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string arrayStr = ArrayAccessExprToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", arrayStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}

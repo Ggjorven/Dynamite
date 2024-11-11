@@ -19,12 +19,14 @@ namespace Dynamite
 	public:
 		// Constructors
 		Tokenizer(std::string& fileContent);
-		~Tokenizer() = default;
+		~Tokenizer();
 
 		// Public methods
 		std::vector<Token> Tokenize();
 
-	public:
+		static Tokenizer& Get();
+
+	private:
 		// Peeking & consuming
 		Optional<char> Peek(int64_t offset = 0) const;
 		char Consume();

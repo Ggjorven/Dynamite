@@ -139,11 +139,91 @@ namespace Dynamite::Language::Node
     public:
         inline static NodeType GetStaticType() { return NodeType::CastExpr; }
     };
+
+    struct AndAndExpr : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        AndAndExpr(Ref<Expression> lhs = (Ref<Expression>)NullRef, Ref<Expression> rhs = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> LHS;
+        Ref<Expression> RHS;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::AndAndExpr; }
+    };
+
+    struct OrOrExpr : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        OrOrExpr(Ref<Expression> lhs = (Ref<Expression>)NullRef, Ref<Expression> rhs = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> LHS;
+        Ref<Expression> RHS;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::OrOrExpr; }
+    };
+
+    struct IsEqualExpr : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        IsEqualExpr(Ref<Expression> lhs = (Ref<Expression>)NullRef, Ref<Expression> rhs = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> LHS;
+        Ref<Expression> RHS;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::IsEqualExpr; }
+    };
+
+    struct ArrayAccessExpr : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        ArrayAccessExpr(Ref<Expression> arrayExpr = (Ref<Expression>)NullRef, Ref<Expression> indexExpr = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> Array;
+        Ref<Expression> Index;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::ArrayAccessExpr; }
+    };
     
     struct Expression : public Base
     {
     private:
-        using VariantType = Variant<Ref<TermExpr>, Ref<BinaryExpr>, Ref<FunctionCall>, Ref<ReferenceExpr>, Ref<AddressExpr>, Ref<DereferenceExpr>, Ref<CastExpr>>;
+        using VariantType = Variant<Ref<TermExpr>, Ref<BinaryExpr>, Ref<FunctionCall>, Ref<ReferenceExpr>, Ref<AddressExpr>, Ref<DereferenceExpr>, Ref<CastExpr>, Ref<AndAndExpr>, Ref<OrOrExpr>, Ref<IsEqualExpr>, Ref<ArrayAccessExpr>>;
         friend class Pulse::Memory::Control;
     private:
         Expression(VariantType expr = {});
@@ -171,6 +251,10 @@ namespace Dynamite::Language::Node
     std::string AddressExprToString(const Ref<AddressExpr> obj, size_t indentLevel = 0);
     std::string DereferenceExprToString(const Ref<DereferenceExpr> obj, size_t indentLevel = 0);
     std::string CastExprToString(const Ref<CastExpr> obj, size_t indentLevel = 0);
+    std::string AndAndExprToString(const Ref<AndAndExpr> obj, size_t indentLevel = 0);
+    std::string OrOrExprToString(const Ref<OrOrExpr> obj, size_t indentLevel = 0);
+    std::string IsEqualExprToString(const Ref<IsEqualExpr> obj, size_t indentLevel = 0);
+    std::string ArrayAccessExprToString(const Ref<ArrayAccessExpr> obj, size_t indentLevel = 0);
     std::string ExpressionToString(const Ref<Expression> obj, size_t indentLevel = 0);
 
 }
