@@ -23,9 +23,6 @@ namespace Dynamite::Language::Node
 	struct AddressExpr;
 	struct DereferenceExpr;
 	struct CastExpr;
-	struct AndAndExpr;
-	struct OrOrExpr;
-	struct IsEqualExpr;
 	struct ArrayAccessExpr;
 
 	// Note: Can be an expression or statement
@@ -34,6 +31,12 @@ namespace Dynamite::Language::Node
 	struct IdentifierTerm;
 	struct LiteralTerm;
 	struct ParenthesisTerm;
+
+	struct AndAndBoolean;
+	struct OrOrBoolean;
+	struct IsEqualBoolean;
+	struct MoreThanBoolean;
+	struct LessThanBoolean;
 
 	struct BinaryAddition;
 	struct BinarySubtraction;
@@ -75,9 +78,7 @@ namespace Dynamite::Language::Node
 		AddressExpr,
 		DereferenceExpr,
 		CastExpr,
-		AndAndExpr,
-		OrOrExpr,
-		IsEqualExpr,
+		BooleanExpr,
 		ArrayAccessExpr,
 
 		FunctionCall,
@@ -85,6 +86,12 @@ namespace Dynamite::Language::Node
 		IdentifierTerm,
 		LiteralTerm,
 		ParenthesisTerm,
+
+		AndAndBoolean,
+		OrOrBoolean,
+		IsEqualBoolean,
+		MoreThanBoolean,
+		LessThanBoolean,
 
 		BinaryAddition,
 		BinarySubtraction,

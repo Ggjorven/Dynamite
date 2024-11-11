@@ -6,6 +6,7 @@
 #include "Dynamite/Utils/Utils.hpp"
 #include "Dynamite/Utils/Checks.hpp"
 
+#include "Dynamite/Language/Nodes/Booleans.hpp"
 #include "Dynamite/Language/Nodes/Functions.hpp"
 
 #include "Dynamite/Language/Types/TypeCollection.hpp"
@@ -96,18 +97,8 @@ namespace Dynamite::Language::Node
 	{
 	}
 
-	AndAndExpr::AndAndExpr(Ref<Expression> lhs, Ref<Expression> rhs)
-		: LHS(lhs), RHS(rhs)
-	{
-	}
-
-	OrOrExpr::OrOrExpr(Ref<Expression> lhs, Ref<Expression> rhs)
-		: LHS(lhs), RHS(rhs)
-	{
-	}
-
-	IsEqualExpr::IsEqualExpr(Ref<Expression> lhs, Ref<Expression> rhs)
-		: LHS(lhs), RHS(rhs)
+	BooleanExpr::BooleanExpr(VariantType boolean)
+		: Boolean(boolean)
 	{
 	}
 
@@ -408,49 +399,67 @@ namespace Dynamite::Language::Node
 		return Expr->GetUnderlying();
 	}
 
-	Type AndAndExpr::GetType() const
+	Type BooleanExpr::GetType() const
 	{
 		return Type(TypeSpecifier::Bool);
 	}
 
-	NodeType AndAndExpr::GetUnderlyingType() const
+	NodeType BooleanExpr::GetUnderlyingType() const
 	{
-		return NodeType::AndAndExpr;
+		struct BooleanVisitor
+		{
+			NodeType operator () (const Ref<AndAndBoolean>) const
+			{
+				return NodeType::AndAndBoolean;
+			}
+			NodeType operator () (const Ref<OrOrBoolean>) const
+			{
+				return NodeType::OrOrBoolean;
+			}
+			NodeType operator () (const Ref<IsEqualBoolean>) const
+			{
+				return NodeType::IsEqualBoolean;
+			}
+			NodeType operator () (const Ref<MoreThanBoolean>) const
+			{
+				return NodeType::MoreThanBoolean;
+			}
+			NodeType operator () (const Ref<LessThanBoolean>) const
+			{
+				return NodeType::LessThanBoolean;
+			}
+		};
+
+		return std::visit(BooleanVisitor(), Boolean);
 	}
 
-	Ref<Base> AndAndExpr::GetUnderlying()
+	Ref<Base> BooleanExpr::GetUnderlying()
 	{
-		return (Ref<Base>)this;
-	}
+		struct BooleanVisitor
+		{
+			Ref<Base> operator () (Ref<AndAndBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<OrOrBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<IsEqualBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<MoreThanBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<LessThanBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+		};
 
-	Type OrOrExpr::GetType() const
-	{
-		return Type(TypeSpecifier::Bool);
-	}
-
-	NodeType OrOrExpr::GetUnderlyingType() const
-	{
-		return NodeType::OrOrExpr;
-	}
-
-	Ref<Base> OrOrExpr::GetUnderlying()
-	{
-		return (Ref<Base>)this;
-	}
-
-	Type IsEqualExpr::GetType() const
-	{
-		return Type(TypeSpecifier::Bool);
-	}
-
-	NodeType IsEqualExpr::GetUnderlyingType() const
-	{
-		return NodeType::IsEqualExpr;
-	}
-
-	Ref<Base> IsEqualExpr::GetUnderlying()
-	{
-		return (Ref<Base>)this;
+		return std::visit(BooleanVisitor(), Boolean);
 	}
 
 	Type ArrayAccessExpr::GetType() const
@@ -504,15 +513,7 @@ namespace Dynamite::Language::Node
 			{
 				return obj->GetType();
 			}
-			Type operator () (const Ref<AndAndExpr> obj) const
-			{
-				return obj->GetType();
-			}
-			Type operator () (const Ref<OrOrExpr> obj) const
-			{
-				return obj->GetType();
-			}
-			Type operator () (const Ref<IsEqualExpr> obj) const
+			Type operator () (const Ref<BooleanExpr> obj) const
 			{
 				return obj->GetType();
 			}
@@ -557,17 +558,9 @@ namespace Dynamite::Language::Node
 			{
 				return NodeType::CastExpr;
 			}
-			NodeType operator () (const Ref<AndAndExpr>) const
+			NodeType operator () (const Ref<BooleanExpr> obj) const
 			{
-				return NodeType::AndAndExpr;
-			}
-			NodeType operator () (const Ref<OrOrExpr>) const
-			{
-				return NodeType::OrOrExpr;
-			}
-			NodeType operator () (const Ref<IsEqualExpr>) const
-			{
-				return NodeType::IsEqualExpr;
+				return obj->GetUnderlyingType();
 			}
 			NodeType operator () (const Ref<ArrayAccessExpr>) const
 			{
@@ -610,15 +603,7 @@ namespace Dynamite::Language::Node
 			{
 				return obj->GetType().IsPointer() || obj->GetType().IsReference();
 			}
-			bool operator () (const Ref<AndAndExpr>) const
-			{
-				return false;
-			}
-			bool operator () (const Ref<OrOrExpr>) const
-			{
-				return false;
-			}
-			bool operator () (const Ref<IsEqualExpr>) const
+			bool operator () (const Ref<BooleanExpr>) const
 			{
 				return false;
 			}
@@ -663,18 +648,11 @@ namespace Dynamite::Language::Node
 			{
 				return (Ref<Base>)obj;
 			}
-			Ref<Base> operator () (Ref<AndAndExpr> obj) const
+			Ref<Base> operator () (Ref<BooleanExpr> obj) const
 			{
-				return (Ref<Base>)obj;
+				return obj->GetUnderlying();
 			}
-			Ref<Base> operator () (Ref<OrOrExpr> obj) const
-			{
-				return (Ref<Base>)obj;
-			}
-			Ref<Base> operator () (Ref<IsEqualExpr> obj) const
-			{
-				return (Ref<Base>)obj;
-			}
+			
 			Ref<Base> operator () (Ref<ArrayAccessExpr> obj) const
 			{
 				return (Ref<Base>)obj;
@@ -872,49 +850,68 @@ namespace Dynamite::Language::Node
 		return str;
 	}
 
-	std::string AndAndExprToString(const Ref<AndAndExpr> obj, size_t indentLevel)
+	std::string BooleanExprToString(const Ref<BooleanExpr> obj, size_t indentLevel)
 	{
-		if (obj == (Ref<AndAndExpr>)NullRef)
+		if (obj == (Ref<BooleanExpr>)NullRef)
 			return {};
 
-		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+		struct BooleanExprVisitor
+		{
+			size_t Indent;
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+			std::string operator () (const Ref<AndAndBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
-		str += Pulse::Text::Format("([AndAndExpr{0}] = '\n{1}\n{3}&&\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+				std::string andAndStr = AndAndBooleanToString(obj, Indent + 1);
 
-		return str;
-	}
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", andAndStr, Utils::StrTimes(Node::TabString, Indent));
 
-	std::string OrOrExprToString(const Ref<OrOrExpr> obj, size_t indentLevel)
-	{
-		if (obj == (Ref<OrOrExpr>)NullRef)
-			return {};
+				return str;
+			}
+			std::string operator () (const Ref<OrOrBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
-		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+				std::string orOrStr = OrOrBooleanToString(obj, Indent + 1);
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", orOrStr, Utils::StrTimes(Node::TabString, Indent));
 
-		str += Pulse::Text::Format("([OrOrExpr{0}] = '\n{1}\n{3}&&\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+				return str;
+			}
+			std::string operator () (const Ref<IsEqualBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
-		return str;
-	}
+				std::string equalStr = IsEqualBooleanToString(obj, Indent + 1);
 
-	std::string IsEqualExprToString(const Ref<IsEqualExpr> obj, size_t indentLevel)
-	{
-		if (obj == (Ref<IsEqualExpr>)NullRef)
-			return {};
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", equalStr, Utils::StrTimes(Node::TabString, Indent));
 
-		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+				return str;
+			}
+			std::string operator () (const Ref<MoreThanBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+				std::string moreStr = MoreThanBooleanToString(obj, Indent + 1);
 
-		str += Pulse::Text::Format("([IsEqualExpr{0}] = '\n{1}\n{3}&&\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", moreStr, Utils::StrTimes(Node::TabString, Indent));
 
-		return str;
+				return str;
+			}
+			std::string operator () (const Ref<LessThanBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string lessStr = LessThanBooleanToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", lessStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+		};
+
+		return std::visit(BooleanExprVisitor(indentLevel), obj->Boolean);
 	}
 
 	std::string ArrayAccessExprToString(const Ref<ArrayAccessExpr> obj, size_t indentLevel)
@@ -1011,33 +1008,13 @@ namespace Dynamite::Language::Node
 
 				return str;
 			}
-			std::string operator () (const Ref<AndAndExpr> obj) const
+			std::string operator () (const Ref<BooleanExpr> obj) const
 			{
 				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
-				std::string andStr = AndAndExprToString(obj, Indent + 1);
+				std::string boolStr = BooleanExprToString(obj, Indent + 1);
 
-				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", andStr, Utils::StrTimes(Node::TabString, Indent));
-
-				return str;
-			}
-			std::string operator () (const Ref<OrOrExpr> obj) const
-			{
-				std::string str = Utils::StrTimes(Node::TabString, Indent);
-
-				std::string orStr = OrOrExprToString(obj, Indent + 1);
-
-				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", orStr, Utils::StrTimes(Node::TabString, Indent));
-
-				return str;
-			}
-			std::string operator () (const Ref<IsEqualExpr> obj) const
-			{
-				std::string str = Utils::StrTimes(Node::TabString, Indent);
-
-				std::string equalStr = IsEqualExprToString(obj, Indent + 1);
-
-				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", equalStr, Utils::StrTimes(Node::TabString, Indent));
+				str += Pulse::Text::Format("([Expression] = '\n{0}'\n{1})", boolStr, Utils::StrTimes(Node::TabString, Indent));
 
 				return str;
 			}
