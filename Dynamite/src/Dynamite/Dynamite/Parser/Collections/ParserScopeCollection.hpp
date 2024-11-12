@@ -4,6 +4,8 @@
 
 #include "Dynamite/Language/Types/Type.hpp"
 
+#include "Dynamite/Language/Utils/Namespace.hpp"
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -17,6 +19,9 @@ namespace Dynamite
 	struct ParserVariable
 	{
 	public:
+		Language::Namespace Namespaces;
+		std::string ClassName;
+
 		std::string Name;
 		Language::Type VariableType;
 	};
@@ -27,22 +32,22 @@ namespace Dynamite
 	class ParserScopeCollection
 	{
 	public:
-		void Reset();
+		static void Reset();
 
-		void BeginScope();
-		void EndScope();
+		static void BeginScope();
+		static void EndScope();
 
-		void PushVar(const std::string& name, const Language::Type& type);
+		static void PushVar(const ParserVariable& variable);
 
-		bool Exists(const std::string& name);
-		Optional<Language::Type> GetVariableType(const std::string& name);
+		static bool Exists(const Language::Namespace& namespaces, const std::string& className, const std::string& name);
+		static Optional<ParserVariable> GetVariable(const Language::Namespace& namespaces, const std::string& className, const std::string& name);
 	
 	private:
-		void PopVars(size_t count);
+		static void PopVars(size_t count);
 	
 	private:
-		std::vector<ParserVariable> m_Variables = {};
-		std::vector<size_t> m_Scopes = { 0 };
+		inline static std::vector<ParserVariable> s_Variables = {};
+		inline static std::vector<size_t> s_Scopes = { 0 };
 	};
 
 }

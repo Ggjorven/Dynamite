@@ -165,6 +165,7 @@ namespace Dynamite::Language
 
 		// Modifying
 		void AddToBack(TypeQualifier qualifier, Optional<size_t> arraySize = {});
+		void PushBack(TypeQualifier qualifier, size_t arraySize);
 		void PopBack();
 
 		// Utils

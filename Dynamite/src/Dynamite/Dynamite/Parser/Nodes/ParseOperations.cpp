@@ -1,15 +1,20 @@
 #include "dypch.h"
-#include "Program.hpp"
+#include "ParseOperations.hpp"
 
 #include "Dynamite/Core/Logging.hpp"
 
 #include "Dynamite/Utils/Utils.hpp"
+#include "Dynamite/Utils/Checks.hpp"
 
-namespace Dynamite::Language::Node
+#include "Dynamite/Compiler/Compiler.hpp"
+
+namespace Dynamite
 {
 
+	using namespace Language;
+
 	/////////////////////////////////////////////////////////////////
-	// Helper functions 
+	// ParseOperations
 	/////////////////////////////////////////////////////////////////
 
 }

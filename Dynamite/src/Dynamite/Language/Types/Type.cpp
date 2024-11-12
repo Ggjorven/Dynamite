@@ -308,6 +308,11 @@ namespace Dynamite::Language
 			BackQualifiers.back().SetArraySize(arraySize.Value());
 	}
 
+	void Type::PushBack(TypeQualifier qualifier, size_t arraySize)
+	{
+		BackQualifiers.emplace_back(qualifier, arraySize);
+	}
+
 	void Type::PopBack()
 	{
 		if (BackQualifiers.empty())

@@ -399,13 +399,13 @@ namespace Dynamite::Language
 		else
 			str += TypeSpecifierToString(type.Information.Specifier);
 
-		for (const auto& [qualifiers, arraySize] : type.BackQualifiers)
+		for (const auto& qualifierGroup : type.BackQualifiers)
 		{
-			for (const auto& qualifier : type.FrontQualifiers.SplitQualifiers())
+			for (const auto& qualifier : qualifierGroup.SplitQualifiers())
 			{
 				if (requiresSpace(qualifier))
 					str += ' ';
-				str += TypeQualifierToString(qualifier, arraySize);
+				str += TypeQualifierToString(qualifier, qualifierGroup.GetArraySize());
 
 			}
 		}

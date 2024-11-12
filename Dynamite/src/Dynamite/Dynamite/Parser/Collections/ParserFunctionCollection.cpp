@@ -16,6 +16,17 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Structs
 	/////////////////////////////////////////////////////////////////
+	std::vector<Language::Type> ParserFunction::Overload::GetArgumentTypes()
+	{
+		std::vector<Type> result;
+		result.reserve(Parameters.size());
+
+		for (const auto& [type, required] : Parameters)
+			result.push_back(type);
+
+		return result;
+	}
+
 	bool ParserFunction::Overload::operator == (const ParserFunction::Overload& other)
 	{
 		if (this->ReturnType != other.ReturnType)
@@ -38,86 +49,34 @@ namespace Dynamite
 		return !(*this == other);
 	}
 
-	/////////////////////////////////////////////////////////////////
-	// FunctionSystem
-	/////////////////////////////////////////////////////////////////
-	void ParserFunctionCollection::Reset()
+	std::vector<Language::Type> ParserFunction::GetReturnTypes() const
 	{
-		m_Functions.clear();
-	}
-
-	void ParserFunctionCollection::Add(const std::string& name, Type returnType, const std::vector<std::pair<Type, bool>>& parameters, bool hasCStyleVardiadicArguments)
-	{
-		auto it = std::ranges::find_if(m_Functions, [&](const ParserFunction& func) { return func.Name == name; });
-		if (it == m_Functions.cend())
-		{
-			m_Functions.emplace_back(name, std::vector({ ParserFunction::Overload(returnType, parameters, hasCStyleVardiadicArguments) }));
-		}
-		else
-		{
-			ParserFunction& func = *it;
-			func.Overloads.emplace_back(returnType, parameters, hasCStyleVardiadicArguments);
-		}
-	}
-
-	std::vector<Type> ParserFunctionCollection::GetReturnTypes(const std::string& functionName)
-	{
-		const auto it = std::ranges::find_if(std::as_const(m_Functions), [&](const ParserFunction& func) { return func.Name == functionName; });
-		if (it == m_Functions.cend()) return { };
-		const ParserFunction& func = *it;
-
 		std::vector<Type> result;
-		result.reserve(func.Overloads.size());
+		result.reserve(Overloads.size());
 
-		for (const auto& overload : func.Overloads)
+		for (const auto& overload : Overloads)
 			result.push_back(overload.ReturnType);
 
 		return result;
 	}
 
-	std::vector<Type> ParserFunctionCollection::GetArgumentTypes(const std::string& functionName, size_t index)
+	std::vector<size_t> ParserFunction::GetArgCounts() const
 	{
-		const auto it = std::ranges::find_if(std::as_const(m_Functions), [&](const ParserFunction& func) { return func.Name == functionName; });
-		if (it == m_Functions.cend()) return { };
-		const ParserFunction& func = *it;
-		
-		std::vector<Type> result;
-		result.reserve(func.Overloads.size());
-		
-		for (const auto& overload : func.Overloads)
-		{
-			if (index < overload.Parameters.size())
-				result.push_back(overload.Parameters[index].first);
-		}
-
-		return result;
-	}
-
-	std::vector<size_t> ParserFunctionCollection::GetArgCounts(const std::string & functionName)
-	{
-		const auto it = std::ranges::find_if(std::as_const(m_Functions), [&](const ParserFunction& func) { return func.Name == functionName; });
-		if (it == m_Functions.cend()) return { };
-		const ParserFunction& func = *it;
-
 		std::vector<size_t> result;
-		result.reserve(func.Overloads.size());
+		result.reserve(Overloads.size());
 
-		for (const auto& overload : func.Overloads)
+		for (const auto& overload : Overloads)
 			result.push_back(overload.Parameters.size());
 
 		return result;
 	}
 
-	std::vector<size_t> ParserFunctionCollection::GetRequiredArgCounts(const std::string& functionName)
+	std::vector<size_t> ParserFunction::GetRequiredArgCounts() const
 	{
-		const auto it = std::ranges::find_if(std::as_const(m_Functions), [&](const ParserFunction& func) { return func.Name == functionName; });
-		if (it == m_Functions.cend()) return { };
-		const ParserFunction& func = *it;
-
 		std::vector<size_t> result;
-		result.reserve(func.Overloads.size());
+		result.reserve(Overloads.size());
 
-		for (const auto& overload : func.Overloads)
+		for (const auto& overload : Overloads)
 		{
 			bool broke = false;
 
@@ -147,17 +106,71 @@ namespace Dynamite
 		return result;
 	}
 
-	bool ParserFunctionCollection::Exists(const std::string& name)
+	std::string ParserFunction::GetFunctionName(size_t overloadIndex) const
 	{
-		const auto it = std::ranges::find_if(std::as_const(m_Functions), [&](const ParserFunction& func) { return func.Name == name; });
+		if (overloadIndex >= Overloads.size())
+		{
+			DY_LOG_ERROR("[Internal Compiler Error] - Accessing a non existing overloads name.");
+			return {};
+		}
 
-		return (it != m_Functions.cend());
+		return ParserFunction::ConstructName(Namespaces, ClassName, Name, overloadIndex);
 	}
 
-	bool ParserFunctionCollection::Exists(const std::string& name, const Type& returnType, const std::vector<Type>& parameters, bool hasVardiadicArguments)
+	std::string ParserFunction::ConstructName(const Language::Namespace& namespaces, const std::string& className, const std::string& name, size_t overloadIndex)
 	{
-		const auto it = std::ranges::find_if(std::as_const(m_Functions), [&](const ParserFunction& func) { return func.Name == name; });
-		if (it == m_Functions.cend()) return false;
+		std::string funcName = "Dy_";
+
+		for (const std::string& nameSpace : namespaces.GetAllLevels())
+			funcName += nameSpace + '_';
+
+		if (!className.empty())
+			funcName += className + '_';
+
+		funcName += name + '_';
+		funcName += std::to_string(overloadIndex);
+
+		return funcName;
+	}
+
+	/////////////////////////////////////////////////////////////////
+	// FunctionSystem
+	/////////////////////////////////////////////////////////////////
+	void ParserFunctionCollection::Reset()
+	{
+		s_Functions.clear();
+	}
+
+	void ParserFunctionCollection::Add(const ParserFunction& func)
+	{
+		s_Functions.push_back(func);
+	}
+
+	void ParserFunctionCollection::Add(const Language::Namespace& namespaces, const std::string& className, const std::string& name, const ParserFunction::Overload& overload)
+	{
+		auto it = std::ranges::find_if(s_Functions, [&](const ParserFunction& func) 
+		{ 
+			return func.Namespaces == namespaces && func.ClassName == className && func.Name == name;
+		});
+
+		if (it == s_Functions.end())
+		{
+			s_Functions.emplace_back(namespaces, className, name, std::vector({ overload }));
+		}
+		else
+		{
+			ParserFunction& func = *it;
+			func.Overloads.push_back(overload);
+		}
+	}
+
+	bool ParserFunctionCollection::Exists(const Language::Namespace& namespaces, const std::string& className, const std::string& name, const Language::Type& returnType, const std::vector<Language::Type>& parameters, bool hasCStyleVardiadicArguments)
+	{
+		const auto it = std::ranges::find_if(std::as_const(s_Functions), [&](const ParserFunction& func)
+		{
+			return func.Namespaces == namespaces && func.ClassName == className && func.Name == name;
+		});
+		if (it == s_Functions.cend()) return false;
 		const ParserFunction& func = *it;
 
 		std::vector<size_t> result;
@@ -165,7 +178,7 @@ namespace Dynamite
 
 		for (const auto& overload : func.Overloads)
 		{
-			if ((returnType == overload.ReturnType) && (parameters.size() == overload.Parameters.size()) && (hasVardiadicArguments == overload.CStyleVardiadicArguments))
+			if ((returnType == overload.ReturnType) && (parameters.size() == overload.Parameters.size()) && (hasCStyleVardiadicArguments == overload.CStyleVardiadicArguments))
 			{
 				bool failed = false;
 				for (size_t i = 0; i < parameters.size(); i++)
@@ -185,20 +198,15 @@ namespace Dynamite
 		return false;
 	}
 
-	ParserFunction* ParserFunctionCollection::GetFunction(const std::string& name)
+	Optional<ParserFunction> ParserFunctionCollection::GetFunction(const Language::Namespace& namespaces, const std::string& className, const std::string& name)
 	{
-		auto it = std::ranges::find_if(m_Functions, [&](const ParserFunction& func) { return func.Name == name; });
-		if (it == m_Functions.cend()) return nullptr;
+		auto it = std::ranges::find_if(s_Functions, [&](const ParserFunction& func)
+		{
+			return func.Namespaces == namespaces && func.ClassName == className && func.Name == name;
+		});
+		if (it == s_Functions.cend()) return {};
 
-		return &(*it);
-	}
-
-	ParserFunction::Overload* ParserFunctionCollection::GetOverload(const std::string& name, size_t overloadIndex)
-	{
-		auto it = std::ranges::find_if(m_Functions, [&](const ParserFunction& func) { return func.Name == name; });
-		if (it == m_Functions.cend()) return nullptr;
-
-		return &((*it).Overloads[overloadIndex]);
+		return (*it);
 	}
 
 }

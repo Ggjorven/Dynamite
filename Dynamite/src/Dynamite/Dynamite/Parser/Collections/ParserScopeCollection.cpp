@@ -18,46 +18,61 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	void ParserScopeCollection::Reset()
 	{
-		m_Variables.clear();
-		m_Scopes = { 0 };
+		s_Variables.clear();
+		s_Scopes = { 0 };
 	}
 
 	void ParserScopeCollection::BeginScope()
 	{
-		m_Scopes.push_back(m_Variables.size());
+		s_Scopes.push_back(s_Variables.size());
 	}
 
 	void ParserScopeCollection::EndScope()
 	{
-		PopVars(m_Variables.size() - m_Scopes.back());
-		m_Scopes.pop_back();
+		// Pop variables
+		{
+			size_t popCount = s_Variables.size() - s_Scopes.back();
+			if (popCount <= s_Variables.size())
+				s_Variables.resize(s_Variables.size() - popCount);
+			else
+				s_Variables.clear();
+		}
+
+		s_Scopes.pop_back();
 	}
 
-	void ParserScopeCollection::PushVar(const std::string& name, const Type& type)
+	void ParserScopeCollection::PushVar(const ParserVariable& variable)
 	{
-		m_Variables.emplace_back(name, type);
+		s_Variables.push_back(variable);
 	}
 
-	bool ParserScopeCollection::Exists(const std::string& name)
+	bool ParserScopeCollection::Exists(const Language::Namespace& namespaces, const std::string& className, const std::string& name)
 	{
-		const auto it = std::ranges::find_if(std::as_const(m_Variables), [&](const ParserVariable& var) { return var.Name == name; });
-		return (it != m_Variables.cend());
+		const auto it = std::ranges::find_if(std::as_const(s_Variables), [&](const ParserVariable& var) 
+		{ 
+			return var.Namespaces == namespaces && var.ClassName == className && var.Name == name; 
+		});
+
+		return (it != s_Variables.cend());
 	}
 
-	Optional<Type> ParserScopeCollection::GetVariableType(const std::string& name)
+	Optional<ParserVariable> ParserScopeCollection::GetVariable(const Language::Namespace& namespaces, const std::string& className, const std::string& name)
 	{
-		const auto it = std::ranges::find_if(std::as_const(m_Variables), [&](const ParserVariable& var) { return var.Name == name; });
-		if (it == m_Variables.cend()) return {};
+		const auto it = std::ranges::find_if(std::as_const(s_Variables), [&](const ParserVariable& var)
+		{
+			return var.Namespaces == namespaces && var.ClassName == className && var.Name == name;
+		});
+		if (it == s_Variables.cend()) return {};
 
-		return (*it).VariableType;
+		return (*it);
 	}
 
 	void ParserScopeCollection::PopVars(size_t count)
 	{
-		if (count <= m_Variables.size())
-			m_Variables.resize(m_Variables.size() - count);
+		if (count <= s_Variables.size())
+			s_Variables.resize(s_Variables.size() - count);
 		else
-			m_Variables.clear();
+			s_Variables.clear();
 	}
 
 }

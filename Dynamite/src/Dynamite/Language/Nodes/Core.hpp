@@ -10,12 +10,24 @@
 namespace Dynamite::Language::Node
 {
 
-	// Base node.
-	struct Base {};
+	/////////////////////////////////////////////////////////////////
+	// Utilities
+	/////////////////////////////////////////////////////////////////
+	template<typename ...Types>
+	using Variant = std::variant<Types...>;
+
+	// Internal Ref type.
+	template<typename T>
+	using Ref = T*;
+
+	constexpr const Ref<void> NullRef = nullptr;
 
 	/////////////////////////////////////////////////////////////////
 	// Forward declaration of all node types
 	/////////////////////////////////////////////////////////////////
+	// Base node.
+	struct Base {};
+
 	struct Expression;
 									
 	struct TermExpr;
@@ -62,6 +74,15 @@ namespace Dynamite::Language::Node
 	struct FunctionDefinition;
 
 	struct Function;
+
+	struct NamespaceDefinition;
+	struct ClassDeclaration;
+	struct ClassDefinition;
+	struct StructDeclaration;
+	struct StructDefinition;
+	struct EnumDefinition;
+
+	using Definition = Variant<Ref<VariableStatement>, Ref<FunctionDeclaration>, Ref<FunctionDefinition>, Ref<NamespaceDefinition>, Ref<ClassDeclaration>, Ref<ClassDefinition>, Ref<StructDeclaration>, Ref<StructDefinition>, Ref<EnumDefinition>>;
 
 	struct Program;
 
@@ -116,20 +137,15 @@ namespace Dynamite::Language::Node
 		FunctionDeclaration,
 		FunctionDefinition,
 
+		NamespaceDefinition,
+		ClassDeclaration,
+		ClassDefinition,
+		StructDeclaration,
+		StructDefinition,
+		EnumDefinition,
+
 		Function,
 	};
-
-	/////////////////////////////////////////////////////////////////
-	// Utilities
-	/////////////////////////////////////////////////////////////////
-	template<typename ...Types>
-	using Variant = std::variant<Types...>;
-
-	// Internal Ref type.
-	template<typename T>
-	using Ref = T*;
-
-	constexpr const Ref<void> NullRef = nullptr;
 
 	/////////////////////////////////////////////////////////////////
 	// Memory

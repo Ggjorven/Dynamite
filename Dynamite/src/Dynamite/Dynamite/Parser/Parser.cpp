@@ -11,10 +11,15 @@
 
 #include "Dynamite/Language/Types/TypeCollection.hpp"
 
+#include "Dynamite/Dynamite/Parser/Collections/ParserState.hpp"
+
 #include "Dynamite/Dynamite/Parser/Collections/ParserScopeCollection.hpp"
 #include "Dynamite/Dynamite/Parser/Collections/ParserFunctionCollection.hpp"
 
 #include <Pulse/Core/Defines.hpp>
+
+#undef FMT_VERSION
+#include <Pulse/Enum/Enum.hpp>
 
 namespace Dynamite
 {
@@ -25,6 +30,7 @@ namespace Dynamite
 	}
 
 	using namespace Language;
+	using namespace Pulse::Enum::Bitwise;
 
 	/////////////////////////////////////////////////////////////////
 	// Main functions
@@ -46,14 +52,23 @@ namespace Dynamite
 
 		m_Index = 0;
 
-		m_Scopes.Reset();
-		m_Functions.Reset();
+		ParserScopeCollection::Reset();
+		ParserFunctionCollection::Reset();
 
 		// Parse statements
 		while (Peek(0).HasValue())
 		{
 			// TODO: ...
-			break;
+
+			size_t offset = 0;
+			if (PeekIsType(offset))
+			{
+				Optional<Type> type = GetType();
+				if (type.HasValue())
+					DY_LOG_TRACE("{0}", TypeCollection::ToString(type.Value()));
+			}
+			else
+				Consume();
 		}
 
 		DY_LOG_ERROR("Parser is currently disabled.");
@@ -136,9 +151,6 @@ namespace Dynamite
 	{
 		Type result = {};
 		
-		// TODO: ...
-		/*
-
 		// Front Qualifiers
 		while (Utils::OptMemberIs(Peek(0), &Token::Type, GetAllTokenTypeQualifiers()))
 			result.FrontQualifiers.Add(TokenTypeToTypeQualifier(Consume().Type));
@@ -159,17 +171,19 @@ namespace Dynamite
 		}
 
 		// Back Qualifiers
+		TypeQualifier qualifierBuffer = TypeQualifier::None;
 		while (Utils::OptMemberIs(Peek(0), &Token::Type, GetAllTokenTypeQualifiers()))
 		{
 			if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenSquareBracket) &&
 				Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::IntegerLiteral) &&
 				Utils::OptMemberIs(Peek(2), &Token::Type, TokenType::CloseSquareBracket))
 			{
-				Consume(); // '[' token
-				auto size = Consume(); // IntegerLiteral token
-				Consume(); // ']' token
+				Consume();				// '[' token
+				auto size = Consume();	// IntegerLiteral token
+				Consume();				// ']' token
 				
-				result.BackQualifiers.emplace_back(TypeQualifier::Array, size.Value);
+				result.PushBack(qualifierBuffer | TypeQualifier::Array, std::stoull(size.Value));
+				qualifierBuffer = TypeQualifier::None;
 			}
 			else if (Utils::OptMemberIs(Peek(0), &Token::Type, TokenType::OpenSquareBracket) &&
 				Utils::OptMemberIs(Peek(1), &Token::Type, TokenType::CloseSquareBracket))
@@ -177,12 +191,20 @@ namespace Dynamite
 				Consume();
 				Consume();
 
-				result.BackQualifiers.emplace_back(TypeQualifier::Array);
+				result.PushBack(qualifierBuffer | TypeQualifier::Array, 0);
+				qualifierBuffer = TypeQualifier::None;
 			}
 			else
-				result.BackQualifiers.emplace_back(TokenTypeToTypeQualifier(Consume().Type));
+			{
+				if (Peek(0).Value().Type == TokenType::Mut || Peek(0).Value().Type == TokenType::Volatile)
+					qualifierBuffer |= TokenTypeToTypeQualifier(Consume().Type);
+				else
+				{
+					result.PushBack(qualifierBuffer | TokenTypeToTypeQualifier(Consume().Type), 0);
+					qualifierBuffer = TypeQualifier::None;
+				}
+			}
 		}
-		*/
 
 		return result;
 	}

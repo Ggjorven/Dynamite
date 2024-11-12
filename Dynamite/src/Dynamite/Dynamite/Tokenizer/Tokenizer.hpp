@@ -24,8 +24,6 @@ namespace Dynamite
 		// Public methods
 		std::vector<Token> Tokenize();
 
-		static Tokenizer& Get();
-
 	private:
 		// Peeking & consuming
 		Optional<char> Peek(int64_t offset = 0) const;
