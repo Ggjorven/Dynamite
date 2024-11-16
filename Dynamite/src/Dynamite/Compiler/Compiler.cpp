@@ -97,7 +97,7 @@ namespace Dynamite
 
 				for (const auto& definition : m_Program.Definitions)
 				{
-					DY_LOG_TRACE("{0}", DefineToString(definition));
+					DY_LOG_TRACE("{0}", DefinitionToString(definition));
 					DY_LOG_TRACE("");
 				}
 

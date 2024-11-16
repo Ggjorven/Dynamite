@@ -94,11 +94,16 @@ namespace Dynamite
 		case TokenType::Enum:					return "enum";
 		case TokenType::Type:					return "type";
 
+		case TokenType::Let:					return "let";
+		case TokenType::Fn:						return "fn";
+
 		case TokenType::If:						return "if";
 		case TokenType::Else:					return "else";
 
 		case TokenType::While:					return "while";
 		case TokenType::For:					return "for";
+
+		case TokenType::In:						return "in";
 
 		case TokenType::Return:					return "return";
 
@@ -167,7 +172,7 @@ namespace Dynamite
 	{
 		if (!Utils::IsEqual(tokenType, GetAllTokenTypeLiterals()))
 		{
-			DY_LOG_ERROR("Tried to get LiteralType from literal, but TokenType::{0} is not a literal.", Pulse::Enum::Name(tokenType));
+			DY_LOG_ERROR("Tried to get LiteralType from token, but TokenType::{0} is not a literal.", Pulse::Enum::Name(tokenType));
 			return {};
 		}
 
@@ -194,7 +199,7 @@ namespace Dynamite
 	{
 		if (!Utils::IsEqual(tokenType, GetAllTokenTypeOperators()))
 		{
-			DY_LOG_ERROR("Tried to get OperationType from operation, but TokenType::{0} is not a operation.", Pulse::Enum::Name(tokenType));
+			DY_LOG_ERROR("Tried to get OperationType from token, but TokenType::{0} is not a operation.", Pulse::Enum::Name(tokenType));
 			return {};
 		}
 
@@ -215,6 +220,27 @@ namespace Dynamite
 
 		DY_LOG_ERROR("[Internal Compiler Error] TokenType::{0} passed == operation check, but did not return a valid OperationType.", Pulse::Enum::Name(tokenType));
 		return Language::OperationType::None;
+	}
+
+	Language::AccessSpecifier TokenTypeToAccessSpecifier(TokenType tokenType)
+	{
+		if (!Utils::IsEqual(tokenType, GetAllTokenTypeAccessSpecifiers()))
+		{
+			DY_LOG_ERROR("Tried to get AccessSpecifier from token, but TokenType::{0} is not an AccessSpecifier.", Pulse::Enum::Name(tokenType));
+			return {};
+		}
+
+		switch (tokenType)
+		{
+		case TokenType::Pub:			return Language::AccessSpecifier::Public;
+		case TokenType::Priv:			return Language::AccessSpecifier::Private;
+
+		default:
+			break;
+		}
+
+		DY_LOG_ERROR("[Internal Compiler Error] TokenType::{0} passed == AccessSpecifier check, but did not return a valid AccessSpecifier.", Pulse::Enum::Name(tokenType));
+		return Language::AccessSpecifier::None;
 	}
 
 	Language::TypeQualifier TokenTypeToTypeQualifier(TokenType tokenType)

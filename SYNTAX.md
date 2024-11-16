@@ -6,14 +6,14 @@ Below the desired syntax is portrayed in the form of an example.
 enum MyEnum(u8)
 {
     None = 0,
-    First,
-    Second
+    First, // 1
+    Second // 2
 };
 
 // Structs / Classes
 struct MyStruct
 {
-// Constructor & Destructor
+    // Constructor & Destructor
     pub MyStruct() 
     {
         std::print("Constructed MyStruct.");
@@ -23,21 +23,16 @@ struct MyStruct
         std::print("Destructed MyStruct.");
     }
 
-// Methods
-    pub i32 Member(i32 x, i32 y)
+    // Methods
+    pub fn Member(x: i32, y: i32) -> i32
     {
         return ((x * this.MultiplicationFactor) + (y * this.MultiplicationFactor));
     }
- 
-    pub static void Static()
-    {
-        std::print("Static method called.\n");
-    }
+    
+    // No operator overloading (yet)
 
-// No operator overloading (yet)
-
-// Variables
-    pub i32 MultiplicationFactor = 10;
+    // Variables
+    pub let MultiplicationFactor = 10i32; // Type deducing
 };
  
 // Typedefs
@@ -48,15 +43,15 @@ str global = "My Global String";
 bool global2 = true;
  
 // Global functions
-void Func()
+fn Func() -> void
 {
-  std::print("Global function called.\n");
+    std::print("Global function called.\n");
 }
  
 // Main method
-i32 main(std::vec<str> args)
+fn main(args: std::vec<str>) -> void
 {
-  for (str& arg in args)
+  for (let arg: str& in args)
   {
     std::printf("Argument passed in {}", arg);
   }

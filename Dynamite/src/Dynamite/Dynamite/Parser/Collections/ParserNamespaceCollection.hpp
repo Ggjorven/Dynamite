@@ -16,37 +16,26 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	// Structs
 	/////////////////////////////////////////////////////////////////
-	struct ParserVariable
+	struct ParserNamespace
 	{
 	public:
 		Language::Namespace Namespaces;
-
-		std::string Name;
-		Language::Type VariableType;
 	};
 
 	/////////////////////////////////////////////////////////////////
-	// ParserScopeCollection
+	// ParserNamespaceCollection
 	/////////////////////////////////////////////////////////////////
-	class ParserScopeCollection
+	class ParserNamespaceCollection
 	{
 	public:
 		static void Reset();
 
-		static void BeginScope();
-		static void EndScope();
+		static void PushNamespace(const ParserNamespace& nameSpace);
 
-		static void PushVar(const ParserVariable& variable);
+		static bool Exists(const ParserNamespace& nameSpace);
 
-		static bool Exists(const Language::Namespace& namespaces, const std::string& name);
-		static Optional<ParserVariable> GetVariable(const Language::Namespace& namespaces, const std::string& name);
-	
 	private:
-		static void PopVars(size_t count);
-	
-	private:
-		inline static std::vector<ParserVariable> s_Variables = {};
-		inline static std::vector<size_t> s_Scopes = { 0 };
+		inline static std::vector<ParserNamespace> s_Namespaces = {};
 	};
 
 }

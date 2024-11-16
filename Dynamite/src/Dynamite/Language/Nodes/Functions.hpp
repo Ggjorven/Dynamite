@@ -5,6 +5,7 @@
 #include "Dynamite/Language/Nodes/Core.hpp"
 
 #include "Dynamite/Language/Types/Type.hpp"
+#include "Dynamite/Language/Utils/Namespace.hpp"
 
 #include <string>
 
@@ -83,9 +84,11 @@ namespace Dynamite::Language::Node
     private:
         friend class Pulse::Memory::Control;
     private:
-        FunctionCall(const Type& returnType = {}, const std::string& function = {}, const std::vector<Ref<Expression>>& arguments = { }, size_t overloadIndex = 0);
+        FunctionCall(const Language::Namespace& nameSpace = {}, const Type& returnType = {}, const std::string& function = {}, const std::vector<Ref<Expression>>& arguments = {}, size_t overloadIndex = 0);
 
     public:
+        Language::Namespace NamespaceLevel;
+
         Type ReturnType;
         std::string Function;
 

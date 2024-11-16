@@ -46,21 +46,21 @@ namespace Dynamite
 		s_Variables.push_back(variable);
 	}
 
-	bool ParserScopeCollection::Exists(const Language::Namespace& namespaces, const std::string& className, const std::string& name)
+	bool ParserScopeCollection::Exists(const Language::Namespace& namespaces, const std::string& name)
 	{
 		const auto it = std::ranges::find_if(std::as_const(s_Variables), [&](const ParserVariable& var) 
 		{ 
-			return var.Namespaces == namespaces && var.ClassName == className && var.Name == name; 
+			return var.Namespaces == namespaces && var.Name == name; 
 		});
 
 		return (it != s_Variables.cend());
 	}
 
-	Optional<ParserVariable> ParserScopeCollection::GetVariable(const Language::Namespace& namespaces, const std::string& className, const std::string& name)
+	Optional<ParserVariable> ParserScopeCollection::GetVariable(const Language::Namespace& namespaces, const std::string& name)
 	{
 		const auto it = std::ranges::find_if(std::as_const(s_Variables), [&](const ParserVariable& var)
 		{
-			return var.Namespaces == namespaces && var.ClassName == className && var.Name == name;
+			return var.Namespaces == namespaces && var.Name == name;
 		});
 		if (it == s_Variables.cend()) return {};
 

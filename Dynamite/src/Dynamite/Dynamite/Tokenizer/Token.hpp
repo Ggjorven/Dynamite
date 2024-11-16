@@ -4,6 +4,7 @@
 
 #include "Dynamite/Language/LiteralType.hpp"
 #include "Dynamite/Language/OperationType.hpp"
+#include "Dynamite/Language/AccessSpecifier.hpp"
 #include "Dynamite/Language/Types/Type.hpp"
 
 #include <cstdint>
@@ -87,11 +88,16 @@ namespace Dynamite
 		Enum,
 		Type,
 
+		Fn,
+		Let,
+
 		If,
 		Else,
 
 		While,
 		For,
+
+		In,
 
 		Return,
 
@@ -196,6 +202,14 @@ namespace Dynamite
 		};
 	}
 
+	inline constexpr const std::vector<TokenType> GetAllTokenTypeAccessSpecifiers()
+	{
+		return {
+			TokenType::Pub,
+			TokenType::Priv,
+		};
+	}
+
 	inline constexpr const std::vector<TokenType> GetAllTokenTypeQualifiers()
 	{
 		return {
@@ -242,6 +256,7 @@ namespace Dynamite
 	/////////////////////////////////////////////////////////////////
 	Language::LiteralType TokenTypeToLiteralType(TokenType tokenType);
 	Language::OperationType TokenTypeToOperationType(TokenType tokenType);
+	Language::AccessSpecifier TokenTypeToAccessSpecifier(TokenType tokenType);
 
 	Language::TypeQualifier TokenTypeToTypeQualifier(TokenType tokenType);
 	Language::TypeSpecifier TokenTypeToTypeSpecifier(TokenType tokenType);

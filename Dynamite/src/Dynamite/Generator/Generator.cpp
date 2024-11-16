@@ -33,7 +33,7 @@ namespace Dynamite
 
 	void Generator::Generate(const std::filesystem::path& outputPath)
 	{
-        DY_LOG_ERROR("Generated is currently disabled.");
+        DY_LOG_ERROR("Generator is currently disabled.");
 	}
 
 }

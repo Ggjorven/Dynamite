@@ -1,9 +1,9 @@
-i32 main(i32 argc, char** argv)
+fn main(argc: i32, argv: char**) -> i32
 {
-	mut i32 x = 10;
-	i32 mut& y = &x;
+	let x: mut i32 = 10;
+	let y: mut i32& = &x;
 
-	mut i32 mut&& z = &y
+	y = 20;
 
 	return 0;
 }

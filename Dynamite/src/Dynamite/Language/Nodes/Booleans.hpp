@@ -75,6 +75,25 @@ namespace Dynamite::Language::Node
         inline static NodeType GetStaticType() { return NodeType::IsEqualBoolean; }
     };
 
+    struct NotBoolean : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        NotBoolean(Ref<Expression> expr = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> Expr;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::NotBoolean; }
+    };
+
     struct MoreThanBoolean : public Base
     {
     private:
@@ -115,13 +134,56 @@ namespace Dynamite::Language::Node
         inline static NodeType GetStaticType() { return NodeType::LessThanBoolean; }
     };
 
+    struct MoreThanOrEqualsBoolean : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        MoreThanOrEqualsBoolean(Ref<Expression> lhs = (Ref<Expression>)NullRef, Ref<Expression> rhs = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> LHS;
+        Ref<Expression> RHS;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::MoreThanOrEqualsBoolean; }
+    };
+
+    struct LessThanOrEqualsBoolean : public Base
+    {
+    private:
+        friend class Pulse::Memory::Control;
+    private:
+        LessThanOrEqualsBoolean(Ref<Expression> lhs = (Ref<Expression>)NullRef, Ref<Expression> rhs = (Ref<Expression>)NullRef);
+
+    public:
+        Ref<Expression> LHS;
+        Ref<Expression> RHS;
+
+        Type GetType() const;
+        NodeType GetUnderlyingType() const;
+
+        Ref<Base> GetUnderlying();
+
+    public:
+        inline static NodeType GetStaticType() { return NodeType::LessThanOrEqualsBoolean; }
+    };
+
     /////////////////////////////////////////////////////////////////
     // Helper functions
     /////////////////////////////////////////////////////////////////
     std::string AndAndBooleanToString(const Ref<AndAndBoolean> obj, size_t indentLevel = 0);
     std::string OrOrBooleanToString(const Ref<OrOrBoolean> obj, size_t indentLevel = 0);
     std::string IsEqualBooleanToString(const Ref<IsEqualBoolean> obj, size_t indentLevel = 0);
+    std::string NotBooleanToString(const Ref<NotBoolean> obj, size_t indentLevel = 0);
     std::string MoreThanBooleanToString(const Ref<MoreThanBoolean> obj, size_t indentLevel = 0);
     std::string LessThanBooleanToString(const Ref<LessThanBoolean> obj, size_t indentLevel = 0);
+    std::string MoreThanOrEqualsBooleanToString(const Ref<MoreThanOrEqualsBoolean> obj, size_t indentLevel = 0);
+    std::string LessThanOrEqualsBooleanToString(const Ref<LessThanOrEqualsBoolean> obj, size_t indentLevel = 0);
 
 }

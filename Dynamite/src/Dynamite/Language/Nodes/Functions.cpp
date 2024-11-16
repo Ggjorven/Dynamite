@@ -30,8 +30,8 @@ namespace Dynamite::Language::Node
 	{
 	}
 
-	FunctionCall::FunctionCall(const Type& returnType, const std::string& function, const std::vector<Ref<Expression>>& arguments, size_t overloadIndex)
-		: ReturnType(returnType), Function(function), Arguments(arguments), OverloadIndex(overloadIndex)
+	FunctionCall::FunctionCall(const Language::Namespace& nameSpace, const Type& returnType, const std::string& function, const std::vector<Ref<Expression>>& arguments, size_t overloadIndex)
+		: NamespaceLevel(nameSpace), ReturnType(returnType), Function(function), Arguments(arguments), OverloadIndex(overloadIndex)
 	{
 	}
 

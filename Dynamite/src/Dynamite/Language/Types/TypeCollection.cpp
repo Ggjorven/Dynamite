@@ -173,7 +173,7 @@ namespace Dynamite::Language
 		{
 		case LiteralType::BoolLiteral:
 		{
-			return Type({}, TypeSpecifier::Bool);
+			return Type({}, {}, TypeSpecifier::Bool);
 		}
 		case LiteralType::IntegerLiteral:
 		{
@@ -184,13 +184,13 @@ namespace Dynamite::Language
 				int64_t intVal = std::stoll(value);
 
 				if (intVal >= Pulse::Numeric::Min<int8_t>() && intVal <= Pulse::Numeric::Max<int8_t>())
-					return Type({}, TypeSpecifier::Int8);
+					return Type({}, {}, TypeSpecifier::Int8);
 				else if (intVal >= Pulse::Numeric::Min<int16_t>() && intVal <= Pulse::Numeric::Max<int16_t>())
-					return Type({}, TypeSpecifier::Int16);
+					return Type({}, {}, TypeSpecifier::Int16);
 				else if (intVal >= Pulse::Numeric::Min<int32_t>() && intVal <= Pulse::Numeric::Max<int32_t>())
-					return Type({}, TypeSpecifier::Int32);
+					return Type({}, {}, TypeSpecifier::Int32);
 				else if (intVal >= Pulse::Numeric::Min<int64_t>() && intVal <= Pulse::Numeric::Max<int64_t>())
-					return Type({}, TypeSpecifier::Int64);
+					return Type({}, {}, TypeSpecifier::Int64);
 				else
 					DY_LOG_ERROR("Integer {0} exceeds max integers' type (Int64) size.", value);
 			}
@@ -199,13 +199,13 @@ namespace Dynamite::Language
 				uint64_t uintVal = std::stoull(value);
 
 				if (uintVal <= Pulse::Numeric::Max<uint8_t>())
-					return Type({}, TypeSpecifier::UInt8);
+					return Type({}, {}, TypeSpecifier::UInt8);
 				else if (uintVal <= Pulse::Numeric::Max<uint16_t>())
-					return Type({}, TypeSpecifier::UInt16);
+					return Type({}, {}, TypeSpecifier::UInt16);
 				else if (uintVal <= Pulse::Numeric::Max<uint32_t>())
-					return Type({}, TypeSpecifier::UInt32);
+					return Type({}, {}, TypeSpecifier::UInt32);
 				else if (uintVal <= Pulse::Numeric::Max<uint64_t>())
-					return Type({}, TypeSpecifier::UInt64);
+					return Type({}, {}, TypeSpecifier::UInt64);
 				else
 					DY_LOG_ERROR("Integer {0} exceeds max integers' type (UInt64) size.", value);
 			}
@@ -216,9 +216,9 @@ namespace Dynamite::Language
 			double doubleVal = std::stod(value);
 
 			if (doubleVal >= Pulse::Numeric::Min<float>() && doubleVal <= Pulse::Numeric::Max<float>())
-				return Type({}, TypeSpecifier::Float32);
+				return Type({}, {}, TypeSpecifier::Float32);
 			if (doubleVal >= Pulse::Numeric::Min<double>() && doubleVal <= Pulse::Numeric::Max<double>())
-				return Type({}, TypeSpecifier::Float64);
+				return Type({}, {}, TypeSpecifier::Float64);
 			else
 				DY_LOG_ERROR("Float {0} exceeds max floats' type (Float64) size.", value);
 
@@ -226,11 +226,11 @@ namespace Dynamite::Language
 		}
 		case LiteralType::CharLiteral:
 		{
-			return Type({}, TypeSpecifier::Char);
+			return Type({}, {}, TypeSpecifier::Char);
 		}
 		case LiteralType::CharArrayLiteral:
 		{
-			return Type({}, TypeSpecifier::Char, { { TypeQualifier::Array, value.size() + 1 }}); // + 1, for the \0 character
+			return Type({}, {}, TypeSpecifier::Char, { { TypeQualifier::Array, value.size() + 1 }}); // + 1, for the \0 character
 		}
 
 		default:

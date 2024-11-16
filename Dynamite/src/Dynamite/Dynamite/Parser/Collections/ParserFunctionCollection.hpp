@@ -39,7 +39,6 @@ namespace Dynamite
 		};
 	public:
 		Language::Namespace Namespaces;
-		std::string ClassName;
 
 		std::string Name;
 		std::vector<Overload> Overloads;
@@ -55,7 +54,7 @@ namespace Dynamite
 		std::string GetFunctionName(size_t overloadIndex = 0) const;
 
 	public:
-		static std::string ConstructName(const Language::Namespace& namespaces, const std::string& className, const std::string& name, size_t overloadIndex = 0);
+		static std::string ConstructName(const Language::Namespace& namespaces, const std::string& name, size_t overloadIndex = 0);
 	};
 
 	/////////////////////////////////////////////////////////////////
@@ -67,11 +66,11 @@ namespace Dynamite
 		static void Reset();
 
 		static void Add(const ParserFunction& func);
-		static void Add(const Language::Namespace& namespaces, const std::string& className, const std::string& name, const ParserFunction::Overload& overload);
+		static void Add(const Language::Namespace& namespaces, const std::string& name, const ParserFunction::Overload& overload);
 
-		static bool Exists(const Language::Namespace& namespaces, const std::string& className, const std::string& name, const Language::Type& returnType, const std::vector<Language::Type>& parameters = { }, bool hasCStyleVardiadicArguments = false);
+		static bool Exists(const Language::Namespace& namespaces, const std::string& name, const Language::Type& returnType, const std::vector<Language::Type>& parameters = { }, bool hasCStyleVardiadicArguments = false);
 
-		Optional<ParserFunction> GetFunction(const Language::Namespace& namespaces, const std::string& className, const std::string& name);
+		Optional<ParserFunction> GetFunction(const Language::Namespace& namespaces, const std::string& name);
 
 	private:
 		inline static std::vector<ParserFunction> s_Functions = {};

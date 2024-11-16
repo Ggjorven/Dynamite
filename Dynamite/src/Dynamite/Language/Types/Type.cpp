@@ -122,14 +122,22 @@ namespace Dynamite::Language
 	{
 	}
 
-	Type::Type(QualifierGroup front, const TypeInfo& info, const std::vector<QualifierGroup>& back)
-		: FrontQualifiers(front), Information(info), BackQualifiers(back)
+	Type::Type(const Language::Namespace& nameSpace, const TypeInfo& info)
+		: NamespaceLevel(nameSpace), Information(info)
+	{
+	}
+
+	Type::Type(const Language::Namespace& nameSpace, QualifierGroup front, const TypeInfo& info, const std::vector<QualifierGroup>& back)
+		: NamespaceLevel(nameSpace), FrontQualifiers(front), Information(info), BackQualifiers(back)
 	{
 	}
 
 	// Operators
 	bool Type::operator == (const Type& other) const
 	{
+		if (this->NamespaceLevel != other.NamespaceLevel)
+			return false;
+
 		// Check if the qualifier counts are the same.
 		if ((this->BackQualifiers.size() != other.BackQualifiers.size()))
 			return false;
@@ -324,7 +332,7 @@ namespace Dynamite::Language
 	// Utils
 	Type Type::RemoveReference() const
 	{
-		Type ret = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
+		Type ret = Type(this->NamespaceLevel, this->FrontQualifiers, this->Information, this->BackQualifiers);
 
 		if (IsReference())
 			ret.BackQualifiers.pop_back();
@@ -334,7 +342,7 @@ namespace Dynamite::Language
 
 	Type Type::RemovePointer() const
 	{
-		Type ret = Type(this->FrontQualifiers, this->Information, this->BackQualifiers);
+		Type ret = Type(this->NamespaceLevel, this->FrontQualifiers, this->Information, this->BackQualifiers);
 
 		if (IsPointer())
 			ret.BackQualifiers.pop_back();
@@ -344,7 +352,7 @@ namespace Dynamite::Language
 
 	Type Type::Clean() const
 	{
-		return Type({}, this->Information, this->BackQualifiers);
+		return Type(this->NamespaceLevel, {}, this->Information, this->BackQualifiers);
 	}
 
 	/////////////////////////////////////////////////////////////////

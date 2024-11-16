@@ -59,16 +59,7 @@ namespace Dynamite
 		while (Peek(0).HasValue())
 		{
 			// TODO: ...
-
-			size_t offset = 0;
-			if (PeekIsType(offset))
-			{
-				Optional<Type> type = GetType();
-				if (type.HasValue())
-					DY_LOG_TRACE("{0}", TypeCollection::ToString(type.Value()));
-			}
-			else
-				Consume();
+			break;
 		}
 
 		DY_LOG_ERROR("Parser is currently disabled.");

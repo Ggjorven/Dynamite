@@ -420,6 +420,10 @@ namespace Dynamite::Language::Node
 			{
 				return NodeType::IsEqualBoolean;
 			}
+			NodeType operator () (const Ref<NotBoolean>) const
+			{
+				return NodeType::NotBoolean;
+			}
 			NodeType operator () (const Ref<MoreThanBoolean>) const
 			{
 				return NodeType::MoreThanBoolean;
@@ -427,6 +431,14 @@ namespace Dynamite::Language::Node
 			NodeType operator () (const Ref<LessThanBoolean>) const
 			{
 				return NodeType::LessThanBoolean;
+			}
+			NodeType operator () (const Ref<MoreThanOrEqualsBoolean>) const
+			{
+				return NodeType::MoreThanOrEqualsBoolean;
+			}
+			NodeType operator () (const Ref<LessThanOrEqualsBoolean>) const
+			{
+				return NodeType::LessThanOrEqualsBoolean;
 			}
 		};
 
@@ -449,11 +461,23 @@ namespace Dynamite::Language::Node
 			{
 				return (Ref<Base>)obj;
 			}
+			Ref<Base> operator () (Ref<NotBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
 			Ref<Base> operator () (Ref<MoreThanBoolean> obj) const
 			{
 				return (Ref<Base>)obj;
 			}
 			Ref<Base> operator () (Ref<LessThanBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<MoreThanOrEqualsBoolean> obj) const
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<LessThanOrEqualsBoolean> obj) const
 			{
 				return (Ref<Base>)obj;
 			}
@@ -889,6 +913,16 @@ namespace Dynamite::Language::Node
 
 				return str;
 			}
+			std::string operator () (const Ref<NotBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string notStr = NotBooleanToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", notStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
 			std::string operator () (const Ref<MoreThanBoolean> obj) const
 			{
 				std::string str = Utils::StrTimes(Node::TabString, Indent);
@@ -904,6 +938,26 @@ namespace Dynamite::Language::Node
 				std::string str = Utils::StrTimes(Node::TabString, Indent);
 
 				std::string lessStr = LessThanBooleanToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", lessStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<MoreThanOrEqualsBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string moreStr = MoreThanOrEqualsBooleanToString(obj, Indent + 1);
+
+				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", moreStr, Utils::StrTimes(Node::TabString, Indent));
+
+				return str;
+			}
+			std::string operator () (const Ref<LessThanOrEqualsBoolean> obj) const
+			{
+				std::string str = Utils::StrTimes(Node::TabString, Indent);
+
+				std::string lessStr = LessThanOrEqualsBooleanToString(obj, Indent + 1);
 
 				str += Pulse::Text::Format("([BooleanExpr] = '\n{0}'\n{1})", lessStr, Utils::StrTimes(Node::TabString, Indent));
 

@@ -106,10 +106,15 @@ namespace Dynamite::Language::Node
         inline static NodeType GetStaticType() { return NodeType::ReturnStatement; }
     };
 
+    // TODO: ...
+    // struct ForLoopStatement;
+    // struct WhileLoopStatement;
+    // struct SwitchStatement;
+
     struct Statement : public Base
     {
     private:
-        using VariantType = Variant<Ref<VariableStatement>, Ref<ScopeStatement>, Ref<IfStatement>, Ref<AssignmentStatement>, Ref<ReturnStatement>, Ref<FunctionCall>>;
+        using VariantType = Variant<Ref<VariableStatement>, Ref<ScopeStatement>, Ref<IfStatement>, Ref<AssignmentStatement>, Ref<ReturnStatement>, Ref<FunctionCall>, Ref<ForLoopStatement>, Ref<WhileLoopStatement>, Ref<SwitchStatement>>;
         friend class Pulse::Memory::Control;
     private:
         Statement(VariantType statement = {});
@@ -133,6 +138,9 @@ namespace Dynamite::Language::Node
     std::string ScopeStatementToString(const Ref<ScopeStatement> obj, size_t indentLevel = 0);
     std::string AssignmentStatementToString(const Ref<AssignmentStatement> obj, size_t indentLevel = 0);
     std::string ReturnStatementToString(const Ref<ReturnStatement> obj, size_t indentLevel = 0);
+    std::string ForLoopStatementToString(const Ref<ForLoopStatement> obj, size_t indentLevel = 0);
+    std::string WhileLoopStatementToString(const Ref<WhileLoopStatement> obj, size_t indentLevel = 0);
+    std::string SwitchStatementToString(const Ref<SwitchStatement> obj, size_t indentLevel = 0);
     std::string StatementToString(const Ref<Statement> obj, size_t indentLevel = 0);
 
 }

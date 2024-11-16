@@ -30,12 +30,27 @@ namespace Dynamite::Language::Node
 	{
 	}
 
+	NotBoolean::NotBoolean(Ref<Expression> expr)
+		: Expr(expr)
+	{
+	}
+
 	MoreThanBoolean::MoreThanBoolean(Ref<Expression> lhs, Ref<Expression> rhs)
 		: LHS(lhs), RHS(rhs)
 	{
 	}
 
 	LessThanBoolean::LessThanBoolean(Ref<Expression> lhs, Ref<Expression> rhs)
+		: LHS(lhs), RHS(rhs)
+	{
+	}
+
+	MoreThanOrEqualsBoolean::MoreThanOrEqualsBoolean(Ref<Expression> lhs, Ref<Expression> rhs)
+		: LHS(lhs), RHS(rhs)
+	{
+	}
+
+	LessThanOrEqualsBoolean::LessThanOrEqualsBoolean(Ref<Expression> lhs, Ref<Expression> rhs)
 		: LHS(lhs), RHS(rhs)
 	{
 	}
@@ -88,6 +103,21 @@ namespace Dynamite::Language::Node
 		return (Ref<Base>)this;
 	}
 
+	Type NotBoolean::GetType() const
+	{
+		return Type(TypeSpecifier::Bool);
+	}
+
+	NodeType NotBoolean::GetUnderlyingType() const
+	{
+		return NodeType::NotBoolean;
+	}
+
+	Ref<Base> NotBoolean::GetUnderlying()
+	{
+		return (Ref<Base>)this;
+	}
+
 	Type MoreThanBoolean::GetType() const
 	{
 		return Type(TypeSpecifier::Bool);
@@ -118,8 +148,38 @@ namespace Dynamite::Language::Node
 		return (Ref<Base>)this;
 	}
 
+	Type MoreThanOrEqualsBoolean::GetType() const
+	{
+		return Type(TypeSpecifier::Bool);
+	}
+
+	NodeType MoreThanOrEqualsBoolean::GetUnderlyingType() const
+	{
+		return NodeType::MoreThanOrEqualsBoolean;
+	}
+
+	Ref<Base> MoreThanOrEqualsBoolean::GetUnderlying()
+	{
+		return (Ref<Base>)this;
+	}
+
+	Type LessThanOrEqualsBoolean::GetType() const
+	{
+		return Type(TypeSpecifier::Bool);
+	}
+
+	NodeType LessThanOrEqualsBoolean::GetUnderlyingType() const
+	{
+		return NodeType::LessThanOrEqualsBoolean;
+	}
+
+	Ref<Base> LessThanOrEqualsBoolean::GetUnderlying()
+	{
+		return (Ref<Base>)this;
+	}
+
 	/////////////////////////////////////////////////////////////////
-	// Helper functions // TODO: Adjust to BinaryExpr format. LHS & RHS
+	// Helper functions
 	/////////////////////////////////////////////////////////////////
 	std::string AndAndBooleanToString(const Ref<AndAndBoolean> obj, size_t indentLevel)
 	{
@@ -128,10 +188,12 @@ namespace Dynamite::Language::Node
 
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([AndAndBoolean{0}] = '\n{1}\n{3}&&\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+		str += Pulse::Text::Format("([AndAndBoolean] = '\n{0}\n{1}'\n{2})", lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
@@ -143,10 +205,12 @@ namespace Dynamite::Language::Node
 
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([OrOrBoolean{0}] = '\n{1}\n{3}||\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+		str += Pulse::Text::Format("([OrOrBoolean] = '\n{0}\n{1}'\n{2})", lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
@@ -158,10 +222,26 @@ namespace Dynamite::Language::Node
 
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([IsEqualBoolean{0}] = '\n{1}\n{3}==\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+		str += Pulse::Text::Format("([IsEqualBoolean] = '\n{0}\n{1}'\n{2})", lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string NotBooleanToString(const Ref<NotBoolean> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<NotBoolean>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string exprStr = ExpressionToString(obj->Expr, indentLevel + 1);
+
+		str += Pulse::Text::Format("([NotBoolean] = '\n{0}'\n{1})", exprStr, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
@@ -173,10 +253,12 @@ namespace Dynamite::Language::Node
 
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([MoreThanBoolean{0}] = '\n{1}\n{3}>\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+		str += Pulse::Text::Format("([MoreThanBoolean] = '\n{0}\n{1}'\n{2})", lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}
@@ -188,10 +270,46 @@ namespace Dynamite::Language::Node
 
 		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
 
-		std::string lhsStr = ExpressionToString(obj->LHS, indentLevel + 1);
-		std::string rhsStr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
 
-		str += Pulse::Text::Format("([LessThanBoolean{0}] = '\n{1}\n{3}<\n{2}'\n{3})", TypeCollection::ToString(obj->GetType()), lhsStr, rhsStr, Utils::StrTimes(Node::TabString, indentLevel));
+		str += Pulse::Text::Format("([LessThanBoolean] = '\n{0}\n{1}'\n{2})", lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string MoreThanOrEqualsBooleanToString(const Ref<MoreThanOrEqualsBoolean> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<MoreThanOrEqualsBoolean>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
+
+		str += Pulse::Text::Format("([MoreThanOrEqualsBoolean] = '\n{0}\n{1}'\n{2})", lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
+
+		return str;
+	}
+
+	std::string LessThanOrEqualsBooleanToString(const Ref<LessThanOrEqualsBoolean> obj, size_t indentLevel)
+	{
+		if (obj == (Ref<LessThanOrEqualsBoolean>)NullRef)
+			return {};
+
+		std::string str = Utils::StrTimes(Node::TabString, indentLevel);
+
+		std::string lhsExpr = ExpressionToString(obj->LHS, indentLevel + 1);
+		std::string rhsExpr = ExpressionToString(obj->RHS, indentLevel + 1);
+		std::string lhs = Utils::EmplaceAfterIndentation(lhsExpr, "LHS: ");
+		std::string rhs = Utils::EmplaceAfterIndentation(rhsExpr, "RHS: ");
+
+		str += Pulse::Text::Format("([LessThanOrEqualsBoolean] = '\n{0}\n{1}'\n{2})", lhs, rhs, Utils::StrTimes(Node::TabString, indentLevel));
 
 		return str;
 	}

@@ -295,11 +295,16 @@ namespace Dynamite
         else if (handleWord(TokenType::Enum))                       return true;
         else if (handleWord(TokenType::Type))                       return true;
 
+        else if (handleWord(TokenType::Let))                        return true;
+        else if (handleWord(TokenType::Fn))                         return true;
+
         else if (handleWord(TokenType::If))                         return true;
         else if (handleWord(TokenType::Else))                       return true;
 
         else if (handleWord(TokenType::While))                      return true;
         else if (handleWord(TokenType::For))                        return true;
+
+        else if (handleWord(TokenType::In))                         return true;
 
         else if (handleWord(TokenType::Return))                     return true;
 

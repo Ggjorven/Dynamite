@@ -143,7 +143,7 @@ namespace Dynamite::Language::Node
     struct BooleanExpr : public Base
     {
     private:
-        using VariantType = Variant<Ref<AndAndBoolean>, Ref<OrOrBoolean>, Ref<IsEqualBoolean>, Ref<MoreThanBoolean>, Ref<LessThanBoolean>>;
+        using VariantType = Variant<Ref<AndAndBoolean>, Ref<OrOrBoolean>, Ref<IsEqualBoolean>, Ref<NotBoolean>, Ref<MoreThanBoolean>, Ref<LessThanBoolean>, Ref<MoreThanOrEqualsBoolean>, Ref<LessThanOrEqualsBoolean>>;
         friend class Pulse::Memory::Control;
     private:
         BooleanExpr(VariantType boolean = {});

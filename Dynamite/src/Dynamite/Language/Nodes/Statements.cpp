@@ -105,6 +105,18 @@ namespace Dynamite::Language::Node
 			{
 				return NodeType::FunctionCall;
 			}
+			NodeType operator () (const Ref<ForLoopStatement>)
+			{
+				return NodeType::ForLoopStatement;
+			}
+			NodeType operator () (const Ref<WhileLoopStatement>)
+			{
+				return NodeType::WhileLoopStatement;
+			}
+			NodeType operator () (const Ref<SwitchStatement>)
+			{
+				return NodeType::SwitchStatement;
+			}
 		};
 
 		return std::visit(StatementVisitor(), StatementObj);
@@ -135,6 +147,18 @@ namespace Dynamite::Language::Node
 				return (Ref<Base>)obj;
 			}
 			Ref<Base> operator () (Ref<FunctionCall> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<ForLoopStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<WhileLoopStatement> obj)
+			{
+				return (Ref<Base>)obj;
+			}
+			Ref<Base> operator () (Ref<SwitchStatement> obj)
 			{
 				return (Ref<Base>)obj;
 			}
@@ -244,6 +268,21 @@ namespace Dynamite::Language::Node
 		return str;
 	}
 
+	std::string ForLoopStatementToString(const Ref<ForLoopStatement> obj, size_t indentLevel)
+	{
+		return "TODO";
+	}
+
+	std::string WhileLoopStatementToString(const Ref<WhileLoopStatement> obj, size_t indentLevel)
+	{
+		return "TODO";
+	}
+
+	std::string SwitchStatementToString(const Ref<SwitchStatement> obj, size_t indentLevel)
+	{
+		return "TODO";
+	}
+
 	std::string StatementToString(const Ref<Statement> obj, size_t indentLevel)
 	{
 		if (obj == (Ref<Statement>)NullRef)
@@ -276,6 +315,18 @@ namespace Dynamite::Language::Node
 			std::string operator () (const Ref<FunctionCall> obj) const
 			{
 				return FunctionCallToString(obj, Ident);
+			}
+			std::string operator () (const Ref<ForLoopStatement> obj) const
+			{
+				return ForLoopStatementToString(obj, Ident);
+			}
+			std::string operator () (const Ref<WhileLoopStatement> obj) const
+			{
+				return WhileLoopStatementToString(obj, Ident);
+			}
+			std::string operator () (const Ref<SwitchStatement> obj) const
+			{
+				return SwitchStatementToString(obj, Ident);
 			}
 		};
 

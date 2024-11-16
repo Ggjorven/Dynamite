@@ -2,6 +2,8 @@
 
 #include "Dynamite/Core/Core.hpp"
 
+#include "Dynamite/Language/Utils/Namespace.hpp"
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -118,6 +120,8 @@ namespace Dynamite::Language
 	struct Type
 	{
 	public:
+		Language::Namespace NamespaceLevel;
+
 		// Ex. mut, volatile
 		QualifierGroup FrontQualifiers;
 
@@ -130,7 +134,8 @@ namespace Dynamite::Language
 		// Constructors
 		Type() = default;
 		Type(const TypeInfo& info);
-		Type(QualifierGroup front, const TypeInfo& info, const std::vector<QualifierGroup>& back = {});
+		Type(const Language::Namespace& nameSpace, const TypeInfo& info);
+		Type(const Language::Namespace& nameSpace, QualifierGroup front, const TypeInfo& info, const std::vector<QualifierGroup>& back = {});
 
 		// Operators
 		bool operator == (const Type& other) const;

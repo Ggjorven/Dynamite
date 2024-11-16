@@ -16,6 +16,9 @@ namespace Dynamite::Language::Node
 	template<typename ...Types>
 	using Variant = std::variant<Types...>;
 
+	template<typename Key, typename Value, typename Hash = std::hash<Key>>
+	using Map = std::unordered_map<Key, Value, Hash>;
+
 	// Internal Ref type.
 	template<typename T>
 	using Ref = T*;
@@ -47,8 +50,11 @@ namespace Dynamite::Language::Node
 	struct AndAndBoolean;
 	struct OrOrBoolean;
 	struct IsEqualBoolean;
+	struct NotBoolean;
 	struct MoreThanBoolean;
 	struct LessThanBoolean;
+	struct MoreThanOrEqualsBoolean;
+	struct LessThanOrEqualsBoolean;
 
 	struct BinaryAddition;
 	struct BinarySubtraction;
@@ -65,6 +71,9 @@ namespace Dynamite::Language::Node
 	struct AssignmentStatement;
 	struct ScopeStatement;
 	struct ReturnStatement;
+	struct ForLoopStatement;
+	struct WhileLoopStatement;
+	struct SwitchStatement;
 
 	struct ElseIfBranch;
 	struct ElseBranch;
@@ -111,8 +120,11 @@ namespace Dynamite::Language::Node
 		AndAndBoolean,
 		OrOrBoolean,
 		IsEqualBoolean,
+		NotBoolean,
 		MoreThanBoolean,
 		LessThanBoolean,
+		MoreThanOrEqualsBoolean,
+		LessThanOrEqualsBoolean,
 
 		BinaryAddition,
 		BinarySubtraction,
@@ -129,6 +141,9 @@ namespace Dynamite::Language::Node
 		AssignmentStatement,
 		ScopeStatement,
 		ReturnStatement,
+		ForLoopStatement,
+		WhileLoopStatement,
+		SwitchStatement,
 
 		ElseIfBranch,
 		ElseBranch,

@@ -114,18 +114,15 @@ namespace Dynamite
 			return {};
 		}
 
-		return ParserFunction::ConstructName(Namespaces, ClassName, Name, overloadIndex);
+		return ParserFunction::ConstructName(Namespaces, Name, overloadIndex);
 	}
 
-	std::string ParserFunction::ConstructName(const Language::Namespace& namespaces, const std::string& className, const std::string& name, size_t overloadIndex)
+	std::string ParserFunction::ConstructName(const Language::Namespace& namespaces, const std::string& name, size_t overloadIndex)
 	{
 		std::string funcName = "Dy_";
 
 		for (const std::string& nameSpace : namespaces.GetAllLevels())
 			funcName += nameSpace + '_';
-
-		if (!className.empty())
-			funcName += className + '_';
 
 		funcName += name + '_';
 		funcName += std::to_string(overloadIndex);
@@ -146,16 +143,16 @@ namespace Dynamite
 		s_Functions.push_back(func);
 	}
 
-	void ParserFunctionCollection::Add(const Language::Namespace& namespaces, const std::string& className, const std::string& name, const ParserFunction::Overload& overload)
+	void ParserFunctionCollection::Add(const Language::Namespace& namespaces, const std::string& name, const ParserFunction::Overload& overload)
 	{
 		auto it = std::ranges::find_if(s_Functions, [&](const ParserFunction& func) 
 		{ 
-			return func.Namespaces == namespaces && func.ClassName == className && func.Name == name;
+			return func.Namespaces == namespaces && func.Name == name;
 		});
 
 		if (it == s_Functions.end())
 		{
-			s_Functions.emplace_back(namespaces, className, name, std::vector({ overload }));
+			s_Functions.emplace_back(namespaces, name, std::vector({ overload }));
 		}
 		else
 		{
@@ -164,11 +161,11 @@ namespace Dynamite
 		}
 	}
 
-	bool ParserFunctionCollection::Exists(const Language::Namespace& namespaces, const std::string& className, const std::string& name, const Language::Type& returnType, const std::vector<Language::Type>& parameters, bool hasCStyleVardiadicArguments)
+	bool ParserFunctionCollection::Exists(const Language::Namespace& namespaces, const std::string& name, const Language::Type& returnType, const std::vector<Language::Type>& parameters, bool hasCStyleVardiadicArguments)
 	{
 		const auto it = std::ranges::find_if(std::as_const(s_Functions), [&](const ParserFunction& func)
 		{
-			return func.Namespaces == namespaces && func.ClassName == className && func.Name == name;
+			return func.Namespaces == namespaces && func.Name == name;
 		});
 		if (it == s_Functions.cend()) return false;
 		const ParserFunction& func = *it;
@@ -198,11 +195,11 @@ namespace Dynamite
 		return false;
 	}
 
-	Optional<ParserFunction> ParserFunctionCollection::GetFunction(const Language::Namespace& namespaces, const std::string& className, const std::string& name)
+	Optional<ParserFunction> ParserFunctionCollection::GetFunction(const Language::Namespace& namespaces, const std::string& name)
 	{
 		auto it = std::ranges::find_if(s_Functions, [&](const ParserFunction& func)
 		{
-			return func.Namespaces == namespaces && func.ClassName == className && func.Name == name;
+			return func.Namespaces == namespaces && func.Name == name;
 		});
 		if (it == s_Functions.cend()) return {};
 
